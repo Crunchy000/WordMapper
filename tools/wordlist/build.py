@@ -38,6 +38,38 @@ BAD_ROOTS = ['disease', 'illness', 'symptom', 'injury', 'disorder', 'pain',
              'killing', 'corpse', 'death', 'body_part', 'organ', 'excretion',
              'genitalia', 'narcotic', 'poison', 'insult']
 
+# Religious figures, tested against the DOMINANT sense only. WordNet orders
+# senses by frequency, so checking every sense over-reaches wildly: "doctor" is
+# a Doctor of the Church, "placebo" was a vespers office, "fox" is George Fox and
+# "moon" is Sun Myung Moon. Judging a word by its first sense keeps all of those
+# and still removes christ, jonah, messiah and the clergy titles.
+FAITH_ROOTS = ['deity', 'religious_person', 'prophet', 'saint', 'clergyman',
+               'sacred_text', 'religion']
+
+# The hypernym test alone is leaky: WordNet's first sense of "messiah" is "any
+# expected deliverer", which sits under no religious root at all. These are the
+# remainder, found by scanning first-sense glosses for religious vocabulary and
+# then read by hand -- the scan alone flags "dinner", "oxen" and "variety",
+# because the keyword appears in an example sentence rather than the definition.
+#
+# The line drawn here is religious vocabulary as a category -- figures, texts,
+# practices, places and labels for believers and non-believers -- applied across
+# faiths equally. Dropping only Christian terms would leave an inconsistent list.
+FAITH_WORDS = {
+    # figures and labels for people by belief
+    'messiah', 'angel', 'creator', 'golem', 'goliath', 'mahatma', 'gentile',
+    'heathen', 'infidel', 'pagan', 'heretic', 'atheist', 'clergy', 'laity',
+    # texts, doctrine, practices
+    'agape', 'baptism', 'dogma', 'fatwa', 'gradual', 'hajj', 'homily', 'idol',
+    'karma', 'kosher', 'liturgy', 'mandala', 'mitzvah', 'nirvana', 'sermon',
+    'sharia', 'worship', 'rota',
+    # places and institutions
+    'ashram', 'bethel', 'medina', 'papacy', 'parish', 'priory', 'rectory',
+    'shrine', 'steeple', 'yeshiva',
+    # not religious, but the same "would rather not" category
+    'harem',
+}
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -85,9 +117,15 @@ def wordnet(wndir):
     return set(senses), verbs, upper - lower, senses, hyper
 
 
-def sensitive_filter(senses, hyper):
-    """True for anything under a BAD_ROOTS concept in the hypernym graph."""
-    roots = {o for w in BAD_ROOTS for o in senses.get(w, [])}
+def sensitive_filter(senses, hyper, roots_words=None, depth=None):
+    """True for anything under one of `roots_words` in the hypernym graph.
+
+    depth=None checks every sense (right for diseases and weapons -- one bad
+    sense is enough to disqualify). depth=1 checks only the dominant sense
+    (right for religion, where many ordinary words carry an obscure religious
+    sense).
+    """
+    roots = {o for w in (roots_words or BAD_ROOTS) for o in senses.get(w, [])}
     cache = {}
 
     def ancestors(off):
@@ -102,7 +140,8 @@ def sensitive_filter(senses, hyper):
         return cache[off]
 
     def bad(w):
-        return any(o in roots or (ancestors(o) & roots) for o in senses.get(w, []))
+        considered = senses.get(w, []) if depth is None else senses.get(w, [])[:depth]
+        return any(o in roots or (ancestors(o) & roots) for o in considered)
     return bad
 
 def inflected(w, nouns, verbs):
@@ -123,6 +162,7 @@ def main(count=COUNT):
     src = load()
     nouns, verbs, proper, senses, hyper = wordnet(src['wndir'])
     sensitive = sensitive_filter(senses, hyper)
+    religious = sensitive_filter(senses, hyper, FAITH_ROOTS, depth=1)
     cmu = src['cmu']
 
     pool = [w for w in nouns
@@ -130,7 +170,8 @@ def main(count=COUNT):
             and w in cmu
             and w not in src['stop'] and w not in proper and w not in src['block']
             and not inflected(w, nouns, verbs)
-            and not sensitive(w)]
+            and not sensitive(w) and not religious(w)
+            and w not in FAITH_WORDS]
     freq = {w: zipf_frequency(w, 'en') for w in pool}
     pool = [w for w in pool if BAND[0] <= freq[w] <= BAND[1]]
     # How many Latin-script languages know this word -- Tirosh's "internationally

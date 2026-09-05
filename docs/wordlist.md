@@ -48,6 +48,26 @@ roots, and anything beneath them in WordNet's hypernym graph is dropped. This
 generalises where a list cannot: `leprosy`, `hernia`, `apnea` and `blister` are
 all caught as diseases without any of them being listed.
 
+**Religion needs a different test: the dominant sense.** Checking every sense
+over-reaches wildly, because ordinary words carry obscure religious senses —
+`doctor` is a Doctor of the Church, `placebo` was a vespers office, `fox` is
+George Fox and `moon` is Sun Myung Moon. Judging a word by its *first* sense
+(WordNet orders them by frequency) keeps all of those and still removes `christ`,
+`jonah`, `bishop`, `caliph` and the clergy titles.
+
+The hypernym test alone is still leaky: WordNet's first sense of `messiah` is
+"any expected deliverer", which sits under no religious root. The remainder came
+from scanning first-sense glosses for religious vocabulary and reading the
+results by hand — the scan alone also flags `dinner`, `oxen` and `variety`,
+where the keyword only appears in an example sentence. Those survivors are in
+`FAITH_WORDS`.
+
+The line drawn is **religious vocabulary as a category** — figures, texts,
+practices, places, and labels for believers and non-believers — applied across
+faiths equally. Dropping only Christian terms would leave an inconsistent list.
+Mythology is deliberately *kept*: `dragon`, `phoenix`, `medusa` are folklore
+rather than active religion.
+
 **Measure international recognisability rather than judging it.** Tirosh
 preferred words legible to non-native speakers. `wordfreq` covers 26 Latin-script
 languages, so each word is scored by how many of them know it — `piano`, `hotel`,
@@ -149,8 +169,14 @@ which is reassuring about both.
   not diseases, weapons or crimes. Tirosh clearly had a human pass here.
 - **British vs American spellings** (`centre`/`center`) are separate words; one
   should be picked per pair.
-- **`zaire` slipped through the proper-noun filter** (WordNet lists it lowercase
-  as a currency unit). There are likely a few more of these.
+- **Proper nouns still leak occasionally.** `zaire` (a currency unit) and
+  `sexton` (WordNet's first sense is the poet Anne Sexton) both got through.
+- **`virgin` survives** — its dominant sense is not religious, but it is the
+  next thing a human pass should look at. A different category from religion,
+  and not one an automated filter is going to settle.
+- **The margin is now thin.** 2,831 words survive selection against the 2,809
+  needed for 53². Much more curation forces the next square down, 52² = 2,704,
+  and a demo grid change.
 - **Rendering cost.** At 2,809 words the demo now draws up to 8,428 rectangles
   across three levels, up from 4,900. Issue 13 in the demo review — switching to
   the canvas renderer — matters more than it did.
