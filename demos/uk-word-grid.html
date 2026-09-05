@@ -3,29 +3,64 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hilbert word-grid demo — UK &amp; Ireland, real Tirosh word list</title>
+<title>Word grid — UK &amp; Ireland</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
-  body { margin: 0; font-family: -apple-system, Arial, sans-serif; }
-  #map { height: 72vh; width: 100%; }
-  #panel { padding: 14px 18px; background: #fafafa; border-top: 1px solid #ddd; }
-  #panel h3 { margin: 0 0 6px; font-size: 15px; }
-  #panel code { background: #eee; padding: 2px 6px; border-radius: 4px; font-size: 14px; }
-  #panel p { margin: 6px 0; font-size: 13px; color: #444; }
-  button { margin-right: 6px; padding: 4px 10px; font-size: 13px; }
+  html, body { margin: 0; height: 100%; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  #map { position: absolute; inset: 0; }
+
+  /* Floating address card. The wrapper ignores pointer events so the map stays
+     draggable everywhere except on the card itself. */
+  #hud {
+    position: absolute; z-index: 1000; top: 14px; left: 14px;
+    pointer-events: none; max-width: calc(100vw - 28px);
+  }
+  #card {
+    pointer-events: auto; display: inline-block;
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(6px);
+    border-radius: 10px; padding: 12px 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.12), 0 6px 20px rgba(0,0,0,.10);
+  }
+  #addr {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 20px; letter-spacing: .01em; color: #16171a; word-break: break-word;
+  }
+  #addr .dot { color: #9a9a94; }
+  #addr .hint {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 15px; color: #5c5c56; letter-spacing: 0;
+  }
+  #meta {
+    margin-top: 5px; font-size: 12px; color: #5c5c56;
+    display: flex; gap: 10px; align-items: center;
+  }
+  #reset {
+    font: inherit; font-size: 12px; color: #1a5c4a; background: none;
+    border: 0; padding: 0; cursor: pointer; text-decoration: underline;
+  }
+
+  /* Word label that follows the cursor, so you can read a cell before clicking. */
+  #tip {
+    position: absolute; z-index: 1100; pointer-events: none;
+    transform: translate(-50%, -140%);
+    background: #16171a; color: #fff; border-radius: 5px;
+    padding: 3px 8px; font-size: 13px; white-space: nowrap;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
 </style>
 </head>
 <body>
 
 <div id="map"></div>
-<div id="panel">
-  <h3 id="addr">Click any level-1 cell to begin</h3>
-  <p id="resolution">The whole bounding area stays visible throughout. Words come from a 2,809-word list (3-7 letters) in which no two entries are within one edit of each other in spelling or pronunciation.</p>
-  <div>
-    <label style="font-size:13px;"><input type="checkbox" id="zoom-toggle"> zoom map to selected cell (helps clicking small cells)</label>
+<div id="hud">
+  <div id="card">
+    <div id="addr"><span class="hint">Click a cell to begin</span></div>
+    <div id="meta"><span id="scale"></span><button id="reset" hidden>reset</button></div>
   </div>
-  <button id="reset">Reset to full extent</button>
 </div>
+<div id="tip" hidden></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
@@ -99,7 +134,10 @@ function rectFor(box, xIdx, yIdx, xSpan, ySpan) {
   return [[lat1, lng0], [lat0, lng1]];
 }
 
-const DEFAULT_BLURB = document.getElementById('resolution').textContent;
+const addrEl = document.getElementById('addr');
+const scaleEl = document.getElementById('scale');
+const resetEl = document.getElementById('reset');
+const tipEl = document.getElementById('tip');
 
 let levelRects = [[], [], []];
 let selectedWords = [];
@@ -119,41 +157,73 @@ function drawLevel(box, levelIdx) {
     const cellBounds = rectFor(box, x, y, lngSpan, latSpan);
     const hue = Math.round((d / words.length) * 300);
     const rect = L.rectangle(cellBounds, { color: `hsl(${hue},55%,50%)`, weight: levelIdx === 0 ? 1 : 0.6, fillOpacity: opacity }).addTo(map);
+    const word = words[d];
+    // Show the word under the cursor: a cell's word is otherwise only knowable
+    // by clicking it, which also subdivides it.
+    rect.on('mouseover', (ev) => showTip(word, ev));
+    rect.on('mousemove', (ev) => showTip(word, ev));
+    rect.on('mouseout', hideTip);
     rect.on('click', (ev) => {
       L.DomEvent.stopPropagation(ev);
+      hideTip();
       selectedWords = selectedWords.slice(0, levelIdx);
-      selectedWords.push(words[d]);
-      updatePanel();
+      selectedWords.push(word);
+      updateCard();
       const nextBox = { latMin: cellBounds[0][0], latMax: cellBounds[1][0], lngMin: cellBounds[0][1], lngMax: cellBounds[1][1] };
       if (levelIdx < 2) drawLevel(nextBox, levelIdx + 1);
-      if (document.getElementById('zoom-toggle').checked) {
-        map.fitBounds(cellBounds, { maxZoom: 18 });
-      }
+      // Always zoom in. A child cell is a fraction of a pixel at the parent's
+      // zoom, so without this the next level cannot be clicked at all.
+      map.fitBounds(cellBounds, { maxZoom: 19 });
     });
     levelRects[levelIdx].push(rect);
   }
 }
 
-function updatePanel() {
-  document.getElementById('addr').innerHTML = selectedWords.length
-    ? `<code>${selectedWords.join('.')}</code>` : 'Click any level-1 cell to begin';
-  document.getElementById('resolution').textContent = selectedWords.length
-    ? `Resolution with ${selectedWords.length} word(s): ${resolutions[selectedWords.length - 1]}`
-    : DEFAULT_BLURB;
+function showTip(word, ev) {
+  tipEl.textContent = word;
+  tipEl.style.left = `${ev.originalEvent.clientX}px`;
+  tipEl.style.top = `${ev.originalEvent.clientY}px`;
+  tipEl.hidden = false;
+}
+function hideTip() { tipEl.hidden = true; }
+
+function updateCard() {
+  if (!selectedWords.length) {
+    addrEl.replaceChildren(el('span', 'hint', 'Click a cell to begin'));
+    scaleEl.textContent = `${words.length.toLocaleString()} words · ${GRID_W}x${GRID_H} grid`;
+    resetEl.hidden = true;
+    return;
+  }
+  // Build the address as nodes rather than innerHTML, so a word can never be
+  // read as markup.
+  const parts = [];
+  selectedWords.forEach((w, i) => {
+    if (i) parts.push(el('span', 'dot', '.'));
+    parts.push(document.createTextNode(w));
+  });
+  addrEl.replaceChildren(...parts);
+  scaleEl.textContent = resolutions[selectedWords.length - 1];
+  resetEl.hidden = false;
+}
+function el(tag, cls, text) {
+  const n = document.createElement(tag);
+  n.className = cls;
+  n.textContent = text;
+  return n;
 }
 
-document.getElementById('reset').addEventListener('click', () => {
+resetEl.addEventListener('click', () => {
   selectedWords = [];
   levelRects.forEach(level => level.forEach(r => map.removeLayer(r)));
   levelRects = [[], [], []];
-  document.getElementById('zoom-toggle').checked = false;
+  hideTip();
   map.fitBounds([[bbox.latMin, bbox.lngMin], [bbox.latMax, bbox.lngMax]]);
-  updatePanel();
+  updateCard();
   drawLevel(bbox, 0);
 });
 
 drawLevel(bbox, 0);
-updatePanel();
+updateCard();
 </script>
 </body>
 </html>

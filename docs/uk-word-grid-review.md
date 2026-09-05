@@ -2,11 +2,15 @@
 
 Findings from auditing the imported demo.
 
-> **Status.** Issues 1, 2 and 3 are **fixed** — the demo now uses a 41×41 grid
-> over a UK + Ireland box, with corrected resolution labels. The figures in
-> those sections describe the original 41×40 UK-only version, and are kept
-> because the reasoning behind the fix still applies. Issues 4-16 are open.
-> See [`coverage.md`](coverage.md) for the extent and resolution analysis. All figures are reproducible with
+> **Status.** Issues 1, 2, 3, 4, 7 and 8 are **fixed**. The demo now uses a
+> 53×53 grid over a UK + Ireland box with a 2,809-word list — an exact
+> word-per-cell fit, so no ground is unaddressable — plus corrected resolution
+> labels, hover labels, and zoom-to-cell by default. The figures in those
+> sections describe the original 41×40 UK-only version and are kept because
+> the reasoning behind each fix still applies.
+>
+> See [`coverage.md`](coverage.md) for extent and resolution, and
+> [`wordlist.md`](wordlist.md) for the word list. All figures are reproducible with
 `node tools/grid-check.mjs`, which reads the word list and the Hilbert
 implementation out of the demo itself.
 
@@ -60,6 +64,10 @@ verified against `tools/grid-check.mjs`.
 Every figure understates the true cell size, in one case by more than 2×.
 
 ### 4. The 7 unused cells leave holes at every level, not just one
+
+**Fixed** — the word list is now exactly GRID_W x GRID_H, so the `break` is
+gone and a guard throws if the two ever drift apart.
+
 
 `if (d >= words.length) break;` silently drops grid indices 1633–1639. At level 1
 those land at roughly 60.4–60.9 °N, 1.0–1.6 °E — open North Sea, so harmless. But
@@ -129,11 +137,18 @@ Exactness is not worth that.
 
 ### 7. You cannot see a cell's word before clicking it
 
+**Fixed** — hovering a cell now shows its word at the cursor.
+
+
 The only way to learn a cell's word is to click it, which also subdivides it. A
 `bindTooltip` on hover would make the mapping legible and make the Hilbert
 locality property visible — the thing the demo exists to show.
 
 ### 8. Levels 2 and 3 are effectively unclickable
+
+**Fixed** — the map always zooms to the selected cell, so the child grid is
+resolvable. The opt-in checkbox that used to gate this is gone.
+
 
 1,633 cells inside one level-1 cell are sub-pixel at UK-wide zoom. The
 `zoom-toggle` checkbox acknowledges this, but it is off by default, so the
@@ -192,10 +207,8 @@ incident away from a blank page.
 The viewport meta tag and the duplicated panel copy are **fixed**; the rest are open.
 
 
-- `updatePanel` writes to `innerHTML`. The words are a trusted static array so
-  there is no injection risk today, but creating the `<code>` element and
-  assigning `textContent` costs nothing and stays safe if the list ever becomes
-  user-supplied.
+- ~~`updatePanel` writes to `innerHTML`.~~ **Fixed** — the address is built from
+  text nodes, so a word can never be read as markup.
 - The word list is inlined as a 20 KB literal in the middle of the script. Moving
   it to a separate `words.json` (or at least the end of the file) would make the
   logic readable.
