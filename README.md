@@ -35,6 +35,13 @@ square, continuous, or large enough for the word list, and runs on every push.
 [`.github/workflows/pages.yml`](.github/workflows/pages.yml) on every push to
 `main`. Pull requests run the build and the grid check without deploying.
 
+**One-time setup:** Pages has to be switched on for the repository before the
+first deploy can succeed — *Settings → Pages → Build and deployment → Source:
+**GitHub Actions***. The workflow cannot do this itself; creating a Pages site
+needs repo-admin rights, which the Actions token does not have. Until it is
+done, the deploy step fails with `Get Pages site failed`. Once it is done,
+re-run the workflow and it will publish.
+
 ## Docs
 
 - [`docs/uk-word-grid-review.md`](docs/uk-word-grid-review.md) — known issues and

@@ -40,12 +40,15 @@ jobs:
           ls -R _site
 
       # Pull requests stop here: the grid check and the build are the gate.
-      # enablement turns Pages on for the repo the first time this runs, so no
-      # manual step in Settings is needed.
+      #
+      # This step needs Pages already switched on for the repository:
+      # Settings -> Pages -> Build and deployment -> Source: "GitHub Actions".
+      # It is a one-time manual step. The workflow cannot do it itself --
+      # creating a Pages site needs repo-admin rights, and the Actions token's
+      # pages: write permission only covers deploying to an existing site
+      # (enablement: true fails with "Resource not accessible by integration").
       - uses: actions/configure-pages@v5
         if: github.event_name != 'pull_request'
-        with:
-          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
         if: github.event_name != 'pull_request'
