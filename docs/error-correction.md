@@ -7,11 +7,14 @@ forms once three words are chosen.
 
 ## The field falls out for free
 
-The word list is **2,809 = 53²** and 53 is prime, so **GF(2809) is a genuine
+The word list is **1,849 = 43²** and 43 is prime, so **GF(1849) is a genuine
 finite field** and one word is exactly one field element — no wasted symbols, and
-every check value is itself a valid word. The same holds for the smaller list:
-1,681 = 41², 41 prime. Choosing perfect squares for the grid handed us the right
-algebra by accident.
+every check value is itself a valid word.
+
+This is now a *binding* constraint rather than a happy accident. The list size
+must be the square of a prime to be both a square grid and a field: 46² = 2,116
+is a fine grid and no field at all, so a word list capped at 2,167 words lands on
+43², not 46².
 
 ## Two lengths, nested
 
@@ -66,7 +69,7 @@ minimum distance 3.
 - 4 words: single error detected (cannot locate — as the bound requires)
 - 5 words: single error **corrected** at unknown position
 - word-order swaps never silently accepted, at both lengths
-- **122,050 real single-character typos, 100% auto-corrected**
+- **118,350 real single-character typos, 100% auto-corrected**
 
 The demo's JavaScript codec is cross-checked against this Python one over 4,000
 random addresses — zero mismatches in either form.

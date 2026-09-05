@@ -2,16 +2,14 @@
 
 Notes from building a soundalike-free replacement for the 1,633-word Tirosh
 list. Build with `python3 tools/wordlist/build.py [--count N]`, check with
-`python3 tools/wordlist/verify.py <list>`. Two lists are committed, both exact
-squares so every grid cell gets a word:
+`python3 tools/wordlist/verify.py data/wordlist.json`. The result is
+[`data/wordlist.json`](../data/wordlist.json) — **1,849 everyday words**, 43².
 
-| List | Words | Grid | 3-word cell | Weakest word |
-|---|---|---|---|---|
-| [`wordlist.json`](../data/wordlist.json) | 1,681 | 41×41 | 14.45 m | 9 of 26 languages |
-| [`wordlist-2809.json`](../data/wordlist-2809.json) | 2,809 | 53×53 | 6.69 m | 1 of 26 languages |
-
-They are nested — the 1,681 is a strict subset of the 2,809, since both are
-prefixes of the same ranked selection. **The demo uses the larger one.**
+The size must be **the square of a prime**. A square grid keeps cell aspect
+constant across levels, and p² with p prime is also what makes GF(1,849) a real
+finite field, which the self-correcting codec needs. 46² = 2,116 would be a
+perfectly good grid and an impossible field — that constraint, not the word
+supply, is what fixes the list at 1,849.
 
 ## Sources
 
@@ -96,9 +94,24 @@ words and inflections together, because WordNet indexes base forms.
 **Proper nouns come from WordNet's own data** — a lemma never seen lowercase in
 any synset is one. That caught `poulenc`, `saratov`, `ustinov`, `tlingit`.
 
-**Frequency is a band, not a floor.** A floor alone leaves `one`, `will`, `time`,
-`people` at the top, too generic to be memorable. Tirosh's words sit in this
-band: `piano` 4.31, `tango` 3.58, `cobalt` 3.37, `gizmo` 2.61.
+**Frequency is a band, not a floor** (Zipf 3.0–5.0). A floor alone leaves `one`,
+`will`, `time`, `people` at the top, too generic to be memorable.
+
+The lower bound was raised from 2.5 to 3.0 to cut words that are technically
+English but not in everyday use: `myelin`, `niacin`, `oryx`, `biotin`, `moiety`,
+`stover`, `liana`, `tiffin`, `snafu`, `batik`, `troika`, `simian`. The rarest
+words now kept are `duchy`, `hummus`, `kiosk`, `acacia`, `ukulele`, `equinox`.
+
+**Two accepted spellings disqualifies a word.** `color`/`colour`,
+`humor`/`humour`, `catalog`/`catalogue`, `defense`/`defence`, `disk`/`disc`,
+`sulfur`/`sulphur`, `yogurt`/`yoghurt` — a listener cannot know which to write,
+which is a stronger objection than nationality. Separately, American-only terms
+an English speaker would not reach for are dropped: `mailman`, `freeway`,
+`ladybug`, `hobo`, `critter`, `caboose`, `bodega`, `beltway`.
+
+Words that merely *mean* something different in the two countries — `bonnet`,
+`chemist`, `caravan`, `pavement` — are deliberately kept. You never need to know
+what an address word means, only how to spell it.
 
 ## What distinctness costs
 
@@ -118,29 +131,18 @@ whole story.
 
 ## The quality dial
 
-The tail of the selection is whatever survived the rules, not good words. So
-truncating trades precision for quality, and the exchange rate is steep:
+Raising the frequency floor costs address space quickly, and the grid can only
+land on the square of a prime:
 
-| Take top | 3-word cell | Mean languages | Worst word | Rarest kept |
-|---|---|---|---|---|
-| **1,681** | **14.45 m** | **18.2/26** | **9/26** | `snooker`, `equinox` |
-| 2,000 | 11.14 m | 16.4/26 | 5/26 | `busby`, `despot` |
-| 2,400 | 8.47 m | 14.1/26 | 2/26 | `crozier`, `meiosis` |
-| 2,880 | 6.44 m | 12.0/26 | 1/26 | `soapbox`, `trundle` |
+| Floor | Words available | Largest usable grid | 3-word cell |
+|---|---|---|---|
+| 2.5 | 2,807 | 53×53 = 2,809 (just misses) → 52² not prime → 47×47 | 9.59 m |
+| **3.0** | **2,167** | **43×43 = 1,849** | **12.53 m** |
+| 3.25 | 1,811 | 41×41 = 1,681 | 14.45 m |
+| 3.5 | 1,462 | 37×37 = 1,369 | 16.55 m |
 
-**1,681 — exactly the 41² needed to leave no grid cell unaddressed — is also
-where word quality is still good.** Every word in it is known in at least 9 of 26
-languages. Pushing further admits words one language in 26 knows.
-
-Both endpoints are worth having, which is why both are committed. The shipped
-choice for the demo is **2,809 = 53²**, buying 6.69 m at the cost of a tail
-containing `zircon`, `yeshiva` and `wingman`. Anyone who would rather have
-uniformly recognisable words takes the 1,681 and accepts 14.45 m.
-
-The grid must stay a **perfect square** either way: a square grid is what holds
-cell aspect constant across levels, and an exact fit to the word count is what
-leaves no ground unaddressable. 53×53 was the largest square available, since
-54² = 2,916 exceeds the 2,880 words that survived selection.
+Land masking would recover about 1.64× on any of these, putting the shipped list
+at roughly **7.6 m** in practice.
 
 ## Conclusions
 
@@ -174,9 +176,13 @@ which is reassuring about both.
 - **`virgin` survives** — its dominant sense is not religious, but it is the
   next thing a human pass should look at. A different category from religion,
   and not one an automated filter is going to settle.
-- **The margin is now thin.** 2,831 words survive selection against the 2,809
-  needed for 53². Much more curation forces the next square down, 52² = 2,704,
-  and a demo grid change.
+- **`erotica` and `gangsta` survive**, and `heaven` slipped the religion filter.
+  A human pass should take these.
+- **`spiegel` is another proper-noun leak** (Der Spiegel), joining `zaire` and
+  `sexton`.
+- **The margin is comfortable now.** 2,167 words survive against the 1,849 that
+  43² needs, so there is room for further curation without changing the grid —
+  the next step down would be 41² = 1,681.
 - **Rendering cost.** At 2,809 words the demo now draws up to 8,428 rectangles
   across three levels, up from 4,900. Issue 13 in the demo review — switching to
   the canvas renderer — matters more than it did.

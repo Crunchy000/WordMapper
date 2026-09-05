@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Self-correcting word addresses: Reed-Solomon over GF(53^2).
 
-The word list has 2809 = 53^2 entries and 53 is prime, so GF(2809) is a genuine
+The word list has 1849 = 43^2 entries and 43 is prime, so GF(1849) is a genuine
 finite field and one word is exactly one field element -- no wasted symbols, and
 every check value is itself a valid word.
 
@@ -22,7 +22,7 @@ would pass silently.
 """
 import json, os
 
-P = 53                      # word list is P*P entries
+P = 43                      # word list is P*P entries
 # x^2 - NR is irreducible over GF(P) when NR is a quadratic non-residue
 NR = next(n for n in range(2, P) if pow(n, (P - 1) // 2, P) == P - 1)
 
@@ -127,7 +127,7 @@ def decode(received):
 # --- word-level convenience ---------------------------------------------------
 def load_words(path=None):
     path = path or os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                '..', '..', 'data', 'wordlist-2809.json')
+                                '..', '..', 'data', 'wordlist.json')
     return json.load(open(path))
 
 def encode_words(three, words, checks=1):

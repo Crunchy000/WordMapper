@@ -74,16 +74,16 @@
   <h2>The demo</h2>
   <p>An interactive grid over the UK and Ireland. Click a cell to pick a word; each
   click subdivides that cell with the same grid, so every extra word refines the
-  address. Three words gets you to about 5.5 × 8 m.</p>
+  address. Three words gets you to about 10 × 15 m.</p>
   <a class="cta" href="demos/uk-word-grid.html">Open the demo →</a>
   <p class="note">Loads Leaflet and OpenStreetMap tiles from a CDN, so it needs network access.</p>
 
   <h2>How it works</h2>
-  <p>The bounding box is divided into a 53 × 53 grid. Cells are numbered along a
+  <p>The bounding box is divided into a 43 × 43 grid. Cells are numbered along a
   <a href="https://github.com/jakubcerveny/gilbert">generalised Hilbert curve</a>, so
   cells that are adjacent in space are adjacent in the numbering. Each index picks a
-  word from a 2,809-word list — exactly one word per cell, so no ground is left
-  unaddressable. No two words are within one edit of each other in spelling
+  word from a 1,849-word list of everyday words — exactly one word per cell, so no
+  ground is left unaddressable. No two words are within one edit of each other in spelling
   <em>or</em> pronunciation, which is what separates <code>sail</code> from
   <code>sale</code>.</p>
 
@@ -91,9 +91,9 @@
   <table>
     <thead><tr><th>Words</th><th>Cell size</th><th>Roughly</th></tr></thead>
     <tbody>
-      <tr><td class="num">1</td><td class="num">15.3 × 23.2 km</td><td>a county</td></tr>
-      <tr><td class="num">2</td><td class="num">288 × 437 m</td><td>a neighbourhood</td></tr>
-      <tr><td class="num">3</td><td class="num">5.4 × 8.2 m</td><td>a building</td></tr>
+      <tr><td class="num">1</td><td class="num">18.8 × 28.6 km</td><td>a county</td></tr>
+      <tr><td class="num">2</td><td class="num">438 × 664 m</td><td>a neighbourhood</td></tr>
+      <tr><td class="num">3</td><td class="num">10.2 × 15.4 m</td><td>a building</td></tr>
     </tbody>
   </table>
   </div>

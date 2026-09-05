@@ -16,12 +16,15 @@ than letters is what catches sail/sale, which no spelling rule would.
 """
 import json, re, math, os, sys, subprocess
 
-BAND = (2.5, 5.0)   # Zipf frequency: below is obscure, above is a function word
+BAND = (3.0, 5.0)   # Zipf frequency: below is obscure, above is a function word
 LENGTH = (3, 7)
-COUNT = 1681        # 41**2 -- exactly fills the demo grid, leaving no cell
-                    # unaddressed. Override with --count; use a perfect square,
-                    # since a square grid is what keeps cell aspect constant
-                    # across levels (see docs/uk-word-grid-review.md).
+COUNT = 1849        # 43**2 -- exactly fills the demo grid, leaving no cell
+                    # unaddressed. Override with --count, but use the square of
+                    # a PRIME: a square grid keeps cell aspect constant across
+                    # levels (docs/uk-word-grid-review.md), and p**2 with p prime
+                    # is also what makes GF(count) a real field, which the
+                    # self-correcting codec needs (docs/error-correction.md).
+                    # 46**2 = 2116 would be a fine grid and an impossible field.
 
 # Only Latin-script languages: a loanword in Russian or Japanese is written in
 # another script, so the English spelling would never appear in its corpus.
@@ -68,6 +71,25 @@ FAITH_WORDS = {
     'shrine', 'steeple', 'yeshiva',
     # not religious, but the same "would rather not" category
     'harem',
+}
+
+# Words with two accepted spellings are bad address words on either side of the
+# Atlantic: a listener cannot know which one to write down.
+DUAL_SPELLING = {
+    'analog', 'armory', 'balk', 'caliber', 'catalog', 'color', 'cozy', 'defense',
+    'dialog', 'disk', 'favor', 'harbor', 'humor', 'license', 'pajama', 'sulfate',
+    'sulfide', 'sulfur', 'vigor', 'yogurt',
+}
+
+# American-only terms an English speaker would not reach for. Words that merely
+# mean something different in the two countries (bonnet, chemist, caravan) are
+# deliberately kept -- you never need to know what an address word means, only
+# how to spell it.
+US_ONLY = {
+    'airdrop', 'arroyo', 'beltway', 'bodega', 'burlap', 'busboy', 'caboose',
+    'canola', 'critter', 'drywall', 'freeway', 'grownup', 'hobo', 'jodhpur',
+    'ladybug', 'mailman', 'mohawk', 'necktie', 'pullout', 'shoebox', 'takeout',
+    'tidbit', 'uptown',
 }
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -171,7 +193,8 @@ def main(count=COUNT):
             and w not in src['stop'] and w not in proper and w not in src['block']
             and not inflected(w, nouns, verbs)
             and not sensitive(w) and not religious(w)
-            and w not in FAITH_WORDS]
+            and w not in FAITH_WORDS
+            and w not in DUAL_SPELLING and w not in US_ONLY]
     freq = {w: zipf_frequency(w, 'en') for w in pool}
     pool = [w for w in pool if BAND[0] <= freq[w] <= BAND[1]]
     # How many Latin-script languages know this word -- Tirosh's "internationally

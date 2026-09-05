@@ -4,7 +4,7 @@ import random, sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import wordcode as wc
 
-N = 2809
+N = 1849
 AZ = 'abcdefghijklmnopqrstuvwxyz'
 fails = []
 
