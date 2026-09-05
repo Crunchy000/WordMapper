@@ -49,6 +49,17 @@ re-run the workflow and it will publish.
 - [`docs/coverage.md`](docs/coverage.md) — how far the scheme stretches: the
   Ireland extension, what global coverage would cost, and the word-list vs
   address-length trade.
+- [`docs/wordlist.md`](docs/wordlist.md) — building a soundalike-free word list,
+  and why phonetic distinctness caps three-word precision at about 6 m.
+
+## Word list
+
+`python3 tools/wordlist/build.py` builds a candidate mnemonic word list, using
+CMU pronunciations to reject words that sound alike and WordNet to reject
+function words, inflections and proper nouns. The output is committed as
+[`data/candidate-wordlist.json`](data/candidate-wordlist.json) — 3,015 words,
+pending a human curation pass (see the doc). It needs `pip install wordfreq`
+and a few npm packages, listed in the script's docstring.
 
 [gilbert]: https://github.com/jakubcerveny/gilbert
 
