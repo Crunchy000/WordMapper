@@ -15,7 +15,10 @@ const { gilbert2d } = await import(
   'data:text/javascript,' + encodeURIComponent(hilbertSrc + '\nexport { gilbert2d };')
 );
 
-const bbox = { latMin: 49.85, latMax: 60.90, lngMin: -8.65, lngMax: 1.80 };
+const bbox = JSON.parse(
+  html.match(/const bbox = (\{[^}]*\});/)[1].replace(/(\w+):/g, '"$1":')
+);
+const [, gw, gh] = html.match(/const GRID_W = (\d+), GRID_H = (\d+);/).map(Number);
 const midLat = (bbox.latMin + bbox.latMax) / 2;
 const kmTall = (bbox.latMax - bbox.latMin) * 111.1;
 const kmWide = (bbox.lngMax - bbox.lngMin) * 111.32 * Math.cos((midLat * Math.PI) / 180);
@@ -59,9 +62,12 @@ const short = words.filter((w) => w.length < 4);
 console.log(`outside the stated 4-7 letters: ${short.join(', ') || 'none'}`);
 console.log(`bbox: ${kmWide.toFixed(0)} km wide x ${kmTall.toFixed(0)} km tall\n`);
 
-report('current       ', 41, 40);
+console.log(`bbox in demo: ${JSON.stringify(bbox)}`);
+console.log(`grid in demo: ${gw}x${gh}\n`);
+
+report('in use        ', gw, gh);
 console.log();
-report('suggested     ', 41, 41);
+report('old (broken)  ', 41, 40);
 console.log();
 report('square-cell L1', 30, 56); // looks good at level 1, aspect compounds badly
 console.log();

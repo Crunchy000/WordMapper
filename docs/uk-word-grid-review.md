@@ -1,15 +1,24 @@
 # Review: `demos/uk-word-grid.html`
 
-Findings from auditing the imported demo. All figures are reproducible with
+Findings from auditing the imported demo.
+
+> **Status.** Issues 1, 2 and 3 are **fixed** — the demo now uses a 41×41 grid
+> over a UK + Ireland box, with corrected resolution labels. The figures in
+> those sections describe the original 41×40 UK-only version, and are kept
+> because the reasoning behind the fix still applies. Issues 4-16 are open.
+> See [`coverage.md`](coverage.md) for the extent and resolution analysis. All figures are reproducible with
 `node tools/grid-check.mjs`, which reads the word list and the Hilbert
 implementation out of the demo itself.
 
-Reference figures for the UK bounding box (49.85–60.90 °N, −8.65–1.80 °E):
-roughly **661 km wide × 1228 km tall**, an aspect ratio of 1.86.
+Reference figures below are for the *original* UK bounding box (49.85–60.90 °N,
+−8.65–1.80 °E): roughly **661 km wide × 1228 km tall**, an aspect ratio of 1.86.
+The demo now covers −11.00–1.80 °E: 810 km × 1228 km, aspect 1.52.
 
 ## Correctness
 
 ### 1. The 41×40 grid breaks the Hilbert curve
+**Fixed** — the grid is now 41×41, which is continuous.
+
 
 The whole point of ordering cells along a Hilbert curve is that consecutive
 indices are spatially adjacent. At `GRID_W = 41, GRID_H = 40` that guarantee does
@@ -22,6 +31,8 @@ port is faithful; 41×40 is simply a size the algorithm does not handle cleanly.
 41×41 and 42×40 both come out clean.
 
 ### 2. Cells are 1.86:1 rectangles
+**Fixed** — a square grid holds cell aspect constant at 1.52 across all levels.
+
 
 A near-square grid over a box that is 1.86× taller than it is wide gives level-1
 cells of **16.1 km × 30.7 km**. Because `GRID_W ≠ GRID_H`, the ratio also drifts
@@ -34,6 +45,9 @@ The drift is slow here, but it is a trap worth naming, because the obvious fix
 makes it far worse. See "Choosing grid dimensions" below.
 
 ### 3. The stated resolutions are wrong
+**Fixed** — `resolutions` now reads `~20 x 30 km`, `~480 x 730 m`, `~12 x 18 m`,
+verified against `tools/grid-check.mjs`.
+
 
 `resolutions` claims `~12.2 km`, `~300 m`, `~7.5 m`. Actual cell sizes:
 
@@ -175,14 +189,13 @@ subresource integrity hashes, or vendor the library, so the demo is not one CDN
 incident away from a blank page.
 
 ### 16. Minor
+The viewport meta tag and the duplicated panel copy are **fixed**; the rest are open.
+
 
 - `updatePanel` writes to `innerHTML`. The words are a trusted static array so
   there is no injection risk today, but creating the `<code>` element and
   assigning `textContent` costs nothing and stays safe if the list ever becomes
   user-supplied.
-- The default panel text is duplicated between the markup and `updatePanel`;
-  the two will drift.
-- No `<meta name="viewport">`, so the demo renders poorly on mobile.
 - The word list is inlined as a 20 KB literal in the middle of the script. Moving
   it to a separate `words.json` (or at least the end of the file) would make the
   logic readable.

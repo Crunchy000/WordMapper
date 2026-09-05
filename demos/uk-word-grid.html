@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Hilbert word-grid demo — United Kingdom, real Tirosh word list</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hilbert word-grid demo — UK &amp; Ireland, real Tirosh word list</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
   body { margin: 0; font-family: -apple-system, Arial, sans-serif; }
@@ -19,17 +20,19 @@
 <div id="map"></div>
 <div id="panel">
   <h3 id="addr">Click any level-1 cell to begin</h3>
-  <p id="resolution">The whole UK bounding area stays visible throughout. Words come from the real 1,633-word Tirosh mnemonic list (no soundalikes, 4-7 letters, phonetic-alphabet style).</p>
+  <p id="resolution">The whole bounding area stays visible throughout. Words come from the real 1,633-word Tirosh mnemonic list (no soundalikes, 3-7 letters, phonetic-alphabet style).</p>
   <div>
     <label style="font-size:13px;"><input type="checkbox" id="zoom-toggle"> zoom map to selected cell (helps clicking small cells)</label>
   </div>
-  <button id="reset">Reset to full UK</button>
+  <button id="reset">Reset to full extent</button>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-// Approx bounding box covering the United Kingdom (Great Britain + Northern Ireland)
-const bbox = { latMin: 49.85, latMax: 60.90, lngMin: -8.65, lngMax: 1.80 };
+// Approx bounding box covering the United Kingdom and Ireland.
+// Extending lngMin west from -8.65 to -11.00 takes in the whole island of
+// Ireland (Tearaght Is. is the westernmost point, ~-10.65) for 22% more area.
+const bbox = { latMin: 49.85, latMax: 60.90, lngMin: -11.00, lngMax: 1.80 };
 const map = L.map('map').fitBounds([[bbox.latMin, bbox.lngMin], [bbox.latMax, bbox.lngMax]]);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -75,9 +78,13 @@ function gilbert2d(width, height) {
   return out;
 }
 
-const GRID_W = 41, GRID_H = 40; // 1640 cells, holds all 1633 words with 7 unused
-const gilbertCoords = gilbert2d(GRID_W, GRID_H); // ordered list of [x,y], length 1640
-const resolutions = ['~12.2 km (UK-wide bounding box)', '~300 m', '~7.5 m'];
+// A square grid keeps cell aspect constant at every level (it is boxAspect *
+// (GRID_W/GRID_H)^level, so any non-square grid compounds). 41x41 is also the
+// smallest square grid that holds the word list, and unlike 41x40 it yields a
+// continuous Hilbert path.
+const GRID_W = 41, GRID_H = 41; // 1681 cells, holds all 1633 words with 48 unused
+const gilbertCoords = gilbert2d(GRID_W, GRID_H); // ordered list of [x,y], length 1681
+const resolutions = ['~20 x 30 km', '~480 x 730 m', '~12 x 18 m'];
 
 function rectFor(box, xIdx, yIdx, xSpan, ySpan) {
   const lat0 = box.latMax - yIdx * ySpan;
@@ -86,6 +93,8 @@ function rectFor(box, xIdx, yIdx, xSpan, ySpan) {
   const lng1 = box.lngMin + (xIdx + 1) * xSpan;
   return [[lat1, lng0], [lat0, lng1]];
 }
+
+const DEFAULT_BLURB = document.getElementById('resolution').textContent;
 
 let levelRects = [[], [], []];
 let selectedWords = [];
@@ -126,7 +135,7 @@ function updatePanel() {
     ? `<code>${selectedWords.join('.')}</code>` : 'Click any level-1 cell to begin';
   document.getElementById('resolution').textContent = selectedWords.length
     ? `Resolution with ${selectedWords.length} word(s): ${resolutions[selectedWords.length - 1]}`
-    : 'The whole UK bounding area stays visible throughout. Words come from the real 1,633-word Tirosh mnemonic list (no soundalikes, 4-7 letters, phonetic-alphabet style).';
+    : DEFAULT_BLURB;
 }
 
 document.getElementById('reset').addEventListener('click', () => {

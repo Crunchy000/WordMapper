@@ -6,10 +6,10 @@ Experiments in encoding geographic coordinates as short, memorable word sequence
 
 ### `demos/uk-word-grid.html`
 
-An interactive proof-of-concept that addresses locations in the United Kingdom
+An interactive proof-of-concept that addresses locations in the UK and Ireland
 with a sequence of three words.
 
-- The UK bounding box (49.85–60.90 °N, −8.65–1.80 °E) is divided into a grid.
+- The bounding box (49.85–60.90 °N, −11.00–1.80 °E) is divided into a 41×41 grid.
 - Cells are numbered along a [generalised Hilbert curve][gilbert] so that
   consecutive words correspond to spatially adjacent cells, and nearby places
   tend to share an address prefix.
@@ -21,8 +21,17 @@ with a sequence of three words.
 Open the file directly in a browser — no build step. It loads Leaflet and
 OpenStreetMap tiles from a CDN, so it needs network access.
 
-See [`docs/uk-word-grid-review.md`](docs/uk-word-grid-review.md) for known
-issues and proposed improvements.
+Run `node tools/grid-check.mjs` to verify the grid geometry; it reads the word
+list, bounding box and Hilbert implementation out of the demo itself, so it
+cannot drift from what the demo does.
+
+## Docs
+
+- [`docs/uk-word-grid-review.md`](docs/uk-word-grid-review.md) — known issues and
+  proposed improvements.
+- [`docs/coverage.md`](docs/coverage.md) — how far the scheme stretches: the
+  Ireland extension, what global coverage would cost, and the word-list vs
+  address-length trade.
 
 [gilbert]: https://github.com/jakubcerveny/gilbert
 
