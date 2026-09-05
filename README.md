@@ -51,6 +51,8 @@ re-run the workflow and it will publish.
   address-length trade.
 - [`docs/wordlist.md`](docs/wordlist.md) — building a soundalike-free word list,
   and why phonetic distinctness caps three-word precision at about 6 m.
+- [`docs/error-correction.md`](docs/error-correction.md) — addresses that repair
+  themselves, and why four words suffice where the textbook bound wants five.
 
 ## Word list
 

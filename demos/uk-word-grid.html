@@ -36,6 +36,16 @@
     margin-top: 5px; font-size: 12px; color: #5c5c56;
     display: flex; gap: 10px; align-items: center;
   }
+  #codes { margin-top: 9px; border-top: 1px solid #e6e6e0; padding-top: 8px; }
+  .code {
+    display: flex; gap: 8px; align-items: baseline; margin-top: 3px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px;
+  }
+  .code .tag {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 11px; color: #5c5c56; width: 92px; flex: none; text-align: right;
+  }
+  .code .chk { color: #1a5c4a; }
   #reset {
     font: inherit; font-size: 12px; color: #1a5c4a; background: none;
     border: 0; padding: 0; cursor: pointer; text-decoration: underline;
@@ -58,6 +68,10 @@
   <div id="card">
     <div id="addr"><span class="hint">Click a cell to begin</span></div>
     <div id="meta"><span id="scale"></span><button id="reset" hidden>reset</button></div>
+    <div id="codes" hidden>
+      <div class="code"><span class="tag">self-correcting</span><span id="c4"></span></div>
+      <div class="code"><span class="tag">error-correcting</span><span id="c5"></span></div>
+    </div>
   </div>
 </div>
 <div id="tip" hidden></div>
@@ -121,6 +135,35 @@ function gilbert2d(width, height) {
 // continuous Hilbert path.
 const GRID_W = 53, GRID_H = 53; // 2809 cells, exactly one per word
 const gilbertCoords = gilbert2d(GRID_W, GRID_H); // ordered list of [x,y], length 2809
+// --- Self-correcting addresses: Reed-Solomon over GF(53^2) ------------------
+// The list is 2809 = 53^2 words and 53 is prime, so GF(2809) is a real field
+// and one word is exactly one field element. See tools/codec/wordcode.py.
+const GF_P = 53;
+const GF_NR = 2;   // least quadratic non-residue mod 53, so x^2-2 is irreducible
+const gEl = (i) => [i % GF_P, Math.floor(i / GF_P)];
+const gIdx = (u) => u[0] + GF_P * u[1];
+const gMod = (x) => ((x % GF_P) + GF_P) % GF_P;
+const gAdd = (u, v) => [gMod(u[0] + v[0]), gMod(u[1] + v[1])];
+const gSub = (u, v) => [gMod(u[0] - v[0]), gMod(u[1] - v[1])];
+const gMul = (u, v) => [gMod(u[0] * v[0] + u[1] * v[1] * GF_NR), gMod(u[0] * v[1] + u[1] * v[0])];
+// Distinct weight per position, so swapping two words changes the check. A
+// plain sum would not: addition is commutative, and swaps would pass silently.
+const WEIGHT_A = [gEl(1), gEl(2), gEl(3)];
+const WEIGHT_B = WEIGHT_A.map((a) => gMul(a, a));
+
+function checkWord(threeIdx, weights) {
+  let t = [0, 0];
+  for (let i = 0; i < 3; i++) t = gAdd(t, gMul(weights[i], gEl(threeIdx[i])));
+  return words[gIdx(gSub([0, 0], t))];
+}
+// 1 check corrects any single word known to be wrong; 2 corrects one wrong word
+// at an unknown position. Nested: the 4-word form is a prefix of the 5-word one.
+function protectedForms(three) {
+  const ids = three.map((w) => words.indexOf(w));
+  const c1 = checkWord(ids, WEIGHT_A);
+  return { four: [...three, c1], five: [...three, c1, checkWord(ids, WEIGHT_B)] };
+}
+
 if (gilbertCoords.length !== words.length) {
   throw new Error(`grid has ${gilbertCoords.length} cells but the word list has ${words.length}`);
 }
@@ -135,6 +178,9 @@ function rectFor(box, xIdx, yIdx, xSpan, ySpan) {
 }
 
 const addrEl = document.getElementById('addr');
+const codesEl = document.getElementById('codes');
+const c4El = document.getElementById('c4');
+const c5El = document.getElementById('c5');
 const scaleEl = document.getElementById('scale');
 const resetEl = document.getElementById('reset');
 const tipEl = document.getElementById('tip');
@@ -192,6 +238,7 @@ function updateCard() {
     addrEl.replaceChildren(el('span', 'hint', 'Click a cell to begin'));
     scaleEl.textContent = `${words.length.toLocaleString()} words · ${GRID_W}x${GRID_H} grid`;
     resetEl.hidden = true;
+    codesEl.hidden = true;
     return;
   }
   // Build the address as nodes rather than innerHTML, so a word can never be
@@ -204,6 +251,27 @@ function updateCard() {
   addrEl.replaceChildren(...parts);
   scaleEl.textContent = resolutions[selectedWords.length - 1];
   resetEl.hidden = false;
+
+  // The code carries exactly three location words, so the protected forms only
+  // exist once all three are chosen.
+  if (selectedWords.length === 3) {
+    const { four, five } = protectedForms(selectedWords);
+    renderCode(c4El, four, 1);
+    renderCode(c5El, five, 2);
+    codesEl.hidden = false;
+  } else {
+    codesEl.hidden = true;
+  }
+}
+
+function renderCode(target, parts, nChecks) {
+  const nodes = [];
+  parts.forEach((w, i) => {
+    if (i) nodes.push(el('span', 'dot', '.'));
+    // tint the check words so it is obvious which carry location
+    nodes.push(i >= parts.length - nChecks ? el('span', 'chk', w) : document.createTextNode(w));
+  });
+  target.replaceChildren(...nodes);
 }
 function el(tag, cls, text) {
   const n = document.createElement(tag);
