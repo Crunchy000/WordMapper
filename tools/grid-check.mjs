@@ -44,10 +44,13 @@ function inspect(w, h) {
   };
 }
 
-function report(label, w, h) {
+function report(label, w, h, inUse = false) {
   const r = inspect(w, h);
   console.log(`${label} ${w}x${h}`);
-  console.log(`  cells ${r.cells} (distinct ${r.distinct}), spare ${r.spare}, discontinuities ${r.breaks}`);
+  // "spare" only means anything for the grid the demo actually uses; for the
+  // historical comparisons below it would be measured against the wrong list.
+  const spare = inUse ? `, spare ${r.spare}` : '';
+  console.log(`  cells ${r.cells} (distinct ${r.distinct})${spare}, discontinuities ${r.breaks}`);
   for (let lvl = 1; lvl <= 3; lvl++) {
     const cw = r.cellW / w ** (lvl - 1);
     const ch = r.cellH / h ** (lvl - 1);
@@ -58,21 +61,21 @@ function report(label, w, h) {
 }
 
 console.log(`word list: ${words.length} entries, ${new Set(words).size} distinct`);
-const short = words.filter((w) => w.length < 4);
-console.log(`outside the stated 4-7 letters: ${short.join(', ') || 'none'}`);
+const wrongLength = words.filter((w) => w.length < 3 || w.length > 7);
+console.log(`outside the stated 3-7 letters: ${wrongLength.join(', ') || 'none'}`);
 console.log(`bbox: ${kmWide.toFixed(0)} km wide x ${kmTall.toFixed(0)} km tall\n`);
 
 console.log(`bbox in demo: ${JSON.stringify(bbox)}`);
 console.log(`grid in demo: ${gw}x${gh}\n`);
 
-report('in use        ', gw, gh);
+report('in use        ', gw, gh, true);
 
 console.log();
-report('old (broken)  ', 41, 40);
+report('41x40 (was)   ', 41, 40);
 console.log();
-report('square-cell L1', 30, 56); // looks good at level 1, aspect compounds badly
+report('30x56         ', 30, 56); // square at level 1, aspect compounds badly
 console.log();
-report('exact fit     ', 23, 71);
+report('23x71         ', 23, 71);
 
 // Assertions, so this is worth running in CI rather than just reading.
 const live = inspect(gw, gh);

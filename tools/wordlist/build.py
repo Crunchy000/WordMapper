@@ -18,7 +18,10 @@ import json, re, math, os, sys, subprocess
 
 BAND = (2.5, 5.0)   # Zipf frequency: below is obscure, above is a function word
 LENGTH = (3, 7)
-COUNT = 1681        # 41**2 -- exactly fills the demo grid, leaving no cell unaddressed
+COUNT = 1681        # 41**2 -- exactly fills the demo grid, leaving no cell
+                    # unaddressed. Override with --count; use a perfect square,
+                    # since a square grid is what keeps cell aspect constant
+                    # across levels (see docs/uk-word-grid-review.md).
 
 # Only Latin-script languages: a loanword in Russian or Japanese is written in
 # another script, so the English spelling would never appear in its corpus.
@@ -115,7 +118,7 @@ def inflected(w, nouns, verbs):
         return True
     return False
 
-def main():
+def main(count=COUNT):
     from wordfreq import zipf_frequency
     src = load()
     nouns, verbs, proper, senses, hyper = wordnet(src['wndir'])
@@ -168,7 +171,9 @@ def main():
     # Truncating costs precision but sharply improves word quality: the tail of
     # the selection is whatever survived the distinctness rules, not good words.
     full = len(out)
-    out = out[:COUNT]
+    if count > full:
+        sys.exit(f'Only {full:,} words survived selection; cannot supply {count:,}.')
+    out = out[:count]
     n = len(out)
     box = 9.92141e11  # UK + Ireland bounding box, m^2
     mean = sum(intl[w] for w in out) / n
@@ -179,4 +184,11 @@ def main():
           file=sys.stderr)
 
 if __name__ == '__main__':
-    main()
+    n = COUNT
+    if '--count' in sys.argv:
+        n = int(sys.argv[sys.argv.index('--count') + 1])
+        root = math.isqrt(n)
+        if root * root != n:
+            print(f'warning: {n:,} is not a perfect square; a {root}x{root + 1} grid '
+                  'makes cell aspect drift with depth', file=sys.stderr)
+    main(n)

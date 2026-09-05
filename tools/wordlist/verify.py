@@ -8,7 +8,6 @@ so checking every pair here confirms that optimisation rather than trusting it.
 """
 import json, re, os, subprocess, sys, math
 
-GRID = 41                    # demo grid is GRID x GRID, so we want GRID**2 words
 BOX_M2 = 9.92141e11          # UK + Ireland bounding box
 
 
@@ -62,9 +61,12 @@ def main(path):
     n = len(words)
     print(f'{n:,} words, {n * (n - 1) // 2:,} pairs checked')
     print(f'3-word cell over UK+Ireland: {math.sqrt(BOX_M2 / n ** 3):.2f} m')
-    if n != GRID ** 2:
-        print(f'NOTE: {n:,} words for a {GRID}x{GRID} grid leaves '
-              f'{GRID ** 2 - n:,} cells unaddressed')
+    root = math.isqrt(n)
+    if root * root == n:
+        print(f'exactly {root}x{root} — every grid cell gets a word')
+    else:
+        print(f'NOTE: {n:,} is not a perfect square; nearest is {root}x{root} '
+              f'= {root ** 2:,}, leaving {n - root ** 2:,} words unused')
     if problems:
         print(f'\nFAIL: {len(problems)} problem(s)')
         print('\n'.join('  ' + p for p in problems[:20]))

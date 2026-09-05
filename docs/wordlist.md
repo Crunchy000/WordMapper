@@ -1,9 +1,17 @@
 # Word list hunt
 
 Notes from building a soundalike-free replacement for the 1,633-word Tirosh
-list. Build with `python3 tools/wordlist/build.py`, check with
-`python3 tools/wordlist/verify.py data/wordlist.json`. The result is committed
-as [`data/wordlist.json`](../data/wordlist.json) — **1,681 words**, exactly 41².
+list. Build with `python3 tools/wordlist/build.py [--count N]`, check with
+`python3 tools/wordlist/verify.py <list>`. Two lists are committed, both exact
+squares so every grid cell gets a word:
+
+| List | Words | Grid | 3-word cell | Weakest word |
+|---|---|---|---|---|
+| [`wordlist.json`](../data/wordlist.json) | 1,681 | 41×41 | 14.45 m | 9 of 26 languages |
+| [`wordlist-2809.json`](../data/wordlist-2809.json) | 2,809 | 53×53 | 6.69 m | 1 of 26 languages |
+
+They are nested — the 1,681 is a strict subset of the 2,809, since both are
+prefixes of the same ranked selection. **The demo uses the larger one.**
 
 ## Sources
 
@@ -102,15 +110,24 @@ truncating trades precision for quality, and the exchange rate is steep:
 
 **1,681 — exactly the 41² needed to leave no grid cell unaddressed — is also
 where word quality is still good.** Every word in it is known in at least 9 of 26
-languages. Pushing to 2,880 for 6.4 m admits words one language in 26 knows.
+languages. Pushing further admits words one language in 26 knows.
 
-That is a happy coincidence rather than a designed one, and it settles the
-question: take the 1,681.
+Both endpoints are worth having, which is why both are committed. The shipped
+choice for the demo is **2,809 = 53²**, buying 6.69 m at the cost of a tail
+containing `zircon`, `yeshiva` and `wingman`. Anyone who would rather have
+uniformly recognisable words takes the 1,681 and accepts 14.45 m.
+
+The grid must stay a **perfect square** either way: a square grid is what holds
+cell aspect constant across levels, and an exact fit to the word count is what
+leaves no ground unaddressable. 53×53 was the largest square available, since
+54² = 2,916 exceeds the 2,880 words that survived selection.
 
 ## Conclusions
 
-**The coverage hole closes cleanly.** 1,681 words removes the 8.3% of ground with
-no valid 3-word address, with no change to address length and no loss of quality.
+**The coverage hole is closed.** An exact word-per-cell fit removes the 8.3% of
+ground that had no valid 3-word address. The demo's `break` statement, which
+caused it, is gone — replaced by a guard that throws if the grid and the word
+list ever drift apart again.
 
 **3 m at three words is not reachable.** It needs 4,795 words; the pipeline's
 absolute ceiling is 2,880, and that already includes words like `trundle`.
@@ -132,5 +149,8 @@ which is reassuring about both.
   not diseases, weapons or crimes. Tirosh clearly had a human pass here.
 - **British vs American spellings** (`centre`/`center`) are separate words; one
   should be picked per pair.
-- **Swapping the list into the demo** — `data/wordlist.json` is not yet wired in;
-  `demos/uk-word-grid.html` still carries the inline Tirosh list.
+- **`zaire` slipped through the proper-noun filter** (WordNet lists it lowercase
+  as a currency unit). There are likely a few more of these.
+- **Rendering cost.** At 2,809 words the demo now draws up to 8,428 rectangles
+  across three levels, up from 4,900. Issue 13 in the demo review — switching to
+  the canvas renderer — matters more than it did.
