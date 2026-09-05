@@ -66,9 +66,28 @@ console.log(`bbox in demo: ${JSON.stringify(bbox)}`);
 console.log(`grid in demo: ${gw}x${gh}\n`);
 
 report('in use        ', gw, gh);
+
 console.log();
 report('old (broken)  ', 41, 40);
 console.log();
 report('square-cell L1', 30, 56); // looks good at level 1, aspect compounds badly
 console.log();
 report('exact fit     ', 23, 71);
+
+// Assertions, so this is worth running in CI rather than just reading.
+const live = inspect(gw, gh);
+const problems = [];
+if (live.breaks > 0)
+  problems.push(`the ${gw}x${gh} Hilbert path has ${live.breaks} discontinuity/ies`);
+if (live.cells < words.length)
+  problems.push(`grid holds ${live.cells} cells but the word list has ${words.length} entries`);
+if (live.distinct !== live.cells)
+  problems.push(`Hilbert path revisits cells (${live.cells} steps, ${live.distinct} distinct)`);
+if (gw !== gh)
+  problems.push(`grid is not square (${gw}x${gh}), so cell aspect compounds with depth`);
+if (problems.length) {
+  console.error('\nFAIL:\n' + problems.map((p) => `  - ${p}`).join('\n'));
+  process.exitCode = 1;
+} else {
+  console.log('\nOK: grid is square, continuous, and large enough for the word list.');
+}

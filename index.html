@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WordMapper — locations as memorable words</title>
+<meta name="description" content="Encoding geographic coordinates as short, memorable word sequences, using a Hilbert curve over a nested grid.">
+<style>
+  :root {
+    --bg: #fbfbf9; --fg: #1c1c1a; --muted: #5c5c56; --rule: #e2e2dc;
+    --card: #ffffff; --accent: #1a5c4a; --accent-fg: #ffffff; --code-bg: #f0f0ea;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #16171a; --fg: #e8e8e4; --muted: #a0a099; --rule: #2c2e33;
+      --card: #1d1f23; --accent: #5ec9a6; --accent-fg: #10231d; --code-bg: #24262b;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 0 24px; }
+  header { padding: 72px 0 40px; border-bottom: 1px solid var(--rule); }
+  h1 { margin: 0 0 12px; font-size: clamp(30px, 6vw, 42px); letter-spacing: -0.02em; line-height: 1.15; }
+  .tagline { margin: 0; font-size: 19px; color: var(--muted); max-width: 34em; }
+  .addr {
+    display: inline-block; margin: 28px 0 0; padding: 10px 16px;
+    background: var(--code-bg); border-radius: 8px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 18px; letter-spacing: 0.01em;
+  }
+  .addr span { color: var(--muted); }
+  h2 { margin: 48px 0 14px; font-size: 21px; letter-spacing: -0.01em; }
+  p { margin: 0 0 16px; }
+  a { color: var(--accent); }
+  .cta {
+    display: inline-block; margin: 24px 0 8px; padding: 12px 22px;
+    background: var(--accent); color: var(--accent-fg); text-decoration: none;
+    border-radius: 8px; font-weight: 600;
+  }
+  .cta:hover { opacity: 0.9; }
+  .note { font-size: 14px; color: var(--muted); margin-top: 10px; }
+  .scroll { overflow-x: auto; margin: 0 0 8px; }
+  table { border-collapse: collapse; width: 100%; font-size: 15px; min-width: 380px; }
+  th, td { text-align: left; padding: 9px 14px 9px 0; border-bottom: 1px solid var(--rule); }
+  th { font-weight: 600; color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; }
+  td.num { font-variant-numeric: tabular-nums; }
+  .eq {
+    background: var(--card); border: 1px solid var(--rule); border-radius: 8px;
+    padding: 18px 20px; margin: 20px 0;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 15px;
+  }
+  ul { padding-left: 20px; margin: 0 0 16px; }
+  li { margin-bottom: 8px; }
+  footer { margin: 64px 0 48px; padding-top: 24px; border-top: 1px solid var(--rule); font-size: 14px; color: var(--muted); }
+  footer a { color: var(--muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <h1>WordMapper</h1>
+    <p class="tagline">Encoding geographic coordinates as short, memorable word sequences — an experiment in whether a small, carefully chosen vocabulary can beat a large careless one.</p>
+    <div class="addr">piano<span>.</span>tango<span>.</span>mango</div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <h2>The demo</h2>
+  <p>An interactive grid over the UK and Ireland. Click a cell to pick a word; each
+  click subdivides that cell with the same grid, so every extra word refines the
+  address. Three words gets you to about 12 × 18 m.</p>
+  <a class="cta" href="demos/uk-word-grid.html">Open the demo →</a>
+  <p class="note">Loads Leaflet and OpenStreetMap tiles from a CDN, so it needs network access.</p>
+
+  <h2>How it works</h2>
+  <p>The bounding box is divided into a 41 × 41 grid. Cells are numbered along a
+  <a href="https://github.com/jakubcerveny/gilbert">generalised Hilbert curve</a>, so
+  cells that are adjacent in space are adjacent in the numbering. Each index picks a
+  word from the 1,633-word Tirosh mnemonic list, chosen so that no two entries sound
+  alike.</p>
+
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Words</th><th>Cell size</th><th>Roughly</th></tr></thead>
+    <tbody>
+      <tr><td class="num">1</td><td class="num">19.7 × 29.9 km</td><td>a county</td></tr>
+      <tr><td class="num">2</td><td class="num">482 × 730 m</td><td>a neighbourhood</td></tr>
+      <tr><td class="num">3</td><td class="num">11.7 × 17.8 m</td><td>a building</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>Because each word strictly subdivides the previous cell, every prefix is already
+  a valid coarser address. A truncated address is degraded, not invalid.</p>
+
+  <h2>Why a small word list</h2>
+  <p>For an area <em>A</em> addressed with <em>L</em> words from a list of <em>N</em>:</p>
+
+  <div class="eq">cell side = sqrt( A / N<sup>L</sup> )</div>
+
+  <p>Coverage is cheap — resolution scales with the square root of area, so doubling
+  the area costs only 41 % in cell size. The vocabulary and the address length are the
+  exponential levers. Grid dimensions do not appear at all: they change the
+  <em>shape</em> of cells, never their area.</p>
+
+  <p>That reframes the usual trade. Reaching 3 m worldwide needs about 38,000 words at
+  three words per address — or about 2,750 at four. what3words took the first route.
+  The second keeps the property that makes a mnemonic list worth having:</p>
+
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Address</th><th>Whole globe</th><th>Land only</th></tr></thead>
+    <tbody>
+      <tr><td class="num">3 words</td><td class="num">342 m</td><td class="num">185 m</td></tr>
+      <tr><td class="num">4 words</td><td class="num">8.5 m</td><td class="num">4.6 m</td></tr>
+      <tr><td class="num">5 words</td><td class="num">21 cm</td><td class="num">11 cm</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>Global coverage does not cost resolution. It costs one more word.</p>
+
+  <h2>Reading</h2>
+  <ul>
+    <li><a href="https://github.com/Crunchy000/WordMapper/blob/main/docs/coverage.md">Coverage and resolution</a> — how far the scheme stretches, and what global would take.</li>
+    <li><a href="https://github.com/Crunchy000/WordMapper/blob/main/docs/uk-word-grid-review.md">Demo review</a> — known issues and proposed improvements.</li>
+    <li><a href="https://github.com/Crunchy000/WordMapper">Source on GitHub</a>.</li>
+  </ul>
+
+</main>
+
+<footer class="wrap">
+  MIT licensed. Word list from the
+  <a href="https://web.archive.org/web/20090918202746/http://tothink.com/mnemonic/">Tirosh mnemonic encoding</a>.
+</footer>
+
+</body>
+</html>
