@@ -1,43 +1,53 @@
 # Word list hunt
 
 Notes from building a soundalike-free replacement for the 1,633-word Tirosh
-list. Reproduce with `python3 tools/wordlist/build.py`; the result is committed
-as [`data/candidate-wordlist.json`](../data/candidate-wordlist.json).
+list. Build with `python3 tools/wordlist/build.py`, check with
+`python3 tools/wordlist/verify.py data/wordlist.json`. The result is committed
+as [`data/wordlist.json`](../data/wordlist.json) — **1,681 words**, exactly 41².
 
 ## Sources
 
-All of these install directly — pypi and the npm registry are reachable:
+All install directly — pypi and the npm registry are reachable:
 
 | Source | What it gives |
 |---|---|
 | `an-array-of-english-words` (npm) | 274,937 English words |
 | `cmu-pronouncing-dictionary` (npm) | 135,155 words as ARPAbet phonemes |
-| `wordnet-db` (npm) | 55,491 single-word noun lemmas, sense categories, capitalisation |
-| `wordfreq` (pypi) | Zipf frequency, for "would anyone recognise this?" |
+| `wordnet-db` (npm) | 55,491 noun lemmas, hypernym graph, capitalisation |
+| `wordfreq` (pypi) | Word frequency in 42 languages |
 | `naughty-words`, `profane-words` (npm) | 3,129 blocked terms |
 
 The CMU dictionary is the important one. It gives real pronunciations, so
 `sail` and `sale` both come out as `S EY1 L` and can be caught as homophones —
-something no spelling-based rule finds.
+something no spelling rule finds. (`flour`/`flower` too.)
 
 ## Method
 
-Two ideas do the work.
-
 **Compare pronunciations, not spellings.** Each word becomes its stress-stripped
-ARPAbet phoneme sequence, with one character substituted per phoneme so ordinary
-edit distance applies to the *sequence*. Two words are rejected as confusable if
-their phoneme sequences are within one edit.
+ARPAbet phoneme sequence, one character per phoneme, so ordinary edit distance
+applies to the *sequence*. Two words are rejected if their pronunciations are
+within one edit — not just identical.
 
 **Use the deletion trick to avoid O(n²).** Two strings are within edit distance 1
-if and only if their sets of one-character deletions intersect. So each accepted
-word contributes its deletion set to a running index, and each candidate is a
-few set lookups rather than millions of comparisons.
+if and only if their sets of one-character deletions intersect. Each accepted
+word adds its deletion set to a running index, so each candidate costs a few set
+lookups instead of millions of comparisons. `verify.py` then checks all 1.4M
+pairs brute-force, to confirm the optimisation rather than trust it.
 
-Selection is greedy in descending frequency, so when two words collide the more
-familiar one wins.
+**Exclude concepts via the hypernym graph, not a blocklist.** Words named in
+`BAD_ROOTS` (disease, weapon, crime, body part, …) contribute all their senses as
+roots, and anything beneath them in WordNet's hypernym graph is dropped. This
+generalises where a list cannot: `leprosy`, `hernia`, `apnea` and `blister` are
+all caught as diseases without any of them being listed.
 
-### What gets filtered, and why
+**Measure international recognisability rather than judging it.** Tirosh
+preferred words legible to non-native speakers. `wordfreq` covers 26 Latin-script
+languages, so each word is scored by how many of them know it — `piano`, `hotel`,
+`taxi` and `radio` score 26/26; `soapbox` and `trundle` score 1/26. Only
+Latin-script languages count: a loanword in Russian or Japanese is written in
+another script, so the English spelling would never appear in its corpus.
+
+### What gets filtered
 
 | Gate | Remaining |
 |---|---|
@@ -46,75 +56,81 @@ familiar one wins.
 | Has a CMU pronunciation | 13,153 |
 | Not a stopword | 13,128 |
 | Not a proper noun | 10,270 |
-| Not offensive | 10,103 |
+| Not on a profanity list | 10,103 |
 | Not an inflected form | 8,654 |
+| Not a sensitive concept | 7,924 |
+| Frequency band (Zipf 2.5–5.0) | 6,053 |
+| **Survives distinctness rules** | **2,880** |
 
-Requiring a **WordNet noun lemma** is the single most useful gate: it removes
-function words and inflections in one move, because WordNet indexes base forms.
+Requiring a **WordNet noun lemma** is the highest-value gate: it removes function
+words and inflections together, because WordNet indexes base forms.
 
-**Proper nouns** are detected from WordNet's own data rather than a list — a
-lemma that never appears lowercase in any synset is a proper noun. That catches
-`poulenc`, `saratov`, `ustinov`, `tlingit`.
+**Proper nouns come from WordNet's own data** — a lemma never seen lowercase in
+any synset is one. That caught `poulenc`, `saratov`, `ustinov`, `tlingit`.
 
-**Frequency is a band, not a floor** (Zipf 2.5–5.0). A floor alone leaves
-`one`, `will`, `time`, `people` at the top, which are too generic to be
-memorable. Tirosh's own words sit in this band: `piano` 4.31, `tango` 3.58,
-`cobalt` 3.37, `gizmo` 2.61.
+**Frequency is a band, not a floor.** A floor alone leaves `one`, `will`, `time`,
+`people` at the top, too generic to be memorable. Tirosh's words sit in this
+band: `piano` 4.31, `tango` 3.58, `cobalt` 3.37, `gizmo` 2.61.
 
-## What it costs
+## What distinctness costs
 
-The interesting result. Starting from the same 6,660-word pool:
+The main result. From the same 6,053-word pool:
 
 | Rule | Words | 3-word cell |
 |---|---|---|
-| Reject homophones only | 6,405 | 1.94 m |
-| + no 1-letter neighbours | 3,849 | 4.17 m |
-| + no 1-phoneme neighbours | 3,299 | 5.26 m |
-| **Both (shipped)** | **3,015** | **6.02 m** |
+| Reject homophones only | 5,829 | 2.24 m |
+| + no 1-letter neighbours | 3,613 | 4.59 m |
+| + no 1-phoneme neighbours | 3,110 | 5.74 m |
+| **Both (shipped)** | **2,880** | **6.44 m** |
 
 **Phonetic distinctness, not vocabulary size, is the binding constraint.**
-Rejecting outright homophones costs almost nothing — 255 words. Requiring that
-no two words be within *one phoneme* of each other costs more than half the
-list. That single rule is the whole story.
+Rejecting outright homophones costs 224 words — nothing. Requiring that no two
+words be within *one phoneme* costs nearly half the pool. That single rule is the
+whole story.
 
-Loosening the frequency band buys a little more, at a visible cost in quality:
+## The quality dial
 
-| Band | Words | 3-word cell | Rarest kept |
-|---|---|---|---|
-| 3.0–5.0 | 2,328 | 8.87 m | `soloist`, `stifle` |
-| **2.5–5.0** | **3,015** | **6.02 m** | `sherbet`, `soapbox` |
-| 2.0–5.0 | 3,443 | 4.93 m | `macrame`, `platen` |
-| 1.5–5.0 | 3,633 | 4.55 m | `redpoll`, `baldric` |
+The tail of the selection is whatever survived the rules, not good words. So
+truncating trades precision for quality, and the exchange rate is steep:
+
+| Take top | 3-word cell | Mean languages | Worst word | Rarest kept |
+|---|---|---|---|---|
+| **1,681** | **14.45 m** | **18.2/26** | **9/26** | `snooker`, `equinox` |
+| 2,000 | 11.14 m | 16.4/26 | 5/26 | `busby`, `despot` |
+| 2,400 | 8.47 m | 14.1/26 | 2/26 | `crozier`, `meiosis` |
+| 2,880 | 6.44 m | 12.0/26 | 1/26 | `soapbox`, `trundle` |
+
+**1,681 — exactly the 41² needed to leave no grid cell unaddressed — is also
+where word quality is still good.** Every word in it is known in at least 9 of 26
+languages. Pushing to 2,880 for 6.4 m admits words one language in 26 knows.
+
+That is a happy coincidence rather than a designed one, and it settles the
+question: take the 1,681.
 
 ## Conclusions
 
-**Closing the coverage hole is comfortably solved.** 1,681 words (41²) removes
-the 8.3% of unaddressable ground, and even the strictest, highest-quality
-setting yields 2,328 — well past that, with room to spare.
+**The coverage hole closes cleanly.** 1,681 words removes the 8.3% of ground with
+no valid 3-word address, with no change to address length and no loss of quality.
 
-**3 m at three words is not reachable.** It needs 4,795 words. The best any
-setting produces is 3,633, and that only by admitting words like `baldric`. The
-honest figure for a strict, genuinely soundalike-free list is **3,015 words →
-about 6 m**.
+**3 m at three words is not reachable.** It needs 4,795 words; the pipeline's
+absolute ceiling is 2,880, and that already includes words like `trundle`.
 
-So the trade is now quantified: **you cannot have what3words precision *and*
+So the trade is quantified: **you cannot have what3words precision *and*
 soundalike-free words in three words.** Phonetic distinctness puts a floor of
-roughly 6 m on three-word UK addressing. Getting below it means either relaxing
-distinctness — which is the one property that makes this scheme worth building —
-or spending a fourth word.
+roughly 6 m on three-word UK addressing, and a defensible-quality floor nearer
+14 m. Below that you either relax distinctness — the one property that makes the
+scheme worth building — or spend a fourth word.
+
+**Independent validation:** 616 of the 1,681 words (37%) also appear in Tirosh.
+The pipeline rediscovered a third of a hand-curated list from mechanical rules,
+which is reassuring about both.
 
 ## Still to do
 
-The candidate list is **not finished**. Mechanical filtering has taken it as far
-as it goes; what remains needs human judgement:
-
-- **Sensitive and unpleasant words.** The profanity lists are passed, but
-  `gun`, `cancer`, `disease`, `leprosy`, `hernia` and similar survive. They are
-  not profane, they are just wrong for a friendly address scheme. Tirosh clearly
-  had a human pass here.
-- **Politically loaded and identity terms** need the same review.
-- **British vs American spellings** (`centre`/`center`) are treated as separate
-  words; one should be picked per pair.
-- **International recognisability.** Tirosh favoured words legible to non-native
-  English speakers. Zipf frequency is an English-only proxy; `wordfreq` covers
-  other languages and could score cross-linguistic familiarity directly.
+- **A human read-through.** The hypernym filter is good but not a substitute for
+  judgement; words like `despot`, `zealot` and `addict` survive because they are
+  not diseases, weapons or crimes. Tirosh clearly had a human pass here.
+- **British vs American spellings** (`centre`/`center`) are separate words; one
+  should be picked per pair.
+- **Swapping the list into the demo** — `data/wordlist.json` is not yet wired in;
+  `demos/uk-word-grid.html` still carries the inline Tirosh list.

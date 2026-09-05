@@ -54,12 +54,18 @@ re-run the workflow and it will publish.
 
 ## Word list
 
-`python3 tools/wordlist/build.py` builds a candidate mnemonic word list, using
-CMU pronunciations to reject words that sound alike and WordNet to reject
-function words, inflections and proper nouns. The output is committed as
-[`data/candidate-wordlist.json`](data/candidate-wordlist.json) — 3,015 words,
-pending a human curation pass (see the doc). It needs `pip install wordfreq`
-and a few npm packages, listed in the script's docstring.
+[`data/wordlist.json`](data/wordlist.json) is a 1,681-word mnemonic list — exactly
+41², so every grid cell gets a word. No two entries are within one edit of each
+other in spelling *or* pronunciation, and every word is known in at least 9 of 26
+Latin-script languages.
+
+- `python3 tools/wordlist/build.py` rebuilds it from CMU pronunciations, WordNet
+  and `wordfreq`. Dependencies are listed in the script's docstring.
+- `python3 tools/wordlist/verify.py data/wordlist.json` checks all 1.4M pairs
+  brute-force and exits non-zero on any collision.
+
+It still wants a human read-through, and is not yet wired into the demo — see
+[`docs/wordlist.md`](docs/wordlist.md).
 
 [gilbert]: https://github.com/jakubcerveny/gilbert
 
