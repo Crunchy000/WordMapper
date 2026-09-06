@@ -27,10 +27,16 @@ jobs:
         with:
           node-version: 'lts/*'
 
-      # Fails the build if the demo's grid stops being square, continuous, or
-      # large enough for the word list.
-      - name: Check grid geometry
-        run: node tools/grid-check.mjs
+      - name: Install codec dependencies
+        run: npm install --prefix tools/gridcode --no-audit --no-fund
+
+      # The demo carries its own JavaScript port of the codec. Fail the build if
+      # it stops agreeing with the Python reference, or stops round-tripping.
+      - name: Check demo codec against the reference
+        run: node tools/gridcode/check-demo.mjs
+
+      - name: Check the scheme
+        run: python3 tools/gridcode/test_bip39grid.py
 
       - name: Assemble site
         run: |

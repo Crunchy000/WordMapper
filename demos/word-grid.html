@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Word grid — 70 km lattice</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+  html, body { margin: 0; height: 100%; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  #map { position: absolute; inset: 0; background: #dfe3e6; }
+  #hud { position: absolute; z-index: 1000; top: 14px; left: 14px; pointer-events: none;
+         max-width: calc(100vw - 28px); }
+  #card { pointer-events: auto; display: inline-block; background: rgba(255,255,255,.95);
+          backdrop-filter: blur(6px); border-radius: 10px; padding: 13px 16px;
+          box-shadow: 0 1px 3px rgba(0,0,0,.12), 0 6px 20px rgba(0,0,0,.10); }
+  #addr { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+          font-size: 20px; color: #16171a; word-break: break-word; }
+  #addr .dot { color: #9a9a94; }
+  #addr .chk { color: #1a5c4a; }
+  .hint { font-family: inherit; font-size: 15px; color: #5c5c56; }
+  #meta { margin-top: 5px; font-size: 12px; color: #5c5c56; }
+  .row { margin-top: 9px; padding-top: 8px; border-top: 1px solid #e6e6e0;
+         font-size: 12px; color: #5c5c56; }
+  label.opt { display: block; margin-top: 4px; }
+  input[type=text] { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+          font-size: 13px; padding: 4px 6px; width: 15.5em; border: 1px solid #ccc; border-radius: 5px; }
+  button { font: inherit; font-size: 12px; padding: 4px 9px; border-radius: 5px;
+           border: 1px solid #ccc; background: #fff; cursor: pointer; }
+  #err { color: #a8322a; margin-top: 4px; min-height: 1em; }
+  #tip { position: absolute; z-index: 1100; pointer-events: none; transform: translate(-50%,-140%);
+         background: #16171a; color: #fff; border-radius: 5px; padding: 3px 8px; font-size: 12px;
+         white-space: nowrap; }
+</style>
+</head>
+<body>
+
+<div id="map"></div>
+<div id="hud">
+  <div id="card">
+    <div id="addr"><span class="hint">Click anywhere on the map</span></div>
+    <div id="meta"></div>
+    <div class="row">
+      <label class="opt"><input type="checkbox" id="check8"> 8 check bits (12 m cell, catches 99.6% of wrong words)</label>
+      <label class="opt"><input type="checkbox" id="showreps" checked> show where this address repeats</label>
+    </div>
+    <div class="row">
+      resolve an address near the map centre:<br>
+      <input type="text" id="dec" placeholder="shoulder.few.lottery" autocomplete="off">
+      <button id="go">go</button>
+      <div id="err"></div>
+    </div>
+  </div>
+</div>
+<div id="tip" hidden></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// The BIP-39 English list: exactly 2048 words, so exactly 11 bits each.
+const WORDS = ["abandon", "ability", "able", "about", "above", "absent", "absorb", "abstract", "absurd", "abuse", "access", "accident", "account", "accuse", "achieve", "acid", "acoustic", "acquire", "across", "act", "action", "actor", "actress", "actual", "adapt", "add", "addict", "address", "adjust", "admit", "adult", "advance", "advice", "aerobic", "affair", "afford", "afraid", "again", "age", "agent", "agree", "ahead", "aim", "air", "airport", "aisle", "alarm", "album", "alcohol", "alert", "alien", "all", "alley", "allow", "almost", "alone", "alpha", "already", "also", "alter", "always", "amateur", "amazing", "among", "amount", "amused", "analyst", "anchor", "ancient", "anger", "angle", "angry", "animal", "ankle", "announce", "annual", "another", "answer", "antenna", "antique", "anxiety", "any", "apart", "apology", "appear", "apple", "approve", "april", "arch", "arctic", "area", "arena", "argue", "arm", "armed", "armor", "army", "around", "arrange", "arrest", "arrive", "arrow", "art", "artefact", "artist", "artwork", "ask", "aspect", "assault", "asset", "assist", "assume", "asthma", "athlete", "atom", "attack", "attend", "attitude", "attract", "auction", "audit", "august", "aunt", "author", "auto", "autumn", "average", "avocado", "avoid", "awake", "aware", "away", "awesome", "awful", "awkward", "axis", "baby", "bachelor", "bacon", "badge", "bag", "balance", "balcony", "ball", "bamboo", "banana", "banner", "bar", "barely", "bargain", "barrel", "base", "basic", "basket", "battle", "beach", "bean", "beauty", "because", "become", "beef", "before", "begin", "behave", "behind", "believe", "below", "belt", "bench", "benefit", "best", "betray", "better", "between", "beyond", "bicycle", "bid", "bike", "bind", "biology", "bird", "birth", "bitter", "black", "blade", "blame", "blanket", "blast", "bleak", "bless", "blind", "blood", "blossom", "blouse", "blue", "blur", "blush", "board", "boat", "body", "boil", "bomb", "bone", "bonus", "book", "boost", "border", "boring", "borrow", "boss", "bottom", "bounce", "box", "boy", "bracket", "brain", "brand", "brass", "brave", "bread", "breeze", "brick", "bridge", "brief", "bright", "bring", "brisk", "broccoli", "broken", "bronze", "broom", "brother", "brown", "brush", "bubble", "buddy", "budget", "buffalo", "build", "bulb", "bulk", "bullet", "bundle", "bunker", "burden", "burger", "burst", "bus", "business", "busy", "butter", "buyer", "buzz", "cabbage", "cabin", "cable", "cactus", "cage", "cake", "call", "calm", "camera", "camp", "can", "canal", "cancel", "candy", "cannon", "canoe", "canvas", "canyon", "capable", "capital", "captain", "car", "carbon", "card", "cargo", "carpet", "carry", "cart", "case", "cash", "casino", "castle", "casual", "cat", "catalog", "catch", "category", "cattle", "caught", "cause", "caution", "cave", "ceiling", "celery", "cement", "census", "century", "cereal", "certain", "chair", "chalk", "champion", "change", "chaos", "chapter", "charge", "chase", "chat", "cheap", "check", "cheese", "chef", "cherry", "chest", "chicken", "chief", "child", "chimney", "choice", "choose", "chronic", "chuckle", "chunk", "churn", "cigar", "cinnamon", "circle", "citizen", "city", "civil", "claim", "clap", "clarify", "claw", "clay", "clean", "clerk", "clever", "click", "client", "cliff", "climb", "clinic", "clip", "clock", "clog", "close", "cloth", "cloud", "clown", "club", "clump", "cluster", "clutch", "coach", "coast", "coconut", "code", "coffee", "coil", "coin", "collect", "color", "column", "combine", "come", "comfort", "comic", "common", "company", "concert", "conduct", "confirm", "congress", "connect", "consider", "control", "convince", "cook", "cool", "copper", "copy", "coral", "core", "corn", "correct", "cost", "cotton", "couch", "country", "couple", "course", "cousin", "cover", "coyote", "crack", "cradle", "craft", "cram", "crane", "crash", "crater", "crawl", "crazy", "cream", "credit", "creek", "crew", "cricket", "crime", "crisp", "critic", "crop", "cross", "crouch", "crowd", "crucial", "cruel", "cruise", "crumble", "crunch", "crush", "cry", "crystal", "cube", "culture", "cup", "cupboard", "curious", "current", "curtain", "curve", "cushion", "custom", "cute", "cycle", "dad", "damage", "damp", "dance", "danger", "daring", "dash", "daughter", "dawn", "day", "deal", "debate", "debris", "decade", "december", "decide", "decline", "decorate", "decrease", "deer", "defense", "define", "defy", "degree", "delay", "deliver", "demand", "demise", "denial", "dentist", "deny", "depart", "depend", "deposit", "depth", "deputy", "derive", "describe", "desert", "design", "desk", "despair", "destroy", "detail", "detect", "develop", "device", "devote", "diagram", "dial", "diamond", "diary", "dice", "diesel", "diet", "differ", "digital", "dignity", "dilemma", "dinner", "dinosaur", "direct", "dirt", "disagree", "discover", "disease", "dish", "dismiss", "disorder", "display", "distance", "divert", "divide", "divorce", "dizzy", "doctor", "document", "dog", "doll", "dolphin", "domain", "donate", "donkey", "donor", "door", "dose", "double", "dove", "draft", "dragon", "drama", "drastic", "draw", "dream", "dress", "drift", "drill", "drink", "drip", "drive", "drop", "drum", "dry", "duck", "dumb", "dune", "during", "dust", "dutch", "duty", "dwarf", "dynamic", "eager", "eagle", "early", "earn", "earth", "easily", "east", "easy", "echo", "ecology", "economy", "edge", "edit", "educate", "effort", "egg", "eight", "either", "elbow", "elder", "electric", "elegant", "element", "elephant", "elevator", "elite", "else", "embark", "embody", "embrace", "emerge", "emotion", "employ", "empower", "empty", "enable", "enact", "end", "endless", "endorse", "enemy", "energy", "enforce", "engage", "engine", "enhance", "enjoy", "enlist", "enough", "enrich", "enroll", "ensure", "enter", "entire", "entry", "envelope", "episode", "equal", "equip", "era", "erase", "erode", "erosion", "error", "erupt", "escape", "essay", "essence", "estate", "eternal", "ethics", "evidence", "evil", "evoke", "evolve", "exact", "example", "excess", "exchange", "excite", "exclude", "excuse", "execute", "exercise", "exhaust", "exhibit", "exile", "exist", "exit", "exotic", "expand", "expect", "expire", "explain", "expose", "express", "extend", "extra", "eye", "eyebrow", "fabric", "face", "faculty", "fade", "faint", "faith", "fall", "false", "fame", "family", "famous", "fan", "fancy", "fantasy", "farm", "fashion", "fat", "fatal", "father", "fatigue", "fault", "favorite", "feature", "february", "federal", "fee", "feed", "feel", "female", "fence", "festival", "fetch", "fever", "few", "fiber", "fiction", "field", "figure", "file", "film", "filter", "final", "find", "fine", "finger", "finish", "fire", "firm", "first", "fiscal", "fish", "fit", "fitness", "fix", "flag", "flame", "flash", "flat", "flavor", "flee", "flight", "flip", "float", "flock", "floor", "flower", "fluid", "flush", "fly", "foam", "focus", "fog", "foil", "fold", "follow", "food", "foot", "force", "forest", "forget", "fork", "fortune", "forum", "forward", "fossil", "foster", "found", "fox", "fragile", "frame", "frequent", "fresh", "friend", "fringe", "frog", "front", "frost", "frown", "frozen", "fruit", "fuel", "fun", "funny", "furnace", "fury", "future", "gadget", "gain", "galaxy", "gallery", "game", "gap", "garage", "garbage", "garden", "garlic", "garment", "gas", "gasp", "gate", "gather", "gauge", "gaze", "general", "genius", "genre", "gentle", "genuine", "gesture", "ghost", "giant", "gift", "giggle", "ginger", "giraffe", "girl", "give", "glad", "glance", "glare", "glass", "glide", "glimpse", "globe", "gloom", "glory", "glove", "glow", "glue", "goat", "goddess", "gold", "good", "goose", "gorilla", "gospel", "gossip", "govern", "gown", "grab", "grace", "grain", "grant", "grape", "grass", "gravity", "great", "green", "grid", "grief", "grit", "grocery", "group", "grow", "grunt", "guard", "guess", "guide", "guilt", "guitar", "gun", "gym", "habit", "hair", "half", "hammer", "hamster", "hand", "happy", "harbor", "hard", "harsh", "harvest", "hat", "have", "hawk", "hazard", "head", "health", "heart", "heavy", "hedgehog", "height", "hello", "helmet", "help", "hen", "hero", "hidden", "high", "hill", "hint", "hip", "hire", "history", "hobby", "hockey", "hold", "hole", "holiday", "hollow", "home", "honey", "hood", "hope", "horn", "horror", "horse", "hospital", "host", "hotel", "hour", "hover", "hub", "huge", "human", "humble", "humor", "hundred", "hungry", "hunt", "hurdle", "hurry", "hurt", "husband", "hybrid", "ice", "icon", "idea", "identify", "idle", "ignore", "ill", "illegal", "illness", "image", "imitate", "immense", "immune", "impact", "impose", "improve", "impulse", "inch", "include", "income", "increase", "index", "indicate", "indoor", "industry", "infant", "inflict", "inform", "inhale", "inherit", "initial", "inject", "injury", "inmate", "inner", "innocent", "input", "inquiry", "insane", "insect", "inside", "inspire", "install", "intact", "interest", "into", "invest", "invite", "involve", "iron", "island", "isolate", "issue", "item", "ivory", "jacket", "jaguar", "jar", "jazz", "jealous", "jeans", "jelly", "jewel", "job", "join", "joke", "journey", "joy", "judge", "juice", "jump", "jungle", "junior", "junk", "just", "kangaroo", "keen", "keep", "ketchup", "key", "kick", "kid", "kidney", "kind", "kingdom", "kiss", "kit", "kitchen", "kite", "kitten", "kiwi", "knee", "knife", "knock", "know", "lab", "label", "labor", "ladder", "lady", "lake", "lamp", "language", "laptop", "large", "later", "latin", "laugh", "laundry", "lava", "law", "lawn", "lawsuit", "layer", "lazy", "leader", "leaf", "learn", "leave", "lecture", "left", "leg", "legal", "legend", "leisure", "lemon", "lend", "length", "lens", "leopard", "lesson", "letter", "level", "liar", "liberty", "library", "license", "life", "lift", "light", "like", "limb", "limit", "link", "lion", "liquid", "list", "little", "live", "lizard", "load", "loan", "lobster", "local", "lock", "logic", "lonely", "long", "loop", "lottery", "loud", "lounge", "love", "loyal", "lucky", "luggage", "lumber", "lunar", "lunch", "luxury", "lyrics", "machine", "mad", "magic", "magnet", "maid", "mail", "main", "major", "make", "mammal", "man", "manage", "mandate", "mango", "mansion", "manual", "maple", "marble", "march", "margin", "marine", "market", "marriage", "mask", "mass", "master", "match", "material", "math", "matrix", "matter", "maximum", "maze", "meadow", "mean", "measure", "meat", "mechanic", "medal", "media", "melody", "melt", "member", "memory", "mention", "menu", "mercy", "merge", "merit", "merry", "mesh", "message", "metal", "method", "middle", "midnight", "milk", "million", "mimic", "mind", "minimum", "minor", "minute", "miracle", "mirror", "misery", "miss", "mistake", "mix", "mixed", "mixture", "mobile", "model", "modify", "mom", "moment", "monitor", "monkey", "monster", "month", "moon", "moral", "more", "morning", "mosquito", "mother", "motion", "motor", "mountain", "mouse", "move", "movie", "much", "muffin", "mule", "multiply", "muscle", "museum", "mushroom", "music", "must", "mutual", "myself", "mystery", "myth", "naive", "name", "napkin", "narrow", "nasty", "nation", "nature", "near", "neck", "need", "negative", "neglect", "neither", "nephew", "nerve", "nest", "net", "network", "neutral", "never", "news", "next", "nice", "night", "noble", "noise", "nominee", "noodle", "normal", "north", "nose", "notable", "note", "nothing", "notice", "novel", "now", "nuclear", "number", "nurse", "nut", "oak", "obey", "object", "oblige", "obscure", "observe", "obtain", "obvious", "occur", "ocean", "october", "odor", "off", "offer", "office", "often", "oil", "okay", "old", "olive", "olympic", "omit", "once", "one", "onion", "online", "only", "open", "opera", "opinion", "oppose", "option", "orange", "orbit", "orchard", "order", "ordinary", "organ", "orient", "original", "orphan", "ostrich", "other", "outdoor", "outer", "output", "outside", "oval", "oven", "over", "own", "owner", "oxygen", "oyster", "ozone", "pact", "paddle", "page", "pair", "palace", "palm", "panda", "panel", "panic", "panther", "paper", "parade", "parent", "park", "parrot", "party", "pass", "patch", "path", "patient", "patrol", "pattern", "pause", "pave", "payment", "peace", "peanut", "pear", "peasant", "pelican", "pen", "penalty", "pencil", "people", "pepper", "perfect", "permit", "person", "pet", "phone", "photo", "phrase", "physical", "piano", "picnic", "picture", "piece", "pig", "pigeon", "pill", "pilot", "pink", "pioneer", "pipe", "pistol", "pitch", "pizza", "place", "planet", "plastic", "plate", "play", "please", "pledge", "pluck", "plug", "plunge", "poem", "poet", "point", "polar", "pole", "police", "pond", "pony", "pool", "popular", "portion", "position", "possible", "post", "potato", "pottery", "poverty", "powder", "power", "practice", "praise", "predict", "prefer", "prepare", "present", "pretty", "prevent", "price", "pride", "primary", "print", "priority", "prison", "private", "prize", "problem", "process", "produce", "profit", "program", "project", "promote", "proof", "property", "prosper", "protect", "proud", "provide", "public", "pudding", "pull", "pulp", "pulse", "pumpkin", "punch", "pupil", "puppy", "purchase", "purity", "purpose", "purse", "push", "put", "puzzle", "pyramid", "quality", "quantum", "quarter", "question", "quick", "quit", "quiz", "quote", "rabbit", "raccoon", "race", "rack", "radar", "radio", "rail", "rain", "raise", "rally", "ramp", "ranch", "random", "range", "rapid", "rare", "rate", "rather", "raven", "raw", "razor", "ready", "real", "reason", "rebel", "rebuild", "recall", "receive", "recipe", "record", "recycle", "reduce", "reflect", "reform", "refuse", "region", "regret", "regular", "reject", "relax", "release", "relief", "rely", "remain", "remember", "remind", "remove", "render", "renew", "rent", "reopen", "repair", "repeat", "replace", "report", "require", "rescue", "resemble", "resist", "resource", "response", "result", "retire", "retreat", "return", "reunion", "reveal", "review", "reward", "rhythm", "rib", "ribbon", "rice", "rich", "ride", "ridge", "rifle", "right", "rigid", "ring", "riot", "ripple", "risk", "ritual", "rival", "river", "road", "roast", "robot", "robust", "rocket", "romance", "roof", "rookie", "room", "rose", "rotate", "rough", "round", "route", "royal", "rubber", "rude", "rug", "rule", "run", "runway", "rural", "sad", "saddle", "sadness", "safe", "sail", "salad", "salmon", "salon", "salt", "salute", "same", "sample", "sand", "satisfy", "satoshi", "sauce", "sausage", "save", "say", "scale", "scan", "scare", "scatter", "scene", "scheme", "school", "science", "scissors", "scorpion", "scout", "scrap", "screen", "script", "scrub", "sea", "search", "season", "seat", "second", "secret", "section", "security", "seed", "seek", "segment", "select", "sell", "seminar", "senior", "sense", "sentence", "series", "service", "session", "settle", "setup", "seven", "shadow", "shaft", "shallow", "share", "shed", "shell", "sheriff", "shield", "shift", "shine", "ship", "shiver", "shock", "shoe", "shoot", "shop", "short", "shoulder", "shove", "shrimp", "shrug", "shuffle", "shy", "sibling", "sick", "side", "siege", "sight", "sign", "silent", "silk", "silly", "silver", "similar", "simple", "since", "sing", "siren", "sister", "situate", "six", "size", "skate", "sketch", "ski", "skill", "skin", "skirt", "skull", "slab", "slam", "sleep", "slender", "slice", "slide", "slight", "slim", "slogan", "slot", "slow", "slush", "small", "smart", "smile", "smoke", "smooth", "snack", "snake", "snap", "sniff", "snow", "soap", "soccer", "social", "sock", "soda", "soft", "solar", "soldier", "solid", "solution", "solve", "someone", "song", "soon", "sorry", "sort", "soul", "sound", "soup", "source", "south", "space", "spare", "spatial", "spawn", "speak", "special", "speed", "spell", "spend", "sphere", "spice", "spider", "spike", "spin", "spirit", "split", "spoil", "sponsor", "spoon", "sport", "spot", "spray", "spread", "spring", "spy", "square", "squeeze", "squirrel", "stable", "stadium", "staff", "stage", "stairs", "stamp", "stand", "start", "state", "stay", "steak", "steel", "stem", "step", "stereo", "stick", "still", "sting", "stock", "stomach", "stone", "stool", "story", "stove", "strategy", "street", "strike", "strong", "struggle", "student", "stuff", "stumble", "style", "subject", "submit", "subway", "success", "such", "sudden", "suffer", "sugar", "suggest", "suit", "summer", "sun", "sunny", "sunset", "super", "supply", "supreme", "sure", "surface", "surge", "surprise", "surround", "survey", "suspect", "sustain", "swallow", "swamp", "swap", "swarm", "swear", "sweet", "swift", "swim", "swing", "switch", "sword", "symbol", "symptom", "syrup", "system", "table", "tackle", "tag", "tail", "talent", "talk", "tank", "tape", "target", "task", "taste", "tattoo", "taxi", "teach", "team", "tell", "ten", "tenant", "tennis", "tent", "term", "test", "text", "thank", "that", "theme", "then", "theory", "there", "they", "thing", "this", "thought", "three", "thrive", "throw", "thumb", "thunder", "ticket", "tide", "tiger", "tilt", "timber", "time", "tiny", "tip", "tired", "tissue", "title", "toast", "tobacco", "today", "toddler", "toe", "together", "toilet", "token", "tomato", "tomorrow", "tone", "tongue", "tonight", "tool", "tooth", "top", "topic", "topple", "torch", "tornado", "tortoise", "toss", "total", "tourist", "toward", "tower", "town", "toy", "track", "trade", "traffic", "tragic", "train", "transfer", "trap", "trash", "travel", "tray", "treat", "tree", "trend", "trial", "tribe", "trick", "trigger", "trim", "trip", "trophy", "trouble", "truck", "true", "truly", "trumpet", "trust", "truth", "try", "tube", "tuition", "tumble", "tuna", "tunnel", "turkey", "turn", "turtle", "twelve", "twenty", "twice", "twin", "twist", "two", "type", "typical", "ugly", "umbrella", "unable", "unaware", "uncle", "uncover", "under", "undo", "unfair", "unfold", "unhappy", "uniform", "unique", "unit", "universe", "unknown", "unlock", "until", "unusual", "unveil", "update", "upgrade", "uphold", "upon", "upper", "upset", "urban", "urge", "usage", "use", "used", "useful", "useless", "usual", "utility", "vacant", "vacuum", "vague", "valid", "valley", "valve", "van", "vanish", "vapor", "various", "vast", "vault", "vehicle", "velvet", "vendor", "venture", "venue", "verb", "verify", "version", "very", "vessel", "veteran", "viable", "vibrant", "vicious", "victory", "video", "view", "village", "vintage", "violin", "virtual", "virus", "visa", "visit", "visual", "vital", "vivid", "vocal", "voice", "void", "volcano", "volume", "vote", "voyage", "wage", "wagon", "wait", "walk", "wall", "walnut", "want", "warfare", "warm", "warrior", "wash", "wasp", "waste", "water", "wave", "way", "wealth", "weapon", "wear", "weasel", "weather", "web", "wedding", "weekend", "weird", "welcome", "west", "wet", "whale", "what", "wheat", "wheel", "when", "where", "whip", "whisper", "wide", "width", "wife", "wild", "will", "win", "window", "wine", "wing", "wink", "winner", "winter", "wire", "wisdom", "wise", "wish", "witness", "wolf", "woman", "wonder", "wood", "wool", "word", "work", "world", "worry", "worth", "wrap", "wreck", "wrestle", "wrist", "write", "wrong", "yard", "year", "yellow", "you", "young", "youth", "zebra", "zero", "zone", "zoo"];
+
+const INDEX = new Map(WORDS.map((w, i) => [w, i]));
+
+// --- the scheme ------------------------------------------------------------
+// Must match tools/gridcode/bip39grid.py exactly; a cross-check compares them.
+const R = 6371008.8;
+const K = Math.cos(30 * Math.PI / 180);   // Lambert equal-area standard parallel
+const CHUNK = 70000;                      // metres, in projected (equal-area) units
+const BITS = 11, NWORDS = 3;
+
+const project = (lat, lng) => [R * (lng * Math.PI / 180) * K, R * Math.sin(lat * Math.PI / 180) / K];
+const unproject = (x, y) => [Math.asin(Math.max(-1, Math.min(1, y * K / R))) * 180 / Math.PI,
+                             x / (R * K) * 180 / Math.PI];
+
+function bitOrder(xb, yb) {
+  const o = [];
+  for (let i = Math.max(xb, yb) - 1; i >= 0; i--) {
+    if (i < xb) o.push(['x', i]);
+    if (i < yb) o.push(['y', i]);
+  }
+  return o;
+}
+function splitBits(check) { const p = NWORDS * BITS - check; return [p, (p + 1) >> 1, p >> 1]; }
+
+// 33 bits does not fit a JS number safely, so the index is a BigInt throughout.
+function interleave(x, y, xb, yb) {
+  let v = 0n;
+  for (const [ax, i] of bitOrder(xb, yb)) v = (v << 1n) | (((ax === 'x' ? x : y) >> BigInt(i)) & 1n);
+  return v;
+}
+function deinterleave(v, xb, yb) {
+  const order = bitOrder(xb, yb);
+  let x = 0n, y = 0n;
+  order.forEach(([ax, i], pos) => {
+    const bit = (v >> BigInt(order.length - 1 - pos)) & 1n;
+    if (ax === 'x') x |= bit << BigInt(i); else y |= bit << BigInt(i);
+  });
+  return [x, y];
+}
+// SHA-256 in plain JS. crypto.subtle would be neater but only exists in a
+// secure context, so it is undefined when this file is opened from disk --
+// which would silently break the checksum for anyone who downloads the demo.
+const SHA_K = [
+  0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+  0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+  0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+  0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+  0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+  0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+  0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+  0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+
+function sha256(bytes) {
+  const H = [0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+  const len = bytes.length;
+  const padded = new Uint8Array((((len + 9) >> 6) + 1) << 6);
+  padded.set(bytes);
+  padded[len] = 0x80;
+  new DataView(padded.buffer).setUint32(padded.length - 4, len * 8);
+  const w = new Uint32Array(64);
+  const rr = (x, n) => (x >>> n) | (x << (32 - n));
+  for (let off = 0; off < padded.length; off += 64) {
+    const dv = new DataView(padded.buffer, off, 64);
+    for (let i = 0; i < 16; i++) w[i] = dv.getUint32(i * 4);
+    for (let i = 16; i < 64; i++) {
+      const s0 = rr(w[i-15],7) ^ rr(w[i-15],18) ^ (w[i-15] >>> 3);
+      const s1 = rr(w[i-2],17) ^ rr(w[i-2],19) ^ (w[i-2] >>> 10);
+      w[i] = (w[i-16] + s0 + w[i-7] + s1) >>> 0;
+    }
+    let [a,b,c,d,e,f,g,h] = H;
+    for (let i = 0; i < 64; i++) {
+      const S1 = rr(e,6) ^ rr(e,11) ^ rr(e,25);
+      const ch = (e & f) ^ (~e & g);
+      const t1 = (h + S1 + ch + SHA_K[i] + w[i]) >>> 0;
+      const S0 = rr(a,2) ^ rr(a,13) ^ rr(a,22);
+      const mj = (a & b) ^ (a & c) ^ (b & c);
+      const t2 = (S0 + mj) >>> 0;
+      h = g; g = f; f = e; e = (d + t1) >>> 0;
+      d = c; c = b; b = a; a = (t1 + t2) >>> 0;
+    }
+    [a,b,c,d,e,f,g,h].forEach((v, i) => { H[i] = (H[i] + v) >>> 0; });
+  }
+  return H;
+}
+
+function checksum(position, bits) {
+  if (!bits) return 0n;
+  const bytes = new Uint8Array(8);
+  let p = position;
+  for (let i = 7; i >= 0; i--) { bytes[i] = Number(p & 0xffn); p >>= 8n; }
+  return BigInt(sha256(bytes)[0] >>> (32 - bits));
+}
+
+const mod = (a, n) => ((a % n) + n) % n;
+
+function encode(lat, lng, check) {
+  const [, xb, yb] = splitBits(check);
+  const [x, y] = project(lat, lng);
+  const u = mod(x, CHUNK), v = mod(y, CHUNK);
+  const xi = BigInt(Math.min(Math.floor(u / CHUNK * 2 ** xb), 2 ** xb - 1));
+  const yi = BigInt(Math.min(Math.floor(v / CHUNK * 2 ** yb), 2 ** yb - 1));
+  const position = interleave(xi, yi, xb, yb);
+  const value = (position << BigInt(check)) | checksum(position, check);
+  const out = [];
+  for (let i = 0; i < NWORDS; i++)
+    out.push(WORDS[Number((value >> BigInt(BITS * (NWORDS - 1 - i))) & 0x7ffn)]);
+  return out;
+}
+
+function decode(spoken, nearLat, nearLng, check) {
+  const unknown = spoken.filter((w) => !INDEX.has(w));
+  if (unknown.length) throw new Error(`not BIP-39 words: ${unknown.join(', ')}`);
+  let value = 0n;
+  for (const w of spoken) value = (value << BigInt(BITS)) | BigInt(INDEX.get(w));
+  const position = value >> BigInt(check);
+  if (check && (value & ((1n << BigInt(check)) - 1n)) !== checksum(position, check))
+    throw new Error('checksum failed - a word is wrong');
+  const [, xb, yb] = splitBits(check);
+  const [xi, yi] = deinterleave(position, xb, yb);
+  const u = (Number(xi) + 0.5) / 2 ** xb * CHUNK;
+  const v = (Number(yi) + 0.5) / 2 ** yb * CHUNK;
+  const [nx, ny] = project(nearLat, nearLng);
+  // Pick the lattice square nearest the position hint. This is the whole point:
+  // the square is not in the address, so the hint supplies it.
+  return unproject(Math.floor((nx - u) / CHUNK + 0.5) * CHUNK + u,
+                   Math.floor((ny - v) / CHUNK + 0.5) * CHUNK + v);
+}
+
+// --- map -------------------------------------------------------------------
+const map = L.map('map', { worldCopyJump: true }).setView([51.50072, -0.12456], 6);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  maxZoom: 19,
+}).addTo(map);
+
+const addrEl = document.getElementById('addr');
+const metaEl = document.getElementById('meta');
+const errEl = document.getElementById('err');
+const tipEl = document.getElementById('tip');
+const check8 = document.getElementById('check8');
+const showReps = document.getElementById('showreps');
+
+let marker = null, square = null, repeats = [], point = null;
+const checkBits = () => (check8.checked ? 8 : 0);
+
+function el(tag, cls, text) { const n = document.createElement(tag); n.className = cls; n.textContent = text; return n; }
+
+function renderAddress(parts, check) {
+  const nodes = [];
+  parts.forEach((w, i) => {
+    if (i) nodes.push(el('span', 'dot', '.'));
+    nodes.push(check && i === parts.length - 1 ? el('span', 'chk', w) : document.createTextNode(w));
+  });
+  addrEl.replaceChildren(...nodes);
+}
+
+function squareAround(lat, lng) {
+  const [x, y] = project(lat, lng);
+  const x0 = Math.floor(x / CHUNK) * CHUNK, y0 = Math.floor(y / CHUNK) * CHUNK;
+  const sw = unproject(x0, y0), ne = unproject(x0 + CHUNK, y0 + CHUNK);
+  return [[sw[0], sw[1]], [ne[0], ne[1]]];
+}
+
+function clearOverlays() {
+  repeats.forEach((r) => map.removeLayer(r));
+  repeats = [];
+  if (square) { map.removeLayer(square); square = null; }
+}
+
+function show(lat, lng) {
+  point = [lat, lng];
+  const check = checkBits();
+  const parts = encode(lat, lng, check);
+  renderAddress(parts, check);
+  const [, xb, yb] = splitBits(check);
+  metaEl.textContent = `cell ${(CHUNK / 2 ** xb).toFixed(2)} x ${(CHUNK / 2 ** yb).toFixed(2)} m`
+    + `  ·  ${check ? '8 check bits' : 'no checksum'}`;
+
+  if (marker) map.removeLayer(marker);
+  marker = L.circleMarker([lat, lng], { radius: 6, color: '#a8322a', weight: 2, fillOpacity: .9 }).addTo(map);
+  clearOverlays();
+  square = L.rectangle(squareAround(lat, lng), { color: '#1a5c4a', weight: 2, fill: false, dashArray: '4 3' }).addTo(map);
+
+  if (showReps.checked) {
+    const [x, y] = project(lat, lng);
+    for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) {
+      if (!dx && !dy) continue;
+      const [la, lo] = unproject(x + dx * CHUNK, y + dy * CHUNK);
+      if (Math.abs(la) > 89) continue;
+      const km = map.distance([lat, lng], [la, lo]) / 1000;
+      const m = L.circleMarker([la, lo], { radius: 4, color: '#b8860b', weight: 2, fillOpacity: .7 }).addTo(map);
+      m.on('mouseover', (ev) => {
+        tipEl.textContent = `same address, ${km.toFixed(1)} km away`;
+        tipEl.style.left = `${ev.originalEvent.clientX}px`;
+        tipEl.style.top = `${ev.originalEvent.clientY}px`;
+        tipEl.hidden = false;
+      });
+      m.on('mouseout', () => { tipEl.hidden = true; });
+      repeats.push(m);
+    }
+  }
+}
+
+map.on('click', (e) => { errEl.textContent = ''; show(e.latlng.lat, e.latlng.lng); });
+check8.addEventListener('change', () => { if (point) show(point[0], point[1]); });
+showReps.addEventListener('change', () => { if (point) show(point[0], point[1]); });
+
+document.getElementById('go').addEventListener('click', () => {
+  const raw = document.getElementById('dec').value.trim().toLowerCase();
+  const parts = raw.split(/[.\s,]+/).filter(Boolean);
+  errEl.textContent = '';
+  if (parts.length !== NWORDS) { errEl.textContent = `expected ${NWORDS} words`; return; }
+  try {
+    const c = map.getCenter();
+    const [lat, lng] = decode(parts, c.lat, c.lng, checkBits());
+    map.setView([lat, lng], Math.max(map.getZoom(), 15));
+    show(lat, lng);
+  } catch (e) { errEl.textContent = e.message; }
+});
+
+show(51.50072, -0.12456);
+</script>
+</body>
+</html>

@@ -1,0 +1,142 @@
+[
+ {
+  "lat": 51.50072,
+  "lng": -0.12456,
+  "a0": [
+   "shoulder",
+   "few",
+   "lottery"
+  ],
+  "a8": [
+   "shoulder",
+   "few",
+   "month"
+  ]
+ },
+ {
+  "lat": 51.5055,
+  "lng": -0.0754,
+  "a0": [
+   "success",
+   "chase",
+   "alley"
+  ],
+  "a8": [
+   "success",
+   "chase",
+   "airport"
+  ]
+ },
+ {
+  "lat": 51.17889,
+  "lng": -1.82624,
+  "a0": [
+   "leg",
+   "athlete",
+   "trial"
+  ],
+  "a8": [
+   "leg",
+   "athlete",
+   "wave"
+  ]
+ },
+ {
+  "lat": 55.94859,
+  "lng": -3.19951,
+  "a0": [
+   "machine",
+   "cruise",
+   "bunker"
+  ],
+  "a8": [
+   "machine",
+   "cruise",
+   "brick"
+  ]
+ },
+ {
+  "lat": -33.85678,
+  "lng": 151.21528,
+  "a0": [
+   "approve",
+   "net",
+   "merit"
+  ],
+  "a8": [
+   "approve",
+   "net",
+   "melt"
+  ]
+ },
+ {
+  "lat": 40.68925,
+  "lng": -74.0445,
+  "a0": [
+   "copy",
+   "tissue",
+   "cushion"
+  ],
+  "a8": [
+   "copy",
+   "tissue",
+   "connect"
+  ]
+ },
+ {
+  "lat": 0.0,
+  "lng": 0.0,
+  "a0": [
+   "abandon",
+   "abandon",
+   "abandon"
+  ],
+  "a8": [
+   "abandon",
+   "abandon",
+   "bicycle"
+  ]
+ },
+ {
+  "lat": -45.3,
+  "lng": 170.2,
+  "a0": [
+   "blur",
+   "dose",
+   "animal"
+  ],
+  "a8": [
+   "blur",
+   "dose",
+   "august"
+  ]
+ },
+ {
+  "lat": 60.1,
+  "lng": -2.0,
+  "a0": [
+   "bicycle",
+   "route",
+   "nerve"
+  ],
+  "a8": [
+   "bicycle",
+   "route",
+   "palace"
+  ]
+ },
+ {
+  "lat": 35.68,
+  "lng": 139.77,
+  "a0": [
+   "embody",
+   "tired",
+   "brain"
+  ],
+  "a8": [
+   "embody",
+   "tired",
+   "blush"
+  ]
+ }
+]

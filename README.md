@@ -6,30 +6,29 @@ Experiments in encoding geographic coordinates as short, memorable word sequence
 
 ## Demos
 
-### `demos/uk-word-grid.html`
+### `demos/word-grid.html`
 
-**Superseded.** This demo implements the earlier scheme — a nested grid over a
-UK + Ireland bounding box with a custom 1,849-word list, inlined in the file so
-it still runs standalone. It has not yet been rebuilt on the 70 km lattice
-described in [`docs/grid-scheme.md`](docs/grid-scheme.md).
+The scheme, live. Click for an address; the dashed box is the 70 km square that
+is never transmitted, and the amber dots are the other places the same three
+words land. Check bits are togglable, and addresses can be resolved back.
 
-- The bounding box (49.85–60.90 °N, −11.00–1.80 °E) is divided into a 43×43 grid.
-- Cells are numbered along a [generalised Hilbert curve][gilbert] so that
-  consecutive words correspond to spatially adjacent cells, and nearby places
-  tend to share an address prefix.
-- Each cell index maps to a word from [`data/wordlist.json`](data/wordlist.json)
-  — 43², exactly one word per cell, so no ground is unaddressable.
-- Clicking a cell subdivides it with the same grid, so each additional word
-  refines the address: `word.word.word`.
+It carries its own JavaScript port of the codec, checked against the Python
+reference by `node tools/gridcode/check-demo.mjs` on every push.
 
-[Try it here](https://crunchy000.github.io/WordMapper/demos/uk-word-grid.html), or
-open the file directly in a browser — no build step. It loads Leaflet and
-OpenStreetMap tiles from a CDN, so it needs network access.
+- The world is projected to an equal-area plane and tiled into 70 km squares.
+- **The square is never transmitted.** An address names a point within one, and
+  the listener supplies the square from knowing roughly where they are. That
+  omission is 16.7 bits not spoken, and it is what buys the resolution.
+- Three [BIP-39][bip39] words are 33 bits — 8,589,934,592 points in a square,
+  a 0.755 m cell. Check bits come out of that: 8 bits gives a 12 m cell and
+  catches 99.6 % of wrong words.
 
-Run `node tools/grid-check.mjs` to verify the grid geometry; it reads the word
-list, bounding box and Hilbert implementation out of the demo itself, so it
-cannot drift from what the demo does. It exits non-zero if the grid stops being
-square, continuous, or large enough for the word list, and runs on every push.
+Open the file directly in a browser — no build step, and no secure-context
+requirement, since the SHA-256 is implemented in plain JavaScript rather than
+via `crypto.subtle`. It loads Leaflet and OpenStreetMap tiles from a CDN, so it
+needs network access.
+
+[bip39]: https://github.com/bitcoin/bips/blob/master/bip-0039/bip-0039-wordlists.md
 
 ## Publishing
 
@@ -46,8 +45,8 @@ re-run the workflow and it will publish.
 
 ## Docs
 
-- [`docs/uk-word-grid-review.md`](docs/uk-word-grid-review.md) — known issues and
-  proposed improvements.
+- [`docs/uk-word-grid-review.md`](docs/uk-word-grid-review.md) — a review of the
+  original imported demo. Historical: that demo and its scheme are gone.
 - [`docs/coverage.md`](docs/coverage.md) — how far the scheme stretches: the
   Ireland extension, what global coverage would cost, and the word-list vs
   address-length trade.
@@ -57,23 +56,30 @@ re-run the workflow and it will publish.
 
 ## Word list
 
-[`data/wordlist.json`](data/wordlist.json) is **1,849 everyday words** — 43², so
-every grid cell gets one. No two entries are within one edit of each other in
-spelling *or* pronunciation, and none has a second accepted spelling.
+The **[BIP-39 English list][bip39]** — exactly 2,048 words, so exactly 11 bits
+each, with nothing wasted rounding to a word boundary. It is used as published,
+with no filtering.
 
-The size is the square of a **prime** on purpose. A square grid keeps cell aspect
-constant across levels, and p² with p prime also makes GF(1,849) a real finite
-field, which the self-correcting codec needs. 46² = 2,116 would be a fine grid
-and an impossible field.
+That is a deliberate trade. BIP-39 is designed to be *typed and checksummed*,
+and its guarantee is unique four-letter prefixes, which says nothing about
+sound: the list contains `pair`/`pear`, `peace`/`piece`, `right`/`write` and
+`wear`/`where`, and 53 % of its words have a same-or-one-phoneme twin. So 89.6 %
+of three-word addresses contain a word that one mishearing turns into a
+different *valid* word. **The checksum is doing that work, not the word list** —
+see [`docs/grid-scheme.md`](docs/grid-scheme.md).
 
-- `python3 tools/wordlist/build.py [--count N]` rebuilds it from CMU
-  pronunciations, WordNet and `wordfreq`. Use the square of a prime for `N`.
-- `python3 tools/wordlist/verify.py data/wordlist.json` brute-forces every pair
-  and exits non-zero on any collision.
+## Tools
 
-It still wants a human read-through — see [`docs/wordlist.md`](docs/wordlist.md).
+```
+npm install --prefix tools/gridcode
+python3 tools/gridcode/test_bip39grid.py      # the scheme: round trip, checksums, uniqueness
+node    tools/gridcode/check-demo.mjs         # the demo's JS against the Python reference
+python3 tools/gridcode/build_fixture.py       # regenerate the cross-check fixture
+```
 
-[gilbert]: https://github.com/jakubcerveny/gilbert
+The last two exist because the codec is implemented twice — once in Python as
+the reference, once in JavaScript inside the demo. The cross-check runs on every
+push so they cannot drift apart.
 
 ## Licence
 
