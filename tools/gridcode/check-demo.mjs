@@ -12,11 +12,11 @@ const fixture = JSON.parse(readFileSync(join(here, 'fixture.json'), 'utf8'));
 const words = html.match(/const WORDS = (\[[^\n]*\]);/)[1];
 const start = html.indexOf('const INDEX = new Map');
 const end = html.indexOf('// --- map ---');
-const src = `const WORDS = ${words};\n${html.slice(start, end)}\nexport { encode, decode };`;
+const src = `const WORDS = ${words};\n${html.slice(start, end)}\nexport { encode, decode, covers };`;
 const mod = await import('data:text/javascript,' + encodeURIComponent(src));
 
 let bad = 0;
-for (const c of fixture) {
+for (const c of fixture.points) {
   for (const [n, expected] of Object.entries(c.words)) {
     const got = mod.encode(c.lat, c.lng, Number(n));
     if (got.join('.') !== expected.join('.')) {
@@ -38,6 +38,20 @@ for (const c of fixture) {
   try { mod.decode(c.words[String(Object.keys(c.words).length)]); }
   catch (e) { bad++; console.error(`  CHECKSUM ${c.lat},${c.lng}: ${e.message}`); }
 }
-console.log(`demo codec vs python reference: ${fixture.length} points x ${Object.keys(fixture[0].words).length} lengths`);
+// Coverage must stop in the same place in both ports. An outside point that
+// slipped through would be given an address belonging to somewhere inside the
+// box, and would pass its own checksum.
+for (const c of fixture.outside) {
+  if (mod.covers(c.lat, c.lng)) {
+    bad++; console.error(`  COVERS an outside point ${c.lat},${c.lng}`);
+    continue;
+  }
+  let refused = false;
+  try { mod.encode(c.lat, c.lng, 4); } catch { refused = true; }
+  if (!refused) { bad++; console.error(`  ENCODED an outside point ${c.lat},${c.lng}`); }
+}
+console.log(`demo codec vs python reference: ${fixture.points.length} points x `
+  + `${Object.keys(fixture.points[0].words).length} lengths, `
+  + `${fixture.outside.length} outside refused`);
 if (bad) { console.error(`FAIL: ${bad} problem(s)`); process.exit(1); }
-console.log('OK: agrees with the reference, truncation holds, checksums verify');
+console.log('OK: agrees with the reference, truncation holds, checksums verify, coverage matches');

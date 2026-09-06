@@ -28,6 +28,15 @@ interleave order per length instead does not work: 11 bits per word is odd, so
 33 bits splits the axes 17/16 while 22 and 44 split evenly, and the three
 orders are unrelated sequences rather than prefixes of one another.
 
+COVERAGE. The box is the whole world as far as this codec is concerned, so a
+coordinate outside it has no address and encode() refuses it. That refusal is
+load-bearing rather than tidiness: decode maps addresses onto the box and
+nowhere else, so a point outside would otherwise alias onto some real address
+inside it -- silently, and passing its own checksum, because the checksum
+covers transmission of the address and cannot know where the caller was
+standing. Widening coverage means widening the box, which costs resolution
+everywhere; see docs/coverage.md.
+
 CHECKSUMS. A checksum cannot live at every length: its bits would sit exactly
 where the next word's position bits must go. Rather than pay for one at every
 length, the four-word form carries it inside its own last word, which is why
@@ -77,11 +86,31 @@ _X0, _Y0 = project(BOX['latMin'], BOX['lngMin'])
 _X1, _Y1 = project(BOX['latMax'], BOX['lngMax'])
 
 
+class OutsideBox(ValueError):
+    """Raised for a coordinate the box does not cover. See the module note."""
+
+
+def covers(lat, lng):
+    """True if the box covers this point. Edges are inclusive."""
+    return (BOX['latMin'] <= lat <= BOX['latMax']
+            and BOX['lngMin'] <= lng <= BOX['lngMax'])
+
+
 def _full_index(lat, lng):
     """x and y interleaved at full precision, coarse bits first."""
+    if not covers(lat, lng):
+        raise OutsideBox(
+            f'{lat:.5f}, {lng:.5f} is outside the covered box '
+            f"({BOX['latMin']}..{BOX['latMax']}, {BOX['lngMin']}..{BOX['lngMax']})")
     x, y = project(lat, lng)
-    xi = min(int((x - _X0) / (_X1 - _X0) * 2 ** PRECISION), 2 ** PRECISION - 1)
-    yi = min(int((y - _Y0) / (_Y1 - _Y0) * 2 ** PRECISION), 2 ** PRECISION - 1)
+    # Both ends must be clamped. The top end saturates a point on the boundary
+    # into the last cell, which is what an inclusive edge means. The bottom end
+    # can only be reached by floating-point slop at the boundary itself, since
+    # covers() has already refused anything genuinely outside -- but an
+    # unclamped negative index would sign-extend under >> and mint a plausible
+    # address for the wrong place, so it is clamped rather than trusted.
+    xi = min(max(int((x - _X0) / (_X1 - _X0) * 2 ** PRECISION), 0), 2 ** PRECISION - 1)
+    yi = min(max(int((y - _Y0) / (_Y1 - _Y0) * 2 ** PRECISION), 0), 2 ** PRECISION - 1)
     v = 0
     for i in range(PRECISION - 1, -1, -1):
         v = (v << 1) | ((xi >> i) & 1)

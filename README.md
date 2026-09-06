@@ -17,6 +17,11 @@ or resolve an address of any length back to a point.
 - The root is a **fixed box** over the UK and Ireland, not a repeating tile, so
   an address is unambiguous at every length and **no position hint is needed**.
 - The [BIP-39][bip39] English list: 2,048 words, exactly 11 bits each.
+- The box is the **limit of coverage**. Outside it there is no address, and the
+  codec refuses rather than inventing one — an invented address would resolve
+  to a real place inside the box and pass its checksum. See
+  [`docs/grid-scheme.md`](docs/grid-scheme.md#outside-the-box) for what a wider
+  box would cost.
 
 | Words | Big Ben | Area |
 |---|---|---|

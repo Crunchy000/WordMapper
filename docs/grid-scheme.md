@@ -96,6 +96,35 @@ This is a property of the grid partition, not of the curve used to order cells:
 a Hilbert ordering would change which word is assigned to each cell, never
 which cell a point falls in.
 
+## Outside the box
+
+The box is the whole world as far as the codec is concerned. A coordinate
+outside it has no address, and `encode` refuses it rather than inventing one.
+
+That refusal is load-bearing, not tidiness. `decode` maps addresses onto the
+box and nowhere else, so a point outside would alias onto an address that
+genuinely belongs to somewhere inside it — and the checksum cannot catch that,
+because it covers transmission of the address, not where the caller was
+standing. An address minted in Sydney would arrive intact, verify, and resolve
+to the North Sea. Measured before this was guarded: 99.7 % of out-of-box points
+produced a checksum-valid address for the wrong place.
+
+Widening coverage means widening the box, which costs resolution everywhere,
+because the same `N^L` cells are spread over more ground:
+
+| box | area | 2 words | 3 words | 4 words |
+|---|---|---|---|---|
+| UK and Ireland (current) | 0.99 M km² | 486 m | 10.8 m | **2.69 m** |
+| Western Europe | 12 M km² | 1.68 km | 37.2 m | 9.31 m |
+| whole world | 510 M km² | 11.0 km | 244 m | 60.9 m |
+
+Coverage really is cheap in the square-root sense — 514× the area costs only
+23× the cell size — but 61 m at four words is a different product. It no longer
+identifies a doorstep, which is the property the scheme exists for. Global
+coverage at this resolution needs a fifth word, and a fifth word cannot exist
+while the fourth is terminal; the checksum would have to move out of the last
+word and back into a separate one.
+
 ## Verified
 
 `python3 tools/gridcode/test_bip39grid.py`:

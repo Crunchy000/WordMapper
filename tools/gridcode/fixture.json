@@ -1,242 +1,382 @@
-[
- {
-  "lat": 51.50072,
-  "lng": -0.12456,
-  "words": {
-   "1": [
-    "plug"
-   ],
-   "2": [
-    "plug",
-    "curtain"
-   ],
-   "3": [
-    "plug",
-    "curtain",
-    "elder"
-   ],
-   "4": [
-    "plug",
-    "curtain",
-    "elder",
-    "script"
-   ]
+{
+ "points": [
+  {
+   "lat": 51.50072,
+   "lng": -0.12456,
+   "words": {
+    "1": [
+     "plug"
+    ],
+    "2": [
+     "plug",
+     "curtain"
+    ],
+    "3": [
+     "plug",
+     "curtain",
+     "elder"
+    ],
+    "4": [
+     "plug",
+     "curtain",
+     "elder",
+     "script"
+    ]
+   }
+  },
+  {
+   "lat": 51.5055,
+   "lng": -0.0754,
+   "words": {
+    "1": [
+     "plug"
+    ],
+    "2": [
+     "plug",
+     "glow"
+    ],
+    "3": [
+     "plug",
+     "glow",
+     "unit"
+    ],
+    "4": [
+     "plug",
+     "glow",
+     "unit",
+     "spoil"
+    ]
+   }
+  },
+  {
+   "lat": 51.17889,
+   "lng": -1.82624,
+   "words": {
+    "1": [
+     "mixed"
+    ],
+    "2": [
+     "mixed",
+     "infant"
+    ],
+    "3": [
+     "mixed",
+     "infant",
+     "path"
+    ],
+    "4": [
+     "mixed",
+     "infant",
+     "path",
+     "ocean"
+    ]
+   }
+  },
+  {
+   "lat": 55.94859,
+   "lng": -3.19951,
+   "words": {
+    "1": [
+     "senior"
+    ],
+    "2": [
+     "senior",
+     "parent"
+    ],
+    "3": [
+     "senior",
+     "parent",
+     "banana"
+    ],
+    "4": [
+     "senior",
+     "parent",
+     "banana",
+     "august"
+    ]
+   }
+  },
+  {
+   "lat": 52.9715,
+   "lng": -9.4309,
+   "words": {
+    "1": [
+     "base"
+    ],
+    "2": [
+     "base",
+     "wheat"
+    ],
+    "3": [
+     "base",
+     "wheat",
+     "field"
+    ],
+    "4": [
+     "base",
+     "wheat",
+     "field",
+     "hammer"
+    ]
+   }
+  },
+  {
+   "lat": 50.06569,
+   "lng": -5.71531,
+   "words": {
+    "1": [
+     "chuckle"
+    ],
+    "2": [
+     "chuckle",
+     "oyster"
+    ],
+    "3": [
+     "chuckle",
+     "oyster",
+     "museum"
+    ],
+    "4": [
+     "chuckle",
+     "oyster",
+     "museum",
+     "lion"
+    ]
+   }
+  },
+  {
+   "lat": 58.64389,
+   "lng": -3.07,
+   "words": {
+    "1": [
+     "squirrel"
+    ],
+    "2": [
+     "squirrel",
+     "evoke"
+    ],
+    "3": [
+     "squirrel",
+     "evoke",
+     "volcano"
+    ],
+    "4": [
+     "squirrel",
+     "evoke",
+     "volcano",
+     "minute"
+    ]
+   }
+  },
+  {
+   "lat": 53.46308,
+   "lng": -2.29139,
+   "words": {
+    "1": [
+     "okay"
+    ],
+    "2": [
+     "okay",
+     "heart"
+    ],
+    "3": [
+     "okay",
+     "heart",
+     "clown"
+    ],
+    "4": [
+     "okay",
+     "heart",
+     "clown",
+     "month"
+    ]
+   }
+  },
+  {
+   "lat": 54.5,
+   "lng": -6.0,
+   "words": {
+    "1": [
+     "dial"
+    ],
+    "2": [
+     "dial",
+     "sting"
+    ],
+    "3": [
+     "dial",
+     "sting",
+     "room"
+    ],
+    "4": [
+     "dial",
+     "sting",
+     "room",
+     "front"
+    ]
+   }
+  },
+  {
+   "lat": 60.1,
+   "lng": -1.2,
+   "words": {
+    "1": [
+     "virtual"
+    ],
+    "2": [
+     "virtual",
+     "primary"
+    ],
+    "3": [
+     "virtual",
+     "primary",
+     "aware"
+    ],
+    "4": [
+     "virtual",
+     "primary",
+     "aware",
+     "mad"
+    ]
+   }
+  },
+  {
+   "lat": 49.85,
+   "lng": -11.0,
+   "words": {
+    "1": [
+     "abandon"
+    ],
+    "2": [
+     "abandon",
+     "abandon"
+    ],
+    "3": [
+     "abandon",
+     "abandon",
+     "abandon"
+    ],
+    "4": [
+     "abandon",
+     "abandon",
+     "abandon",
+     "april"
+    ]
+   }
+  },
+  {
+   "lat": 49.85,
+   "lng": 1.8,
+   "words": {
+    "1": [
+     "primary"
+    ],
+    "2": [
+     "primary",
+     "fetch"
+    ],
+    "3": [
+     "primary",
+     "fetch",
+     "primary"
+    ],
+    "4": [
+     "primary",
+     "fetch",
+     "primary",
+     "feature"
+    ]
+   }
+  },
+  {
+   "lat": 60.9,
+   "lng": -11.0,
+   "words": {
+    "1": [
+     "fetch"
+    ],
+    "2": [
+     "fetch",
+     "primary"
+    ],
+    "3": [
+     "fetch",
+     "primary",
+     "fetch"
+    ],
+    "4": [
+     "fetch",
+     "primary",
+     "fetch",
+     "program"
+    ]
+   }
+  },
+  {
+   "lat": 60.9,
+   "lng": 1.8,
+   "words": {
+    "1": [
+     "zoo"
+    ],
+    "2": [
+     "zoo",
+     "zoo"
+    ],
+    "3": [
+     "zoo",
+     "zoo",
+     "zoo"
+    ],
+    "4": [
+     "zoo",
+     "zoo",
+     "zoo",
+     "wife"
+    ]
+   }
   }
- },
- {
-  "lat": 51.5055,
-  "lng": -0.0754,
-  "words": {
-   "1": [
-    "plug"
-   ],
-   "2": [
-    "plug",
-    "glow"
-   ],
-   "3": [
-    "plug",
-    "glow",
-    "unit"
-   ],
-   "4": [
-    "plug",
-    "glow",
-    "unit",
-    "spoil"
-   ]
+ ],
+ "outside": [
+  {
+   "lat": 48.8566,
+   "lng": 2.3522
+  },
+  {
+   "lat": 40.4168,
+   "lng": -3.7038
+  },
+  {
+   "lat": 40.7128,
+   "lng": -74.006
+  },
+  {
+   "lat": -33.8688,
+   "lng": 151.2093
+  },
+  {
+   "lat": 64.1466,
+   "lng": -21.9426
+  },
+  {
+   "lat": 0.0,
+   "lng": 0.0
+  },
+  {
+   "lat": 49.84,
+   "lng": -2.0
+  },
+  {
+   "lat": 60.91,
+   "lng": -2.0
+  },
+  {
+   "lat": 55.0,
+   "lng": -11.01
+  },
+  {
+   "lat": 55.0,
+   "lng": 1.81
   }
- },
- {
-  "lat": 51.17889,
-  "lng": -1.82624,
-  "words": {
-   "1": [
-    "mixed"
-   ],
-   "2": [
-    "mixed",
-    "infant"
-   ],
-   "3": [
-    "mixed",
-    "infant",
-    "path"
-   ],
-   "4": [
-    "mixed",
-    "infant",
-    "path",
-    "ocean"
-   ]
-  }
- },
- {
-  "lat": 55.94859,
-  "lng": -3.19951,
-  "words": {
-   "1": [
-    "senior"
-   ],
-   "2": [
-    "senior",
-    "parent"
-   ],
-   "3": [
-    "senior",
-    "parent",
-    "banana"
-   ],
-   "4": [
-    "senior",
-    "parent",
-    "banana",
-    "august"
-   ]
-  }
- },
- {
-  "lat": 52.9715,
-  "lng": -9.4309,
-  "words": {
-   "1": [
-    "base"
-   ],
-   "2": [
-    "base",
-    "wheat"
-   ],
-   "3": [
-    "base",
-    "wheat",
-    "field"
-   ],
-   "4": [
-    "base",
-    "wheat",
-    "field",
-    "hammer"
-   ]
-  }
- },
- {
-  "lat": 50.06569,
-  "lng": -5.71531,
-  "words": {
-   "1": [
-    "chuckle"
-   ],
-   "2": [
-    "chuckle",
-    "oyster"
-   ],
-   "3": [
-    "chuckle",
-    "oyster",
-    "museum"
-   ],
-   "4": [
-    "chuckle",
-    "oyster",
-    "museum",
-    "lion"
-   ]
-  }
- },
- {
-  "lat": 58.64389,
-  "lng": -3.07,
-  "words": {
-   "1": [
-    "squirrel"
-   ],
-   "2": [
-    "squirrel",
-    "evoke"
-   ],
-   "3": [
-    "squirrel",
-    "evoke",
-    "volcano"
-   ],
-   "4": [
-    "squirrel",
-    "evoke",
-    "volcano",
-    "minute"
-   ]
-  }
- },
- {
-  "lat": 53.46308,
-  "lng": -2.29139,
-  "words": {
-   "1": [
-    "okay"
-   ],
-   "2": [
-    "okay",
-    "heart"
-   ],
-   "3": [
-    "okay",
-    "heart",
-    "clown"
-   ],
-   "4": [
-    "okay",
-    "heart",
-    "clown",
-    "month"
-   ]
-  }
- },
- {
-  "lat": 54.5,
-  "lng": -6.0,
-  "words": {
-   "1": [
-    "dial"
-   ],
-   "2": [
-    "dial",
-    "sting"
-   ],
-   "3": [
-    "dial",
-    "sting",
-    "room"
-   ],
-   "4": [
-    "dial",
-    "sting",
-    "room",
-    "front"
-   ]
-  }
- },
- {
-  "lat": 60.1,
-  "lng": -1.2,
-  "words": {
-   "1": [
-    "virtual"
-   ],
-   "2": [
-    "virtual",
-    "primary"
-   ],
-   "3": [
-    "virtual",
-    "primary",
-    "aware"
-   ],
-   "4": [
-    "virtual",
-    "primary",
-    "aware",
-    "mad"
-   ]
-  }
- }
-]
+ ]
+}

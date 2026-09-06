@@ -92,6 +92,13 @@
   disambiguate and <strong>no position hint is needed</strong> — knowing roughly where
   someone is becomes a sanity check, not a precondition.</p>
 
+  <p>The box is also the limit of coverage: outside it there is no address, and the
+  codec refuses rather than inventing one. It has to. Decoding maps addresses onto the
+  box and nowhere else, so an invented address would resolve to a real place inside it
+  and pass its own checksum &mdash; the check covers the words, not where the caller was
+  standing. A wider box would reach further at the cost of resolution everywhere: the
+  whole world would put four words at 61&nbsp;m rather than 2.7&nbsp;m.</p>
+
   <p>Which is the useful shape for an emergency call. A caller who manages two words
   before the line drops has still given a real answer; one who keeps going narrows it
   without going back on anything.</p>

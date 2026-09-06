@@ -145,10 +145,23 @@ function checksum(position) {
 // Interleave ONCE at full precision, then truncate, so every length is
 // genuinely a prefix. Deriving the order per length does not work: 11 bits per
 // word is odd, so 33 bits splits the axes 17/16 while 22 and 44 split evenly.
+const covers = (lat, lng) => lat >= BOX.latMin && lat <= BOX.latMax
+  && lng >= BOX.lngMin && lng <= BOX.lngMax;
+
 function fullIndex(lat, lng) {
+  // The box is the whole world here. A point outside it has no address, and
+  // must not be given one: decode maps onto the box and nowhere else, so an
+  // outside point would alias onto a real address inside it -- silently, and
+  // passing its own checksum, since the checksum covers the address rather
+  // than where the caller was standing.
+  if (!covers(lat, lng)) throw new Error('outside the covered area');
   const [x, y] = project(lat, lng);
-  const xi = BigInt(Math.min(Math.floor((x - X0) / (X1 - X0) * 2 ** PRECISION), 2 ** PRECISION - 1));
-  const yi = BigInt(Math.min(Math.floor((y - Y0) / (Y1 - Y0) * 2 ** PRECISION), 2 ** PRECISION - 1));
+  // Clamp both ends: the top saturates a boundary point into the last cell,
+  // and an unclamped negative index would sign-extend under >> into a
+  // plausible address for the wrong place.
+  const clamp = (v) => BigInt(Math.min(Math.max(Math.floor(v), 0), 2 ** PRECISION - 1));
+  const xi = clamp((x - X0) / (X1 - X0) * 2 ** PRECISION);
+  const yi = clamp((y - Y0) / (Y1 - Y0) * 2 ** PRECISION);
   let v = 0n;
   for (let i = PRECISION - 1; i >= 0; i--) {
     v = (v << 1n) | ((xi >> BigInt(i)) & 1n);
@@ -224,6 +237,15 @@ function cellBounds(lat, lng, n) {
 
 function show(lat, lng) {
   point = [lat, lng];
+  if (marker) map.removeLayer(marker);
+  marker = L.circleMarker([lat, lng], { radius: 5, color: '#a8322a', weight: 2, fillOpacity: .9 }).addTo(map);
+  boxes.forEach((b) => map.removeLayer(b)); boxes = [];
+  if (!covers(lat, lng)) {
+    rowsEl.hidden = true; emptyEl.hidden = false;
+    emptyEl.textContent = 'No address here. The dashed box is everything this grid covers \u2014 '
+      + 'a wider box would reach further but make every address coarser.';
+    return;
+  }
   emptyEl.hidden = true; rowsEl.hidden = false;
   rowsEl.replaceChildren();
   const full = encode(lat, lng, MAX_WORDS);
@@ -246,9 +268,6 @@ function show(lat, lng) {
     tr.addEventListener('click', () => { selected = n; show(lat, lng); });
     rowsEl.appendChild(tr);
   }
-  if (marker) map.removeLayer(marker);
-  marker = L.circleMarker([lat, lng], { radius: 5, color: '#a8322a', weight: 2, fillOpacity: .9 }).addTo(map);
-  boxes.forEach((b) => map.removeLayer(b)); boxes = [];
   // Draw the nesting: each length is a box inside the previous one.
   for (let n = 1; n <= Math.min(selected + 1, MAX_WORDS); n++) {
     boxes.push(L.rectangle(cellBounds(lat, lng, n),

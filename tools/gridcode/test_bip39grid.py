@@ -79,6 +79,36 @@ check('1-3 word addresses decode without a checksum',
       all(g.decode(g.encode(lat, lng, WORDS, n), WORDS) is not None
           for n in (1, 2, 3) for lat, lng in pts[:200]), True)
 
+# Outside the box there is no address, and inventing one is worse than
+# refusing: decode maps onto the box, so an outside point aliases onto a real
+# address inside it and passes the checksum, which covers the address rather
+# than the caller's position. Before this was guarded, 99.7% of out-of-box
+# points minted a checksum-valid address for somewhere else -- Sydney landed
+# in the North Sea, 17,790 km out.
+outside = [(48.8566, 2.3522), (40.4168, -3.7038), (40.7128, -74.0060),
+           (-33.8688, 151.2093), (64.1466, -21.9426), (0.0, 0.0),
+           (49.84, -2.0), (60.91, -2.0), (55.0, -11.01), (55.0, 1.81)]
+refused = 0
+for lat, lng in outside:
+    try:
+        g.encode(lat, lng, WORDS, g.MAX_WORDS)
+    except g.OutsideBox:
+        refused += 1
+check('a coordinate outside the box is refused, not aliased', refused, len(outside))
+
+# The corners are inclusive, and must still encode rather than trip the guard.
+corners = [(g.BOX['latMin'], g.BOX['lngMin']), (g.BOX['latMin'], g.BOX['lngMax']),
+           (g.BOX['latMax'], g.BOX['lngMin']), (g.BOX['latMax'], g.BOX['lngMax'])]
+check('the box corners still encode',
+      all(len(g.encode(lat, lng, WORDS, g.MAX_WORDS)) == g.MAX_WORDS
+          for lat, lng in corners), True)
+
+# A corner sits exactly on a cell boundary, where rounding can land the index
+# one past either end. Both ends are clamped, so a corner round trips.
+check('the box corners round trip inside one cell diagonal',
+      max(hav((lat, lng), g.decode(g.encode(lat, lng, WORDS, g.MAX_WORDS), WORDS))
+          for lat, lng in corners) < math.hypot(*g.cell_size(g.MAX_WORDS)), True)
+
 w, h = g.cell_size(g.MAX_WORDS)
 print(f'  ----  4 words: {math.sqrt(w*h):.2f} m with {g.REFINE_BITS} refine + '
       f'{g.CHECK_BITS} check bits (3 words alone is {math.sqrt(math.prod(g.cell_size(3))):.2f} m)')
