@@ -74,23 +74,47 @@ FAITH_WORDS = {
 }
 
 # Words with two accepted spellings are bad address words on either side of the
-# Atlantic: a listener cannot know which one to write down.
-DUAL_SPELLING = {
-    'analog', 'armory', 'balk', 'caliber', 'catalog', 'color', 'cozy', 'defense',
-    'dialog', 'disk', 'favor', 'harbor', 'humor', 'license', 'pajama', 'sulfate',
-    'sulfide', 'sulfur', 'vigor', 'yogurt',
+# Atlantic: a listener cannot know which one to write down. Derived from data
+# rather than hand-listed, because a hand list does not survive regeneration --
+# the backfill quietly reintroduced armor, fervor, flavor and rumor.
+SPELLING_KEEP = {
+    'almanac',   # almanack is archaic; almanac is standard in both
+    'filter',    # paired with "philtre", which is a different word entirely
 }
+US_KEEP = {'deputy', 'derby', 'grunt'}   # flagged as American, ordinary in the UK
+
+# Proper nouns whose lowercase common-noun sense is too weak to carry them.
+#
+# These come from WordNet's own capitalisation, but they are curated rather than
+# rule-derived: the obvious rule -- "the word's most frequent sense is a
+# capitalised proper noun" -- flags 77 words and would take basic, sweet, grey,
+# crown, mobile and burger with them, because WordNet's sense ordering puts
+# proper nouns first far more often than usage does. Words with a strong
+# everyday sense are kept: jersey (garment), ottoman (furniture), scribe,
+# swift, smith, marine, drake, ford, polo, diesel, cheddar, cola.
+PROPER_NOUNS = {
+    'apache', 'argus', 'berlin', 'bohemia', 'bolivia', 'bologna', 'brazil',
+    'burgess', 'chapman', 'collins', 'concord', 'danish', 'dixie', 'geneva',
+    'hogan', 'japan', 'java', 'kremlin', 'louvre', 'madras', 'mecca', 'medusa',
+    'midland', 'morocco', 'nelson', 'newton', 'oxford', 'phoebe', 'pueblo',
+    'ritz', 'roman', 'savoy', 'sexton', 'spiegel', 'trojan', 'ulster', 'zaire',
+}
+
+# Adult content. "liaison" is deliberately kept: WordNet's first sense is the
+# illicit one, but everyday usage is a liaison officer.
+ADULT = {'erotica', 'amour', 'deviate', 'virgin'}
 
 # American-only terms an English speaker would not reach for. Words that merely
 # mean something different in the two countries (bonnet, chemist, caravan) are
 # deliberately kept -- you never need to know what an address word means, only
 # how to spell it.
-US_ONLY = {
-    'airdrop', 'arroyo', 'beltway', 'bodega', 'burlap', 'busboy', 'caboose',
-    'canola', 'critter', 'drywall', 'freeway', 'grownup', 'hobo', 'jodhpur',
-    'ladybug', 'mailman', 'mohawk', 'necktie', 'pullout', 'shoebox', 'takeout',
-    'tidbit', 'uptown',
-}
+def anglo_filters():
+    """(dual-spelling, american-only) word sets, from the translator package."""
+    def single(d):
+        return {k.lower() for k in d if ' ' not in k and k.isalpha()}
+    dual = single(npm_json("require('american-british-english-translator/data/american_spellings.json')"))
+    us = single(npm_json("require('american-british-english-translator/data/american_only.json')"))
+    return dual - SPELLING_KEEP, us - US_KEEP
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -183,6 +207,7 @@ def main(count=COUNT):
     from wordfreq import zipf_frequency
     src = load()
     nouns, verbs, proper, senses, hyper = wordnet(src['wndir'])
+    dual_spelling, us_only = anglo_filters()
     sensitive = sensitive_filter(senses, hyper)
     religious = sensitive_filter(senses, hyper, FAITH_ROOTS, depth=1)
     cmu = src['cmu']
@@ -194,7 +219,8 @@ def main(count=COUNT):
             and not inflected(w, nouns, verbs)
             and not sensitive(w) and not religious(w)
             and w not in FAITH_WORDS
-            and w not in DUAL_SPELLING and w not in US_ONLY]
+            and w not in dual_spelling and w not in us_only
+            and w not in PROPER_NOUNS and w not in ADULT]
     freq = {w: zipf_frequency(w, 'en') for w in pool}
     pool = [w for w in pool if BAND[0] <= freq[w] <= BAND[1]]
     # How many Latin-script languages know this word -- Tirosh's "internationally

@@ -102,12 +102,27 @@ English but not in everyday use: `myelin`, `niacin`, `oryx`, `biotin`, `moiety`,
 `stover`, `liana`, `tiffin`, `snafu`, `batik`, `troika`, `simian`. The rarest
 words now kept are `duchy`, `hummus`, `kiosk`, `acacia`, `ukulele`, `equinox`.
 
+**Proper nouns need a curated list, not a rule.** The obvious rule — "the word's
+most frequent WordNet sense is a capitalised proper noun" — flags 77 words and
+takes `basic`, `sweet`, `grey`, `crown`, `mobile` and `burger` with them, because
+WordNet orders proper senses first far more often than usage does. So that rule
+generates candidates and `PROPER_NOUNS` records the judgement: `berlin`, `japan`,
+`oxford`, `mecca`, `kremlin`, `medusa`, `sexton`, `spiegel`, `zaire` go; `jersey`
+(garment), `ottoman` (furniture), `scribe`, `swift`, `smith`, `drake`, `ford`,
+`polo` and `cheddar` stay.
+
 **Two accepted spellings disqualifies a word.** `color`/`colour`,
-`humor`/`humour`, `catalog`/`catalogue`, `defense`/`defence`, `disk`/`disc`,
-`sulfur`/`sulphur`, `yogurt`/`yoghurt` — a listener cannot know which to write,
-which is a stronger objection than nationality. Separately, American-only terms
-an English speaker would not reach for are dropped: `mailman`, `freeway`,
-`ladybug`, `hobo`, `critter`, `caboose`, `bodega`, `beltway`.
+`humor`/`humour`, `catalog`/`catalogue`, `armor`/`armour`, `flavor`/`flavour` —
+a listener cannot know which to write, which is a stronger objection than
+nationality. This one is **derived from data**, not hand-listed: a hand list does
+not survive regeneration, and the backfill quietly reintroduced `armor`,
+`fervor`, `flavor` and `rumor` after the first pass removed their siblings. Two
+false pairs are kept by name — `almanac` (almanack is archaic) and `filter`
+(paired with `philtre`, a different word entirely).
+
+American-only terms are dropped the same way: `mailman`, `freeway`, `ladybug`,
+`hobo`, `critter`, `caboose`, `bodega`, `condo`. `deputy`, `derby` and `grunt`
+are kept by name — flagged as American, ordinary in Britain.
 
 Words that merely *mean* something different in the two countries — `bonnet`,
 `chemist`, `caravan`, `pavement` — are deliberately kept. You never need to know
@@ -176,13 +191,13 @@ which is reassuring about both.
 - **`virgin` survives** — its dominant sense is not religious, but it is the
   next thing a human pass should look at. A different category from religion,
   and not one an automated filter is going to settle.
-- **`erotica` and `gangsta` survive**, and `heaven` slipped the religion filter.
-  A human pass should take these.
-- **`spiegel` is another proper-noun leak** (Der Spiegel), joining `zaire` and
-  `sexton`.
-- **The margin is comfortable now.** 2,167 words survive against the 1,849 that
-  43² needs, so there is room for further curation without changing the grid —
-  the next step down would be 41² = 1,681.
+- **`gangsta` survives**, and `heaven` slipped the religion filter. A human pass
+  should look at both.
+- **`mafia` survives** — a named criminal organisation, arguably the same class
+  as the religious and adult exclusions.
+- **The margin is comfortable.** 2,130 words survive against the 1,849 that 43²
+  needs, so there is room for more curation without changing the grid; the next
+  step down would be 41² = 1,681.
 - **Rendering cost.** At 2,809 words the demo now draws up to 8,428 rectangles
   across three levels, up from 4,900. Issue 13 in the demo review — switching to
   the canvas renderer — matters more than it did.
