@@ -14,9 +14,9 @@ GLOBAL_POINTS = [
     (64.14660, -21.94260), (0.00000, 0.00000), (12.00000, -40.00000),
     (-90.0, 0.0), (90.0, 0.0), (0.0, 180.0), (0.0, -180.0), (89.9999, 179.9999),
 ]
-# Inside the UK box, corners included. Dublin is in there: the box is a
+# Inside the Local box, corners included. Dublin is in there: the box is a
 # rectangle, not a border.
-UK_POINTS = [
+LOCAL_POINTS = [
     (51.50072, -0.12456), (55.94859, -3.19951), (50.06569, -5.71531),
     (54.59730, -5.93010), (60.15500, -1.14500), (53.34980, -6.26030),
     (49.85, -8.70), (49.85, 1.80), (60.90, -8.70), (60.90, 1.80),
@@ -35,8 +35,8 @@ TAILS = [
 # than resolving quietly to the wrong tile.
 HOPELESS = [(51.50072, -0.12456, 3, 40.71280, -74.00600),
             (51.50072, -0.12456, 2, 48.85660, 2.35220)]
-# Coordinates the UK box does not cover: both ports must refuse them.
-UK_OUTSIDE = [(48.8566, 2.3522), (40.7128, -74.0060), (-33.8688, 151.2093),
+# Coordinates the Local box does not cover: both ports must refuse them.
+LOCAL_OUTSIDE = [(48.8566, 2.3522), (40.7128, -74.0060), (-33.8688, 151.2093),
               (53.2707, -9.0568), (64.1466, -21.9426), (0.0, 0.0)]
 
 
@@ -72,19 +72,19 @@ if __name__ == '__main__':
             'axis_bits': [g.GLOBAL.xb, g.GLOBAL.yb],
         },
         'uk': {
-            'points': pack(UK_POINTS, g.UK),
-            'outside': [{'lat': la, 'lng': lo} for la, lo in UK_OUTSIDE],
-            'order': ''.join('xy'[a] for a in g.UK.order),
-            'axis_bits': [g.UK.xb, g.UK.yb],
-            'box': g.UK.box,
+            'points': pack(LOCAL_POINTS, g.LOCAL),
+            'outside': [{'lat': la, 'lng': lo} for la, lo in LOCAL_OUTSIDE],
+            'order': ''.join('xy'[a] for a in g.LOCAL.order),
+            'axis_bits': [g.LOCAL.xb, g.LOCAL.yb],
+            'box': g.LOCAL.box,
         },
-        # A UK address is not terminal in global mode, so nothing checks it --
-        # which is why decode_auto tries the UK reading first. Both ports must
+        # A Local address is not terminal in global mode, so nothing checks it --
+        # which is why decode_auto tries the Local reading first. Both ports must
         # agree on that resolution order.
         'auto': [{'words': g.encode(la, lo, words, s=sc), 'scope': sc.key,
                   'verified': True}
-                 for sc, la, lo in [(g.UK, 51.50072, -0.12456),
-                                    (g.UK, 55.94859, -3.19951),
+                 for sc, la, lo in [(g.LOCAL, 51.50072, -0.12456),
+                                    (g.LOCAL, 55.94859, -3.19951),
                                     (g.GLOBAL, 51.50072, -0.12456),
                                     (g.GLOBAL, -33.86880, 151.20930)]]
         + [{'words': g.encode(51.50072, -0.12456, words, 3), 'scope': 'global',

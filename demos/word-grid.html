@@ -3,56 +3,32 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Word grid — five words anywhere on earth</title>
+<title>Word grid — three words and a check word</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
   html, body { margin: 0; height: 100%; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
   #map { position: absolute; inset: 0; background: #dfe3e6; }
-  #hud { position: absolute; z-index: 1000; top: 14px; left: 14px; pointer-events: none;
-         max-width: calc(100vw - 28px); }
-  #card { pointer-events: auto; display: inline-block; background: rgba(255,255,255,.95);
-          backdrop-filter: blur(6px); border-radius: 10px; padding: 13px 16px;
-          box-shadow: 0 1px 3px rgba(0,0,0,.12), 0 6px 20px rgba(0,0,0,.10); }
-  table { border-collapse: collapse; font-size: 14px; }
-  td { padding: 2px 0; vertical-align: baseline; }
-  td.a { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-         padding-right: 14px; color: #b9b9b2; white-space: nowrap; }
-  td.a .new { color: #16171a; font-weight: 600; }
-  td.a .dot { color: #cfcfc8; }
-  td.s { font-size: 12px; color: #5c5c56; white-space: nowrap; }
-  tr.sel td.a .new, tr.sel td.a { color: #16171a; }
-  tr.sel td.s { color: #1a5c4a; font-weight: 600; }
-  tr:hover td.s { color: #16171a; }
-  .hint { font-size: 15px; color: #5c5c56; }
-  .row { margin-top: 10px; padding-top: 8px; border-top: 1px solid #e6e6e0;
-         font-size: 12px; color: #5c5c56; }
-  #chk { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #1a5c4a; }
-  input[type=text] { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-          font-size: 13px; padding: 4px 6px; width: 16em; border: 1px solid #ccc; border-radius: 5px; }
-  button { font: inherit; font-size: 12px; padding: 4px 9px; border-radius: 5px;
-           border: 1px solid #ccc; background: #fff; cursor: pointer; }
-  #err { color: #a8322a; margin-top: 4px; min-height: 1em; }
-  #tabs { display: flex; gap: 4px; margin-bottom: 9px; }
-  .tab { font: inherit; font-size: 12px; padding: 4px 10px; cursor: pointer;
-         border: 1px solid #ddd; border-radius: 6px; background: #f4f4ef;
-         color: #5c5c56; }
-  .tab.on { background: #1a5c4a; border-color: #1a5c4a; color: #fff; font-weight: 600; }
-  #knows { font: inherit; font-size: 12px; padding: 2px 4px;
-           border: 1px solid #ccc; border-radius: 5px; background: #fff; }
-  #local { margin-top: 5px; color: #16171a; }
-  #local .tailaddr { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-                     color: #1a5c4a; font-weight: 600; }
-  #local .sub { font-size: 11px; color: #8a8a82; margin-top: 2px; }
+  /* No card: the address sits directly on the map. A halo rather than a panel
+     keeps it readable over both pale streets and dark satellite tiles. */
+  #hud { position: absolute; z-index: 1000; top: 16px; left: 16px;
+         pointer-events: none; max-width: calc(100vw - 32px); }
+  #addr, .hint { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+                 font-size: 20px; letter-spacing: -0.01em;
+                 text-shadow: 0 1px 3px #fff, 0 0 8px #fff, 0 0 16px #fff,
+                              1px 0 3px #fff, -1px 0 3px #fff, 0 -1px 3px #fff; }
+  #words { color: #16171a; font-weight: 700; }
+  #sep { color: #9a9a92; margin: 0 8px; }
+  /* The last word is set apart because it does a different job: it refines the
+     position and carries the checksum. */
+  #check { color: #1a5c4a; font-weight: 700; font-style: italic;
+           border-bottom: 2px dotted #4f9481; padding-bottom: 1px; }
+  .hint { font-size: 16px; color: #5c5c56; font-weight: 600; }
   /* On a phone the five-word row is wider than the screen; let it wrap and
      shrink rather than pushing the page sideways. */
   @media (max-width: 480px) {
-    #card { padding: 11px 13px; }
-    table { font-size: 12px; }
-    td.a { white-space: normal; word-break: break-word; padding-right: 10px; }
-    td.s { font-size: 11px; }
-    input[type=text] { width: 11em; }
-    #knows { max-width: calc(100vw - 76px); }
+    #hud { top: 12px; left: 12px; }
+    #addr, .hint { font-size: 15px; overflow-wrap: anywhere; }
   }
 </style>
 </head>
@@ -60,27 +36,9 @@
 
 <div id="map"></div>
 <div id="hud">
-  <div id="card">
-    <div id="tabs"></div>
-    <div id="empty" class="hint">Click anywhere on earth</div>
-    <table id="rows" hidden></table>
-    <div class="row" id="knowsrow">
-      if they already know where you are, to within
-      <select id="knows">
-        <option value="0">nothing</option>
-        <option value="200000">200 km</option>
-        <option value="3000" selected>3 km</option>
-        <option value="100">100 m</option>
-        <option value="2">2 m</option>
-      </select>
-      <div id="local"></div>
-    </div>
-    <div class="row">
-      resolve an address (any length):<br>
-      <input type="text" id="dec" placeholder="leg.tunnel.slam or .slam.subway.gown" autocomplete="off">
-      <button id="go">go</button>
-      <div id="err"></div>
-    </div>
+  <div id="empty" class="hint">Click anywhere</div>
+  <div id="addr" hidden>
+    <span id="words"></span><span id="sep">&middot;</span><span id="check"></span>
   </div>
 </div>
 
@@ -94,7 +52,17 @@ const INDEX = new Map(WORDS.map((w, i) => [w, i]));
 // --- the scheme ------------------------------------------------------------
 // Must match tools/gridcode/bip39grid.py exactly; CI cross-checks them.
 const R = 6371008.8;
-const K = Math.cos(30 * Math.PI / 180);
+// Lambert equal-area, with the standard parallel chosen so the PROJECTED WORLD
+// IS SQUARE. Its aspect is pi*K^2, so K = 1/sqrt(pi) makes it exactly 1.
+//
+// That is what makes cells square. Cell aspect is the frame's aspect times
+// 2**(yb-xb), and xb+yb is fixed by the address length, so parity decides which
+// powers of two are reachable: an even bit count can only land on frame*4**k.
+// With a square frame the even lengths -- which include both terminal lengths --
+// come out exactly 1:1, for the same cell area, since only the shape changes.
+// The odd lengths land on frame*2*4**k and so go to 2:1; no frame can square
+// both, because one exponent is odd whenever the other is even.
+const K = 1 / Math.sqrt(Math.PI);
 const BITS = 11;
 // The last word does two jobs: 4 bits refine the position, 7 carry a checksum.
 const REFINE_BITS = 4, CHECK_BITS = BITS - REFINE_BITS;
@@ -128,10 +96,13 @@ function makeScope(key, name, tag, box, maxWords) {
            positionBitsTotal, order, xb, yb: positionBitsTotal - xb };
 }
 const GLOBAL = makeScope('global', 'Global', '', [-90, 90, -180, 180], 5);
-// The United Kingdom with margin: Lizard Point to Shetland, St Kilda to
-// Lowestoft, and Northern Ireland inside it.
-const UK = makeScope('uk', 'United Kingdom', 'GB', [49.85, 60.90, -8.70, 1.80], 4);
-const SCOPES = { global: GLOBAL, uk: UK };
+// Local is the United Kingdom with margin: Lizard Point to Shetland, St Kilda
+// to Lowestoft, and Northern Ireland inside it. Its tag stays 'GB' whatever the
+// box is called: the tag is bound into the checksum, so renaming it would
+// invalidate every Local address ever issued.
+const UK = makeScope('uk', 'Local', 'GB', [49.85, 60.90, -8.70, 1.80], 4);
+const SCOPES = { uk: UK, global: GLOBAL };
+const DEFAULT_SCOPE = UK;
 
 const wrapLng = (lng) => ((lng + 180) % 360 + 360) % 360 - 180;
 
@@ -404,19 +375,15 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
 }).addTo(map);
 
-const rowsEl = document.getElementById('rows');
+const addrEl = document.getElementById('addr');
+const wordsEl = document.getElementById('words');
+const checkEl = document.getElementById('check');
 const emptyEl = document.getElementById('empty');
-const errEl = document.getElementById('err');
-const knowsEl = document.getElementById('knows');
-const knowsRow = document.getElementById('knowsrow');
-const localEl = document.getElementById('local');
-const tabsEl = document.getElementById('tabs');
-let marker = null, boxes = [], scopeBox = null, point = null, selected = 4;
-let scope = GLOBAL;
+let marker = null, boxes = [], scopeBox = null;
 
-const fmt = (m) => m >= 1000 ? `${(m / 1000).toFixed(1)} km`
-  : m >= 1 ? `${m.toFixed(1)} m` : `${(m * 100).toFixed(0)} cm`;
-const cellOf = (n, sc) => { const [w, h] = cellSize(n, sc); return Math.sqrt(w * h); };
+// Global is implemented and tested, just not surfaced: the demo shows Local
+// only. Switching the constant here is all it takes to bring it back.
+const scope = DEFAULT_SCOPE;
 
 function cellBounds(lat, lng, n, sc) {
   const [xb, yb] = axisBits(n, sc);
@@ -427,147 +394,47 @@ function cellBounds(lat, lng, n, sc) {
   return [unproject(cx, cy), unproject(cx + w, cy + h)];
 }
 
-// How few words a listener who already knows roughly where you are still needs.
-// The dropped words are the coarse ones, so their ambiguity is one tile: any
-// accuracy better than half a tile pins it down.
-function shortestFor(accuracy, sc) {
-  for (let n = 1; n <= sc.maxWords; n++) {
-    const [w, h] = tileSize(n, sc);
-    if (Math.min(w, h) / 2 >= accuracy) return n;
-  }
-  return sc.maxWords;
-}
-
-function buildTabs() {
-  tabsEl.replaceChildren();
-  for (const sc of [GLOBAL, UK]) {
-    const b = document.createElement('button');
-    b.className = 'tab' + (sc === scope ? ' on' : '');
-    b.textContent = `${sc.name} · ${sc.maxWords} words`;
-    b.addEventListener('click', () => {
-      scope = sc;
-      selected = Math.min(selected, sc.maxWords);
-      buildTabs();
-      if (point) show(point[0], point[1]);
-    });
-    tabsEl.appendChild(b);
-  }
-}
-
 function show(lat, lng) {
-  point = [lat, lng];
-  errEl.textContent = '';
   if (marker) map.removeLayer(marker);
   marker = L.circleMarker([lat, lng],
     { radius: 5, color: '#a8322a', weight: 2, fillOpacity: .9 }).addTo(map);
   boxes.forEach((b) => map.removeLayer(b)); boxes = [];
   if (scopeBox) { map.removeLayer(scopeBox); scopeBox = null; }
 
-  // Outside a scope's box there is no address in that scope, and the codec
-  // refuses rather than inventing one -- an invented address would resolve to
-  // a real place inside the box and pass its own checksum.
+  const drawScopeBox = (opacity) => {
+    if (scope === GLOBAL) return;          // its box is the whole earth
+    const [a, b, c, d] = scope.box;
+    scopeBox = L.rectangle([[a, c], [b, d]],
+      { color: '#1a5c4a', weight: 1, fill: false, dashArray: '5 4', opacity }).addTo(map);
+  };
+
+  // Outside the box there is no address here, and the codec refuses rather than
+  // inventing one -- an invented address would resolve to a real place inside
+  // the box and pass its own checksum.
   if (!covers(lat, lng, scope)) {
-    rowsEl.hidden = true; knowsRow.hidden = true; emptyEl.hidden = false;
-    emptyEl.textContent = `No ${scope.name} address here — the dashed box is `
-      + 'everything this scope covers. Switch to Global, which covers the earth.';
-    const [a, b, c, d] = scope.box;
-    scopeBox = L.rectangle([[a, c], [b, d]],
-      { color: '#1a5c4a', weight: 1, fill: false, dashArray: '5 4', opacity: .55 }).addTo(map);
+    addrEl.hidden = true; emptyEl.hidden = false;
+    emptyEl.textContent = 'Outside the area';
+    drawScopeBox(.55);
     return;
   }
-  emptyEl.hidden = true; rowsEl.hidden = false; knowsRow.hidden = false;
-  rowsEl.replaceChildren();
+  emptyEl.hidden = true; addrEl.hidden = false;
+
+  // The last word is set apart because it does a different job: it refines the
+  // position AND carries the checksum.
   const full = encode(lat, lng, scope.maxWords, scope);
-  for (let n = 1; n <= scope.maxWords; n++) {
-    const tr = document.createElement('tr');
-    if (n === selected) tr.className = 'sel';
-    const td = document.createElement('td'); td.className = 'a';
-    full.slice(0, n).forEach((word, i) => {
-      if (i) {
-        const d = document.createElement('span');
-        d.className = 'dot'; d.textContent = SEP; td.appendChild(d);
-      }
-      // Only the word this row adds is highlighted; the rest are already said.
-      const w = document.createElement('span');
-      if (i === n - 1) w.className = 'new';
-      w.textContent = word; td.appendChild(w);
-    });
-    const ts = document.createElement('td'); ts.className = 's';
-    ts.textContent = n === scope.maxWords
-      ? `${fmt(cellOf(n, scope))} · checked` : fmt(cellOf(n, scope));
-    tr.append(td, ts);
-    tr.addEventListener('click', () => { selected = n; show(lat, lng); });
-    rowsEl.appendChild(tr);
-  }
-  renderLocal(full);
+  wordsEl.textContent = full.slice(0, -1).join(SEP);
+  checkEl.textContent = full[full.length - 1];
 
-  // The UK box, then the nesting: each length is a box inside the previous.
-  // Global's box is the whole earth, so drawing it adds nothing.
-  if (scope !== GLOBAL) {
-    const [a, b, c, d] = scope.box;
-    scopeBox = L.rectangle([[a, c], [b, d]],
-      { color: '#1a5c4a', weight: 1, fill: false, dashArray: '5 4', opacity: .45 }).addTo(map);
-  }
-  for (let n = 2; n <= Math.min(selected + 1, scope.maxWords); n++) {
+  drawScopeBox(.35);
+  // The cell itself, and the one a word coarser, for a sense of scale.
+  for (const n of [scope.maxWords - 1, scope.maxWords]) {
     boxes.push(L.rectangle(cellBounds(lat, lng, n, scope),
-      { color: n === selected ? '#1a5c4a' : '#8a8a82',
-        weight: n === selected ? 2 : 1, fill: false }).addTo(map));
+      { color: n === scope.maxWords ? '#1a5c4a' : '#8a8a82',
+        weight: n === scope.maxWords ? 2 : 1, fill: false }).addTo(map));
   }
-}
-
-function renderLocal(full) {
-  const accuracy = Number(knowsEl.value);
-  localEl.replaceChildren();
-  if (!accuracy) {
-    localEl.append(document.createTextNode('say the whole address'));
-    return;
-  }
-  const n = shortestFor(accuracy, scope);
-  const [tw, th] = tileSize(n, scope);
-  const said = document.createElement('span');
-  said.className = 'tailaddr';
-  said.textContent = formatAddress(full.slice(-n), n < scope.maxWords);
-  const dropped = scope.maxWords - n;
-  localEl.append(
-    document.createTextNode(dropped ? `say ${n}: ` : `still needs all ${n}: `),
-    said,
-    Object.assign(document.createElement('div'), {
-      className: 'sub',
-      textContent: dropped
-        ? `${dropped} coarse word${dropped > 1 ? 's' : ''} dropped; ambiguity is `
-          + `one ${fmt(tw)} × ${fmt(th)} tile`
-        : 'no coarse word can be dropped at that accuracy',
-    }));
 }
 
 map.on('click', (e) => show(e.latlng.lat, wrapLng(e.latlng.lng)));
-knowsEl.addEventListener('change', () => { if (point) show(point[0], point[1]); });
-
-document.getElementById('go').addEventListener('click', () => {
-  errEl.textContent = '';
-  try {
-    const [parts, tail] = parseAddress(document.getElementById('dec').value);
-    let lat, lng, sc = scope, note = '';
-    if (tail) {
-      // A tail is resolved against the middle of the map, which stands in for
-      // whatever the listener already knows.
-      const c = map.getCenter();
-      [lat, lng] = resolveTail(parts, c.lat, wrapLng(c.lng), scope);
-    } else {
-      let verified;
-      [lat, lng, sc, verified] = decodeAuto(parts);
-      if (!verified) note = ' (a short address carries no checksum, so this is '
-        + 'read as a coarse Global one)';
-    }
-    if (sc !== scope) { scope = sc; buildTabs(); }
-    selected = tail ? scope.maxWords : Math.min(parts.length, scope.maxWords);
-    map.fitBounds(cellBounds(lat, lng, selected, scope), { maxZoom: 19 });
-    show(lat, lng);
-    if (note) errEl.textContent = note.trim();
-  } catch (e) { errEl.textContent = e.message; }
-});
-
-buildTabs();
 show(51.50072, -0.12456);
 </script>
 </body>

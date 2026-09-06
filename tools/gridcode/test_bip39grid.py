@@ -54,7 +54,7 @@ def in_scope(sc, n):
             for _ in range(n)]
 
 
-UK_PTS = in_scope(g.UK, 4000)
+LOCAL_PTS = in_scope(g.LOCAL, 4000)
 
 print('\nthe grid')
 check('every point on earth encodes',
@@ -63,12 +63,22 @@ check('the poles and the antimeridian encode',
       all(len(g.encode(lat, lng, WORDS)) == g.GLOBAL.max_words
           for lat in (-90, -89.999, 0, 89.999, 90)
           for lng in (-180, -179.999, 0, 179.999, 180)), True)
-# Not a plain alternation: the world is 2.36 times wider than tall in this
-# projection, and alternating bits carries that aspect into every cell.
-check('bit order gives x the extra bits', (g.GLOBAL.xb, g.GLOBAL.yb), (25, 23))
+# The projected world is square, so the axes split evenly at full depth.
+check('the frame is square', round(g.GLOBAL.xr / g.GLOBAL.yr, 9), 1.0)
+check('the axes split evenly at full depth', (g.GLOBAL.xb, g.GLOBAL.yb), (24, 24))
+# Even bit counts land on frame*4**k and odd ones on frame*2*4**k, so with a
+# square frame the even lengths are exactly square and the odd ones are 2:1.
+# Both terminal lengths -- 48 bits global, 44 local -- are even.
+for sc in (g.GLOBAL, g.LOCAL):
+    w, h = g.cell_size(sc.max_words, sc)
+    check(f'{sc.name}: the terminal cell is close to square',
+          max(w, h) / min(w, h) < 1.1, True)
+check('global cells are exactly square at even lengths',
+      [round(max(w, h) / min(w, h), 9)
+       for w, h in (g.cell_size(n) for n in (2, 4))], [1.0, 1.0])
 worst = max(max(w, h) / min(w, h) for w, h in
             (g.cell_size(n) for n in range(1, g.GLOBAL.max_words + 1)))
-check('no cell is worse than 1.7:1', worst < 1.75, True)
+check('no cell is worse than 2:1', worst <= 2.0 + 1e-9, True)
 
 print('\ntrailing words: coarser, no context needed')
 bad = 0
@@ -201,30 +211,30 @@ check('parse round trips a tail',
 check('parse accepts spaces and case',
       g.parse_address('  LEG tunnel Slam '), (['leg', 'tunnel', 'slam'], False))
 
-print('\nthe UK scope')
-sc = g.UK
+print('\nthe Local scope')
+sc = g.LOCAL
 w, h = g.cell_size(sc.max_words, sc)
-check('UK is four words', sc.max_words, 4)
-check('every UK point encodes',
-      all(len(g.encode(lat, lng, WORDS, s=sc)) == 4 for lat, lng in UK_PTS[:500]), True)
+check('Local is four words', sc.max_words, 4)
+check('every Local point encodes',
+      all(len(g.encode(lat, lng, WORDS, s=sc)) == 4 for lat, lng in LOCAL_PTS[:500]), True)
 bad = 0
-for lat, lng in UK_PTS[:800]:
+for lat, lng in LOCAL_PTS[:800]:
     full = g.encode(lat, lng, WORDS, s=sc)
     for n in range(1, sc.max_words):
         if g.encode(lat, lng, WORDS, n, sc) != full[:n]:
             bad += 1
-check('UK: every address is a prefix of the next longer one', bad, 0)
-check('UK: round trip inside one cell diagonal',
+check('Local: every address is a prefix of the next longer one', bad, 0)
+check('Local: round trip inside one cell diagonal',
       max(proj_err((lat, lng), g.decode(g.encode(lat, lng, WORDS, s=sc), WORDS, sc))
-          for lat, lng in UK_PTS[:800]) < math.hypot(w, h), True)
+          for lat, lng in LOCAL_PTS[:800]) < math.hypot(w, h), True)
 seen, dupes = {}, 0
 cw, ch = g.cell_size(3, sc)
-for lat, lng in UK_PTS:
+for lat, lng in LOCAL_PTS:
     k = tuple(g.encode(lat, lng, WORDS, 3, sc))
     if k in seen and proj_err((lat, lng), seen[k]) > math.hypot(cw, ch):
         dupes += 1
     seen.setdefault(k, (lat, lng))
-check('UK: 3 words never repeat in the box', dupes, 0)
+check('Local: 3 words never repeat in the box', dupes, 0)
 
 # Outside the box there is no UK address, and inventing one is worse than
 # refusing: decode maps onto the box and nowhere else, so an outside point
@@ -237,21 +247,21 @@ for lat, lng in outside:
         g.encode(lat, lng, WORDS, s=sc)
     except g.OutsideBox:
         refused += 1
-check('UK: a coordinate outside the box is refused', refused, len(outside))
-check('UK: those same points all have global addresses',
+check('Local: a coordinate outside the box is refused', refused, len(outside))
+check('Local: those same points all have global addresses',
       all(len(g.encode(lat, lng, WORDS)) == 5 for lat, lng in outside), True)
 # The box is a rectangle, not a border. Dublin sits inside it, so UK mode gives
 # it an address -- which resolves correctly, because encoding and decoding use
 # the same box. Worth asserting so nobody mistakes the box for a claim.
-check('UK: the box is a rectangle, not a border (Dublin is inside it)',
-      g.covers(53.3498, -6.2603, g.UK), True)
-check('UK: and such a point still round trips',
+check('Local: the box is a rectangle, not a border (Dublin is inside it)',
+      g.covers(53.3498, -6.2603, g.LOCAL), True)
+check('Local: and such a point still round trips',
       proj_err((53.3498, -6.2603),
                g.decode(g.encode(53.3498, -6.2603, WORDS, s=sc), WORDS, sc))
       < math.hypot(w, h), True)
 
 caught = tot = 0
-for lat, lng in UK_PTS[:2000]:
+for lat, lng in LOCAL_PTS[:2000]:
     a = g.encode(lat, lng, WORDS, s=sc)
     bad_a = list(a)
     i = random.randrange(4)
@@ -262,32 +272,32 @@ for lat, lng in UK_PTS[:2000]:
         g.decode(bad_a, WORDS, sc)
     except ValueError:
         caught += 1
-print(f'  ----  UK: a wrong word is rejected {caught/tot*100:.1f}% (theory {theory:.2f}%)')
-check('UK: detection is within a point of theory',
+print(f'  ----  Local: a wrong word is rejected {caught/tot*100:.1f}% (theory {theory:.2f}%)')
+check('Local: detection is within a point of theory',
       abs(caught / tot * 100 - theory) < 1.0, True)
 
 print('\ntelling the two scopes apart')
-# The scope is bound into the checksum, so a UK address must not verify as a
-# global one. The two directions are not symmetrical, which is why decode_auto
+# The scope is bound into the checksum, so a Local address must not verify as
+# a global one. The two directions are not symmetrical, which is why decode_auto
 # tries the UK reading first: a global PREFIX carries no checksum at all, so
-# nothing would catch a UK address read as one.
+# nothing would catch a Local address read as one.
 caught = tot = 0
-for lat, lng in UK_PTS[:2000]:
+for lat, lng in LOCAL_PTS[:2000]:
     tot += 1
     try:
         g.decode(g.encode(lat, lng, WORDS, s=sc), WORDS, g.GLOBAL)
     except ValueError:
         caught += 1
-check('a 4-word UK address is not terminal in global mode, so nothing checks it',
+check('a 4-word Local address is not terminal in global mode, so nothing checks it',
       caught, 0)
 right = tot = 0
-for lat, lng in UK_PTS[:1500]:
+for lat, lng in LOCAL_PTS[:1500]:
     tot += 1
     _, _, got, ver = g.decode_auto(g.encode(lat, lng, WORDS, s=sc), WORDS)
     if got is sc and ver:
         right += 1
-print(f'  ----  a UK address is identified as UK {right/tot*100:.1f}% of the time')
-check('decode_auto identifies UK addresses within a point of theory',
+print(f'  ----  a Local address is identified as Local {right/tot*100:.1f}% of the time')
+check('decode_auto identifies Local addresses within a point of theory',
       abs(right / tot * 100 - theory) < 1.0, True)
 right = tot = 0
 for lat, lng in PTS[:1500]:
@@ -303,10 +313,10 @@ print()
 w, h = g.cell_size(g.GLOBAL.max_words)
 print(f'  ----  global: 5 words is {w:.2f} x {h:.2f} m; 4 words alone is '
       f'{math.sqrt(math.prod(g.cell_size(4))):.2f} m')
-uw, uh = g.cell_size(4, g.UK)
-print(f'  ----  UK: 4 words is {uw:.2f} x {uh:.2f} m '
+uw, uh = g.cell_size(4, g.LOCAL)
+print(f'  ----  Local: 4 words is {uw:.2f} x {uh:.2f} m '
       f'({math.sqrt(uw*uh):.2f} m); 3 words alone is '
-      f'{math.sqrt(math.prod(g.cell_size(3, g.UK))):.2f} m')
+      f'{math.sqrt(math.prod(g.cell_size(3, g.LOCAL))):.2f} m')
 print()
 if fails:
     print(f'{len(fails)} FAILURE(S): ' + ', '.join(fails)); sys.exit(1)

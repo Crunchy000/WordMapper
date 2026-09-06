@@ -7,21 +7,23 @@ GLOBAL -- five words, anywhere on earth, 1.35 m:
 
     leg.tunnel.slam.subway.gown
 
-UK -- four words, over a box around the United Kingdom, self-contained:
+LOCAL -- four words, over a box around the United Kingdom, self-contained.
+This is the default:
 
     hollow.gadget.crane.pupil
 
 Both are the same grid mechanism over a different box. The scope is bound into
-the checksum, so a UK address read as a global one fails its check 99.2% of the
+the checksum, so a Local address read as a global one fails its check 99.2% of the
 time, and the reverse likewise -- the two can never be silently confused.
 
-WHICH TO USE. UK mode is one word shorter and needs nothing said or known
-beyond "this is a UK address". Global mode works everywhere and is finer.
+WHICH TO USE. Local is the default: one word shorter, and it needs nothing
+said or known beyond "this is a local address". Global works everywhere and is
+finer.
 
 Global mode can also be shortened by dropping LEADING words when whoever is
 listening already knows roughly where you are -- and four global words that
-way reach 1.35 m against UK mode's 2.42 m, because one dropped word is worth a
-full 11 bits of context where the UK box is worth only 9.3. UK mode earns its
+way reach 1.35 m against Local's 2.43 m, because one dropped word is worth a
+full 11 bits of context where the Local box is worth only 9.3. Local earns its
 place on ergonomics rather than resolution: nothing to agree, nothing to
 reconstruct, no reference point.
 
@@ -44,7 +46,6 @@ orders are unrelated sequences rather than prefixes of one another.
 import hashlib, json, math, os, subprocess, sys
 
 R = 6371008.8               # mean earth radius, metres
-STD_PARALLEL = 30.0         # Lambert equal-area standard parallel
 BITS_PER_WORD = 11          # log2(2048), exactly
 REFINE_BITS = 4             # of the last word's 11 bits, how many refine position
 CHECK_BITS = BITS_PER_WORD - REFINE_BITS
@@ -53,7 +54,22 @@ TAIL_MARK = SEP             # a leading separator marks a context-dependent tail
 EPS = 1e-9                  # degrees of slack on a box edge, for float error
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
-_K = math.cos(math.radians(STD_PARALLEL))
+
+# Lambert equal-area, with the standard parallel chosen so the PROJECTED WORLD
+# IS SQUARE. Its aspect is pi*K^2, so K = 1/sqrt(pi) makes it exactly 1.
+#
+# That is what makes cells square. Cell aspect is the frame's aspect times
+# 2**(yb-xb), and xb+yb is fixed by the address length, so parity decides which
+# powers of two are reachable: an even bit count can only land on frame*4**k.
+# With a square frame the even lengths -- which include both terminal lengths,
+# 44 and 48 bits -- come out exactly 1:1. At 30 degrees the frame was 2.356:1
+# and the five-word cell was 1.03 x 1.75 m; now it is 1.346 m square, for the
+# same area, because the projection is equal-area and only the shape changes.
+#
+# The cost is the odd lengths, which land on frame*2*4**k and so go to 2:1.
+# No frame can square both: one exponent is odd whenever the other is even.
+_K = 1.0 / math.sqrt(math.pi)
+STD_PARALLEL = math.degrees(math.acos(_K))         # 55.654 degrees
 
 
 class OutsideBox(ValueError):
@@ -113,10 +129,14 @@ class Scope:
 
 
 GLOBAL = Scope('global', 'Global', '', (-90.0, 90.0, -180.0, 180.0), 5)
-# The United Kingdom with margin: Lizard Point to Shetland, St Kilda to
-# Lowestoft, and Northern Ireland inside it.
-UK = Scope('uk', 'United Kingdom', 'GB', (49.85, 60.90, -8.70, 1.80), 4)
-SCOPES = {s.key: s for s in (GLOBAL, UK)}
+# Local is the United Kingdom with margin: Lizard Point to Shetland, St Kilda
+# to Lowestoft, and Northern Ireland inside it. Its tag stays 'GB' whatever the
+# box is called: the tag is bound into the checksum, so renaming it would
+# invalidate every Local address ever issued.
+LOCAL = Scope('uk', 'Local', 'GB', (49.85, 60.90, -8.70, 1.80), 4)
+UK = LOCAL                                  # the old name, still accepted
+DEFAULT = LOCAL                             # what a caller gets without asking
+SCOPES = {s.key: s for s in (LOCAL, GLOBAL)}
 
 
 def scope(s=GLOBAL):
@@ -204,7 +224,7 @@ def tile_size(n_said, s=GLOBAL):
 
 
 def _checksum(position, s=GLOBAL):
-    """Over the scope as well as the position, so a UK address read as a global
+    """Over the scope as well as the position, so a Local address read as a global
     one fails the same check as a wrong word."""
     s = scope(s)
     # Global's payload is the bare position, which is what it has always been,
@@ -279,17 +299,17 @@ def decode_auto(spoken, words):
     """Resolve without being told the scope. Returns (lat, lng, scope, verified).
 
     A terminal-length address carries a checksum over its own scope, so it
-    identifies itself: four words that pass the UK check are a UK address, and
+    identifies itself: four words that pass the Local check are a Local address, and
     five that pass the global check are a global one. Anything shorter is an
     unverified coarse prefix, and only the caller knows which scope it belongs
     to, so global is assumed and `verified` says it was not confirmed.
 
     This matters because the two directions are not symmetrical. A global
-    prefix read as UK fails its checksum 99.2% of the time and is caught. A UK
+    prefix read as UK fails its checksum 99.2% of the time and is caught. A Local
     address read as a global prefix would decode silently to a different place
-    entirely, since nothing checks a prefix -- so the UK reading is tried first.
+    entirely, since nothing checks a prefix -- so the Local reading is tried first.
     """
-    for s in (UK, GLOBAL):
+    for s in (LOCAL, GLOBAL):
         if len(spoken) == s.max_words:
             try:
                 lat, lng = decode(spoken, words, s)

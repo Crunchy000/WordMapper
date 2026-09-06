@@ -146,22 +146,39 @@ spot check on 2 and 4 would have passed.
 
 The tests check this at every length over 1,500 points.
 
-## Which axis gets each bit
+## Why cells are square
 
-Not a plain alternation. The projected world is 34,667 × 14,713 km, an aspect of
-2.36, and alternating bits carries that aspect straight down into every cell:
-2.07 × 0.88 m at full depth.
+Cell aspect is the projected frame's aspect times `2**(yb - xb)`, and `xb + yb`
+is fixed by the address length. So **parity decides which aspects are
+reachable**: an even bit count can only land on `frame × 4ᵏ`, an odd one only on
+`frame × 2 × 4ᵏ`.
 
-Giving each bit to whichever axis is currently *wider* keeps cells near square
-at every length — 1.70 : 1 at worst, 1.18 : 1 at half the lengths — for exactly
-the same cell area, since the projection is equal-area and only the shape
-changes. x ends up with 25 bits and y with 23.
+The projection's standard parallel is therefore chosen to make the projected
+world **exactly square**. Its aspect is `πK²`, so `K = 1/√π` gives 1 — a
+standard parallel of 55.654°.
 
-```
-x x y x y x y x y x y x y x y x y x y x y x y x y ...
-```
+| | 30° (before) | 55.654° (now) |
+|---|---|---|
+| frame | 34,667 × 14,713 km | 22,585 × 22,585 km |
+| 5-word cell | 1.03 × 1.75 m — 1.70 : 1 | **1.346 × 1.346 m — 1.00 : 1** |
+| 4-word cell | 4.13 × 7.02 m — 1.70 : 1 | **5.385 m square** |
+| Local's 4-word cell | 1.93 × 3.07 m — 1.59 : 1 | **2.51 × 2.36 m — 1.07 : 1** |
 
-## The last word does two jobs
+Cell *area* is untouched — the projection is equal-area, so only the shape
+changes and the resolution figures are the same.
+
+Both terminal lengths are even bit counts (48 global, 44 local), which is why
+both land exactly square. The cost falls on the odd lengths, which go to 2 : 1 —
+a 3-word global cell is 172 × 345 m rather than 264 × 225 m. No frame can square
+both: one exponent is odd whenever the other is even. The best compromise that
+squares *nothing* but evens everything out is a √2 frame (47.86°), which puts
+every length at 1.414 : 1; squaring the lengths that people actually say is
+worth more.
+
+Within a box the bits are still handed to whichever axis is currently wider, so
+a box with its own aspect — Local's is 1 : 1.9 — still comes out near square.
+
+## The last word does two jobs## The last word does two jobs
 
 A whole fifth word of position would reach 8 cm, finer than anyone needs. So its
 11 bits are split between refinement and checksum:

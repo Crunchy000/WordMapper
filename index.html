@@ -70,10 +70,10 @@
   <div class="wrap">
     <h1>WordMapper</h1>
     <p class="tagline">Five words name any point on earth to a metre; four do it inside the UK. Say fewer for a coarser place — or, if whoever is listening already knows roughly where you are, drop the leading words and keep every metre.</p>
-    <div class="addr">leg<span>.</span>tunnel<span>.</span>slam<span>.</span>subway<span>.</span>gown</div>
-    <p class="note">Big Ben, to 1.35 m and checksummed. No prefix, no registry, no
-    agreement about borders. In UK scope the same point is
-    <code>play.cram.side.someone</code> &mdash; four words, 2.43 m, self-contained.</p>
+    <div class="addr">flower<span>.</span>era<span>.</span>slogan<span>.</span>quarter</div>
+    <p class="note">Big Ben in Local scope &mdash; four words over a box around the UK,
+    to 2.43 m and checksummed. The same point globally is five words,
+    <code>leaf.step.cruel.tomato.unable</code>, to 1.35 m.</p>
   </div>
 </header>
 
@@ -152,6 +152,19 @@
   checksum catches.</p>
 
   <p class="note">Click anywhere to watch the address grow a word at a time.</p>
+
+  <h2>Cells are square</h2>
+  <p>Cell aspect is the projected frame&rsquo;s aspect times a power of two, and the
+  address length fixes the exponent&rsquo;s parity &mdash; so an even bit count can only
+  land on <em>frame</em>&nbsp;&times;&nbsp;4<sup>k</sup>. The standard parallel is
+  therefore chosen to make the projected world <strong>exactly square</strong>: its
+  aspect is &pi;K&sup2;, so K&nbsp;=&nbsp;1/&radic;&pi; gives 1, at
+  55.654&deg;.</p>
+  <p>Both terminal lengths are even bit counts, so both land exactly square: the
+  five-word global cell is 1.346&nbsp;m square, and Local&rsquo;s four-word cell is
+  2.51&nbsp;&times;&nbsp;2.36&nbsp;m. The projection is equal-area, so this changes
+  the shape and not the resolution. The odd lengths pay for it at 2:1 &mdash; no frame
+  can square both, because one exponent is odd whenever the other is even.</p>
 
   <h2>The part that is easy to get wrong</h2>
   <p>Coordinates are interleaved <em>once</em> at full precision and the bit string is

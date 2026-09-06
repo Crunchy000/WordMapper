@@ -8,54 +8,34 @@ Experiments in encoding geographic coordinates as short, memorable word sequence
 
 ### `demos/word-grid.html`
 
-The scheme, live, with a tab per scope. Click anywhere and watch the address
-grow a word at a time; click a row to pick a length, or resolve an address back
-to a point.
-
-**Two scopes, the same grid mechanism over a different box.**
+The scheme, live and deliberately bare: click anywhere in the UK and the address
+sits on the map, nothing else. Three words plus a fourth set apart, because that
+one does a different job — it refines the position *and* carries the checksum.
 
 ```
-leg.tunnel.slam.subway.gown      Big Ben, Global — 5 words, 1.35 m
-play.cram.side.someone           Big Ben, UK     — 4 words, 2.43 m
+flower.era.slogan · quarter        Big Ben — 2.43 m, checked
 ```
 
-- **Global** — five [BIP-39][bip39] words, anywhere on earth. No registry, no
-  agreement about borders, nothing the caller has to know.
-- **UK** — four words over a box around the United Kingdom. One word shorter,
-  self-contained, nothing to reconstruct.
+- **Local** — four words over a box around the United Kingdom. This is what the
+  demo shows.
+- **Global** — five [BIP-39][bip39] words, anywhere on earth, 1.35 m. Built and
+  tested, just not surfaced in the demo for now; one constant in the UI brings
+  it back.
 - The scope is **bound into the checksum**, so the two can never be silently
   confused, and a terminal-length address identifies itself.
 
-An address shortens **two ways** in either scope. Drop **trailing** words for a
-coarser address that needs no context. Drop **leading** words to keep full
-precision with fewer words, when whoever is listening already knows roughly
-where you are — marked with a leading `.`:
+Cells are square. The projection's standard parallel is chosen so the projected
+world is exactly square (`K = 1/√π`, 55.654°), which makes the 5-word global cell
+1.346 m square and Local's 4-word cell 2.51 × 2.36 m. Equal-area throughout, so
+this changes shape and not resolution — see
+[`docs/grid-scheme.md`](docs/grid-scheme.md).
 
-| Words said | Written (Global) | Usable if the listener knows your position within |
-|---|---|---|
-| 4 | `.tunnel.slam.subway.gown` | 230 km — which country |
-| 3 | `.slam.subway.gown` | 4.2 km — which town |
-| 2 | `.subway.gown` | 112 m — which street |
-
-The **checksum verifies the reconstruction**, so filling in dropped words from a
-reference point is safe: the wrong tile fails the check 99.2 % of the time
-rather than resolving quietly to the wrong place.
-
-Which to use is a trade of ergonomics against resolution. Global shortened by
-one leading word is *also* four words and reaches 1.35 m against UK's 2.43 m —
-one dropped word is worth 11 bits of context where the UK box is worth 9.3. UK
-mode buys you not having to reconstruct anything.
-
-Two sharp edges, both documented in [`docs/grid-scheme.md`](docs/grid-scheme.md):
-
-- A four-word **UK address read as a global prefix decodes silently**, because a
-  prefix carries no checksum. So the UK reading is always tried first.
-- The UK box is a **rectangle, not a border** — Dublin is inside it.
-
-The last word does two jobs: four of its bits refine the position and seven
-carry a checksum, so it rejects a wrong word 99.2 % of the time. what3words is
-3 m with no checksum. Each scope's terminal length is terminal — a further word
-would have to reinterpret those bits.
+An address also shortens **two ways**. Drop **trailing** words for a coarser
+address that needs no context. Drop **leading** words to keep full precision
+with fewer words, when whoever is listening already knows roughly where you are
+— marked with a leading `.`, and the checksum verifies the reconstruction, so a
+reference too far away is caught 99.2 % of the time rather than resolving
+quietly to the wrong place.
 
 Open the file directly in a browser: no build step, and no secure-context
 requirement, since SHA-256 is plain JavaScript rather than `crypto.subtle`. It

@@ -27,7 +27,7 @@ try { mod = await import(pathToFileURL(tmp).href); } finally { rmSync(tmp, { for
 let bad = 0;
 const fail = (msg) => { bad++; console.error(`  ${msg}`); };
 
-for (const [key, sc] of [['global', mod.GLOBAL], ['uk', mod.UK]]) {
+for (const [key, sc] of [['global', mod.GLOBAL], ['uk', mod.UK]   /* named Local in the UI */]) {
   const f = fixture[key];
   // The bit order decides the shape of every cell, so the ports must agree on
   // it exactly, not merely on the totals.
@@ -58,14 +58,14 @@ for (const [key, sc] of [['global', mod.GLOBAL], ['uk', mod.UK]]) {
   }
 }
 
-// Coverage must stop in the same place in both ports. A point outside the UK
-// box that slipped through would be given an address belonging to somewhere
+// Coverage must stop in the same place in both ports. A point outside the
+// Local box that slipped through would be given an address belonging to somewhere
 // inside it, and would pass its own checksum.
 for (const c of fixture.uk.outside) {
-  if (mod.covers(c.lat, c.lng, mod.UK)) fail(`UK COVERS ${c.lat},${c.lng}`);
+  if (mod.covers(c.lat, c.lng, mod.UK)) fail(`LOCAL COVERS ${c.lat},${c.lng}`);
   let refused = false;
   try { mod.encode(c.lat, c.lng, 4, mod.UK); } catch { refused = true; }
-  if (!refused) fail(`UK ENCODED an outside point ${c.lat},${c.lng}`);
+  if (!refused) fail(`LOCAL ENCODED an outside point ${c.lat},${c.lng}`);
 }
 
 // Dropping leading words and filling them back in from a reference point,
