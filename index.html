@@ -69,13 +69,40 @@
 <header>
   <div class="wrap">
     <h1>WordMapper</h1>
-    <p class="tagline">Five words name any point on earth to a metre. Say fewer for a coarser place — or, if whoever is listening already knows roughly where you are, drop the leading words and keep every metre.</p>
+    <p class="tagline">Five words name any point on earth to a metre; four do it inside the UK. Say fewer for a coarser place — or, if whoever is listening already knows roughly where you are, drop the leading words and keep every metre.</p>
     <div class="addr">leg<span>.</span>tunnel<span>.</span>slam<span>.</span>subway<span>.</span>gown</div>
-    <p class="note">Big Ben, to 1.35 m and checksummed. One global grid &mdash; no prefix, no registry, no agreement about borders.</p>
+    <p class="note">Big Ben, to 1.35 m and checksummed. No prefix, no registry, no
+    agreement about borders. In UK scope the same point is
+    <code>play.cram.side.someone</code> &mdash; four words, 2.43 m, self-contained.</p>
   </div>
 </header>
 
 <main class="wrap">
+
+  <h2>Two scopes</h2>
+  <p>The same grid mechanism over a different box. The scope is bound into the checksum,
+  so the two can never be silently confused: a UK address read as a global one fails its
+  check 99.2&nbsp;% of the time, and a terminal-length address identifies itself.</p>
+
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Scope</th><th>Words</th><th>Cell</th><th>Needs</th></tr></thead>
+    <tbody>
+      <tr><td class="num">Global</td><td class="num">5</td><td class="num">1.35 m</td><td class="num">nothing at all</td></tr>
+      <tr><td class="num">UK</td><td class="num">4</td><td class="num">2.43 m</td><td class="num">to be inside the UK box</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>UK mode wins on ergonomics rather than resolution. Global shortened by one leading
+  word is <em>also</em> four words and reaches 1.35&nbsp;m &mdash; one dropped word is
+  worth a full 11 bits of context where the UK box is worth only 9.3. What UK mode buys
+  is that there is nothing to reconstruct and no reference point: four words, done.</p>
+
+  <p>Two sharp edges. A four-word UK address read as a <em>global prefix</em> would
+  decode silently, because a prefix carries no checksum at all &mdash; so the UK reading
+  is always tried first. And the UK box is a rectangle, not a border: Dublin is inside
+  it, and gets a UK address that resolves correctly.</p>
 
   <h2>Drop trailing words: coarser, needs no context</h2>
   <p>Each word narrows the area, and the words already said never change &mdash; every

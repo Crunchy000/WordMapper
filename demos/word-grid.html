@@ -33,6 +33,11 @@
   button { font: inherit; font-size: 12px; padding: 4px 9px; border-radius: 5px;
            border: 1px solid #ccc; background: #fff; cursor: pointer; }
   #err { color: #a8322a; margin-top: 4px; min-height: 1em; }
+  #tabs { display: flex; gap: 4px; margin-bottom: 9px; }
+  .tab { font: inherit; font-size: 12px; padding: 4px 10px; cursor: pointer;
+         border: 1px solid #ddd; border-radius: 6px; background: #f4f4ef;
+         color: #5c5c56; }
+  .tab.on { background: #1a5c4a; border-color: #1a5c4a; color: #fff; font-weight: 600; }
   #knows { font: inherit; font-size: 12px; padding: 2px 4px;
            border: 1px solid #ccc; border-radius: 5px; background: #fff; }
   #local { margin-top: 5px; color: #16171a; }
@@ -56,9 +61,10 @@
 <div id="map"></div>
 <div id="hud">
   <div id="card">
+    <div id="tabs"></div>
     <div id="empty" class="hint">Click anywhere on earth</div>
     <table id="rows" hidden></table>
-    <div class="row">
+    <div class="row" id="knowsrow">
       if they already know where you are, to within
       <select id="knows">
         <option value="0">nothing</option>
@@ -89,89 +95,108 @@ const INDEX = new Map(WORDS.map((w, i) => [w, i]));
 // Must match tools/gridcode/bip39grid.py exactly; CI cross-checks them.
 const R = 6371008.8;
 const K = Math.cos(30 * Math.PI / 180);
-const BITS = 11, MAX_WORDS = 5;
+const BITS = 11;
 // The last word does two jobs: 4 bits refine the position, 7 carry a checksum.
 const REFINE_BITS = 4, CHECK_BITS = BITS - REFINE_BITS;
-const POSITION_BITS = BITS * (MAX_WORDS - 1) + REFINE_BITS;   // 48
 const SEP = '.';
-const X0 = -Math.PI * R * K, Y0 = -R / K;
-const XR = 2 * Math.PI * R * K, YR = 2 * R / K;
+const EPS = 1e-9;
 
 const project = (lat, lng) => [R * lng * Math.PI / 180 * K,
                                R * Math.sin(lat * Math.PI / 180) / K];
 const unproject = (x, y) => [Math.asin(Math.max(-1, Math.min(1, y * K / R))) * 180 / Math.PI,
                              x / (R * K) * 180 / Math.PI];
 
-// Which axis each position bit refines, coarse bit first. Not a plain
-// alternation: the projected world is 34,667 x 14,713 km, an aspect of 2.36,
-// and alternating bits carries that straight down into every cell. Giving each
-// bit to whichever axis is currently wider keeps cells near square at every
-// length, for the same cell area -- the projection is equal-area, so only the
-// shape changes.
-const ORDER = (() => {
-  const o = []; let w = XR, h = YR;
-  for (let i = 0; i < POSITION_BITS; i++) {
-    if (w >= h) { o.push(0); w /= 2; } else { o.push(1); h /= 2; }
+// A scope is a box, an address length, and the bit layout they imply. The tag
+// is bound into the checksum so the two can never be silently confused.
+function makeScope(key, name, tag, box, maxWords) {
+  const [latMin, latMax, lngMin, lngMax] = box;
+  const [x0, y0] = project(latMin, lngMin);
+  const [x1, y1] = project(latMax, lngMax);
+  const xr = Math.abs(x1 - x0), yr = Math.abs(y1 - y0);
+  const positionBitsTotal = BITS * (maxWords - 1) + REFINE_BITS;
+  // Which axis each position bit refines, coarse bit first. Not a plain
+  // alternation: a box wider than it is tall would carry that aspect down into
+  // every cell. Giving each bit to whichever axis is currently wider keeps
+  // cells near square at every length, for the same cell area -- the
+  // projection is equal-area, so only the shape changes.
+  const order = []; let w = xr, h = yr;
+  for (let i = 0; i < positionBitsTotal; i++) {
+    if (w >= h) { order.push(0); w /= 2; } else { order.push(1); h /= 2; }
   }
-  return o;
-})();
-const XB = ORDER.filter((a) => a === 0).length;      // 25
-const YB = POSITION_BITS - XB;                       // 23
+  const xb = order.filter((a) => a === 0).length;
+  return { key, name, tag, box, maxWords, x0, y0, xr, yr,
+           positionBitsTotal, order, xb, yb: positionBitsTotal - xb };
+}
+const GLOBAL = makeScope('global', 'Global', '', [-90, 90, -180, 180], 5);
+// The United Kingdom with margin: Lizard Point to Shetland, St Kilda to
+// Lowestoft, and Northern Ireland inside it.
+const UK = makeScope('uk', 'United Kingdom', 'GB', [49.85, 60.90, -8.70, 1.80], 4);
+const SCOPES = { global: GLOBAL, uk: UK };
+
+const wrapLng = (lng) => ((lng + 180) % 360 + 360) % 360 - 180;
+
+function covers(lat, lng, sc) {
+  const [latMin, latMax, lngMin, lngMax] = sc.box;
+  const l = wrapLng(lng);
+  return lat >= latMin - EPS && lat <= latMax + EPS
+      && l >= lngMin - EPS && l <= lngMax + EPS;
+}
 
 // Both ends are clamped. The top saturates a point on the boundary -- the
 // poles, the antimeridian -- into the last cell. The bottom is only reachable
 // by floating-point slop, but an unclamped negative index would sign-extend
 // under >> and mint a plausible address for the wrong place.
-function indices(lat, lng) {
-  lng = ((lng + 180) % 360 + 360) % 360 - 180;
-  const [x, y] = project(lat, lng);
+function indices(lat, lng, sc) {
+  if (!covers(lat, lng, sc)) throw new Error(`outside ${sc.name}`);
+  const [x, y] = project(lat, wrapLng(lng));
   const cell = (v, lo, span, bits) =>
     Math.min(Math.max(Math.floor((v - lo) / span * 2 ** bits), 0), 2 ** bits - 1);
-  return [cell(x, X0, XR, XB), cell(y, Y0, YR, YB)];
+  return [cell(x, sc.x0, sc.xr, sc.xb), cell(y, sc.y0, sc.yr, sc.yb)];
 }
 
-function interleave(xi, yi) {
-  let v = 0n, xa = XB, ya = YB;
+function interleave(xi, yi, sc) {
+  let v = 0n, xa = sc.xb, ya = sc.yb;
   const X = BigInt(xi), Y = BigInt(yi);
-  for (const axis of ORDER) {
+  for (const axis of sc.order) {
     if (axis === 0) { xa--; v = (v << 1n) | ((X >> BigInt(xa)) & 1n); }
     else { ya--; v = (v << 1n) | ((Y >> BigInt(ya)) & 1n); }
   }
   return v;
 }
 
-function deinterleave(v, bits) {
+function deinterleave(v, bits, sc) {
   let xi = 0n, yi = 0n;
   for (let i = 0; i < bits; i++) {
     const bit = (v >> BigInt(bits - 1 - i)) & 1n;
-    if (ORDER[i] === 0) xi = (xi << 1n) | bit; else yi = (yi << 1n) | bit;
+    if (sc.order[i] === 0) xi = (xi << 1n) | bit; else yi = (yi << 1n) | bit;
   }
   return [Number(xi), Number(yi)];
 }
 
-const positionBits = (n) => (n < MAX_WORDS ? BITS * n : POSITION_BITS);
-const axisBits = (n) => {
-  const b = positionBits(n);
-  const xb = ORDER.slice(0, b).filter((a) => a === 0).length;
+const positionBits = (n, sc) => (n < sc.maxWords ? BITS * n : sc.positionBitsTotal);
+const axisBits = (n, sc) => {
+  const b = positionBits(n, sc);
+  const xb = sc.order.slice(0, b).filter((a) => a === 0).length;
   return [xb, b - xb];
 };
 
-function cellSize(n) {
-  const [xb, yb] = axisBits(n);
-  return [XR / 2 ** xb, YR / 2 ** yb];
+function cellSize(n, sc) {
+  const [xb, yb] = axisBits(n, sc);
+  return [sc.xr / 2 ** xb, sc.yr / 2 ** yb];
 }
 
 // The ambiguity left when an address is given as its last n words.
-function tileSize(nSaid) {
-  const [xb, yb] = axisBits(MAX_WORDS - nSaid);
-  return [XR / 2 ** xb, YR / 2 ** yb];
+function tileSize(nSaid, sc) {
+  if (nSaid >= sc.maxWords) return [sc.xr, sc.yr];
+  const [xb, yb] = axisBits(sc.maxWords - nSaid, sc);
+  return [sc.xr / 2 ** xb, sc.yr / 2 ** yb];
 }
 
 // How many low bits of each axis index a tail of nSaid words pins down.
-function knownLow(nSaid) {
-  const dropped = BITS * (MAX_WORDS - nSaid);
-  const dx = ORDER.slice(0, dropped).filter((a) => a === 0).length;
-  return [XB - dx, YB - (dropped - dx)];
+function knownLow(nSaid, sc) {
+  const dropped = BITS * (sc.maxWords - nSaid);
+  const dx = sc.order.slice(0, dropped).filter((a) => a === 0).length;
+  return [sc.xb - dx, sc.yb - (dropped - dx)];
 }
 
 // SHA-256 in plain JS. crypto.subtle would be neater but only exists in a
@@ -223,50 +248,77 @@ function sha256(bytes) {
 
 // Global mode binds the empty string, which no region code can be.
 
-function checksum(position) {
-  const bytes = new Array(8);
+// Global's payload is the bare position, which is what it has always been, so
+// every global address ever published stays valid. A tagged scope prepends its
+// tag, which no untagged payload can begin with.
+function checksum(position, sc) {
+  const bytes = [];
+  for (let i = 0; i < sc.tag.length; i++) bytes.push(sc.tag.charCodeAt(i) & 0xff);
+  if (sc.tag) bytes.push(0);
+  const p = new Array(8);
   let v = position;
-  for (let i = 7; i >= 0; i--) { bytes[i] = Number(v & 0xffn); v >>= 8n; }
-  return BigInt(sha256(bytes)[0] >>> (32 - CHECK_BITS));
+  for (let i = 7; i >= 0; i--) { p[i] = Number(v & 0xffn); v >>= 8n; }
+  return BigInt(sha256(bytes.concat(p))[0] >>> (32 - CHECK_BITS));
 }
 
-function value(lat, lng) {
-  const position = interleave(...indices(lat, lng));
-  return (position << BigInt(CHECK_BITS)) | checksum(position);
+function value(lat, lng, sc) {
+  const position = interleave(...indices(lat, lng, sc), sc);
+  return (position << BigInt(CHECK_BITS)) | checksum(position, sc);
 }
 
 // The first n words. Coarser as n falls; needs no context at any length.
-function encode(lat, lng, n) {
-  let v = value(lat, lng);
-  if (n < MAX_WORDS) v >>= BigInt(BITS * (MAX_WORDS - n));
+function encode(lat, lng, n, sc) {
+  let v = value(lat, lng, sc);
+  if (n < sc.maxWords) v >>= BigInt(BITS * (sc.maxWords - n));
   const out = [];
   for (let i = 0; i < n; i++) out.push(WORDS[Number((v >> BigInt(BITS * (n - 1 - i))) & 0x7ffn)]);
   return out;
 }
 
-function fromPosition(position) {
-  const [xi, yi] = deinterleave(position, POSITION_BITS);
-  return unproject(X0 + (xi + 0.5) / 2 ** XB * XR, Y0 + (yi + 0.5) / 2 ** YB * YR);
+function fromPosition(position, sc) {
+  const [xi, yi] = deinterleave(position, sc.positionBitsTotal, sc);
+  return unproject(sc.x0 + (xi + 0.5) / 2 ** sc.xb * sc.xr,
+                   sc.y0 + (yi + 0.5) / 2 ** sc.yb * sc.yr);
 }
 
 // An absolute address: the first n words, coarser as n falls.
-function decode(spoken) {
+function decode(spoken, sc) {
   const unknown = spoken.filter((w) => !INDEX.has(w));
   if (unknown.length) throw new Error(`not BIP-39 words: ${unknown.join(', ')}`);
-  if (spoken.length < 1 || spoken.length > MAX_WORDS) throw new Error(`1 to ${MAX_WORDS} words`);
+  if (spoken.length < 1 || spoken.length > sc.maxWords)
+    throw new Error(`1 to ${sc.maxWords} words in ${sc.name}`);
   let v = 0n;
   for (const w of spoken) v = (v << BigInt(BITS)) | BigInt(INDEX.get(w));
   let prefix;
-  if (spoken.length < MAX_WORDS) prefix = v;
+  if (spoken.length < sc.maxWords) prefix = v;
   else {
     prefix = v >> BigInt(CHECK_BITS);
-    if ((v & ((1n << BigInt(CHECK_BITS)) - 1n)) !== checksum(prefix))
-      throw new Error('checksum failed - a word is wrong');
+    if ((v & ((1n << BigInt(CHECK_BITS)) - 1n)) !== checksum(prefix, sc))
+      throw new Error('checksum failed - a word is wrong, or this address '
+        + 'belongs to the other scope');
   }
-  const bits = positionBits(spoken.length);
-  const [xb, yb] = axisBits(spoken.length);
-  const [xi, yi] = deinterleave(prefix, bits);
-  return unproject(X0 + (xi + 0.5) / 2 ** xb * XR, Y0 + (yi + 0.5) / 2 ** yb * YR);
+  const bits = positionBits(spoken.length, sc);
+  const [xb, yb] = axisBits(spoken.length, sc);
+  const [xi, yi] = deinterleave(prefix, bits, sc);
+  return unproject(sc.x0 + (xi + 0.5) / 2 ** xb * sc.xr,
+                   sc.y0 + (yi + 0.5) / 2 ** yb * sc.yr);
+}
+
+// Resolve without being told the scope. A terminal-length address carries a
+// checksum over its own scope, so it identifies itself. Anything shorter is an
+// unverified coarse prefix and global is assumed.
+//
+// The UK reading is tried first because the two directions are not
+// symmetrical: a global prefix read as UK fails its checksum 99.2% of the time
+// and is caught, but a UK address read as a global prefix would decode
+// silently to a different place, since nothing checks a prefix.
+function decodeAuto(spoken) {
+  for (const sc of [UK, GLOBAL]) {
+    if (spoken.length === sc.maxWords) {
+      try { return [...decode(spoken, sc), sc, true]; } catch { /* try the next */ }
+    }
+  }
+  return [...decode(spoken, GLOBAL), GLOBAL, false];
 }
 
 // An address given as its last words, plus a reference point. The dropped
@@ -274,55 +326,63 @@ function decode(spoken) {
 // the candidate matching the known low bits that is nearest the reference. The
 // checksum then covers the whole reconstruction, so a reference too far off to
 // pick the right tile is caught rather than resolving quietly to the wrong place.
-function resolveTail(spoken, nearLat, nearLng) {
+function resolveTail(spoken, nearLat, nearLng, sc) {
   const unknown = spoken.filter((w) => !INDEX.has(w));
   if (unknown.length) throw new Error(`not BIP-39 words: ${unknown.join(', ')}`);
   const n = spoken.length;
-  if (n < 1 || n > MAX_WORDS) throw new Error(`1 to ${MAX_WORDS} words`);
+  if (n < 1 || n > sc.maxWords) throw new Error(`1 to ${sc.maxWords} words in ${sc.name}`);
   let low = 0n;
   for (const w of spoken) low = (low << BigInt(BITS)) | BigInt(INDEX.get(w));
   const check = low & ((1n << BigInt(CHECK_BITS)) - 1n);
   const knownBits = BITS * n - CHECK_BITS;
   const posLow = low >> BigInt(CHECK_BITS);
-  const [cx, cy] = knownLow(n);
+  const [cx, cy] = knownLow(n, sc);
   let knownX = 0, knownY = 0;
   for (let i = 0; i < knownBits; i++) {
-    const seq = POSITION_BITS - knownBits + i;
+    const seq = sc.positionBitsTotal - knownBits + i;
     const bit = Number((posLow >> BigInt(knownBits - 1 - i)) & 1n);
-    if (ORDER[seq] === 0) knownX = knownX * 2 + bit; else knownY = knownY * 2 + bit;
+    if (sc.order[seq] === 0) knownX = knownX * 2 + bit; else knownY = knownY * 2 + bit;
   }
-  const [xiRef, yiRef] = indices(nearLat, nearLng);
+  const [xiRef, yiRef] = indices(nearLat, nearLng, sc);
   // x wraps: the projection is a cylinder, so a reference a few kilometres west
   // of the antimeridian is a whole world-width away in index terms while being
   // next door on the ground. Linear arithmetic picks a tile on the far side.
-  const periodX = 2 ** cx, totalX = 2 ** XB;
-  const k = Math.round((((xiRef - knownX) % totalX + totalX) % totalX) / periodX)
-    % (totalX / periodX);
-  const xi = (knownX + k * periodX) % totalX;
-  // y does not wrap -- latitude ends at the poles -- so clamp, but to the last
+  const clampLattice = (known, period, ref, bits) => {
+    const v = known + Math.round((ref - known) / period) * period;
+    return Math.min(Math.max(v, known),
+      known + Math.floor((2 ** bits - 1 - known) / period) * period);
+  };
+  const periodX = 2 ** cx, totalX = 2 ** sc.xb;
+  let xi;
+  if (sc === GLOBAL) {
+    const k = Math.round((((xiRef - knownX) % totalX + totalX) % totalX) / periodX)
+      % (totalX / periodX);
+    xi = (knownX + k * periodX) % totalX;
+  } else {
+    xi = clampLattice(knownX, periodX, xiRef, sc.xb);   // a partial box does not wrap
+  }
+  // y never wraps -- latitude ends at the poles -- so clamp, but to the last
   // point ON the lattice: clamping to the last index would leave a value the
   // known bits do not match.
-  const periodY = 2 ** cy;
-  const yi = Math.min(Math.max(knownY + Math.round((yiRef - knownY) / periodY) * periodY,
-    knownY), knownY + Math.floor((2 ** YB - 1 - knownY) / periodY) * periodY);
-  const position = interleave(xi, yi);
-  if (checksum(position) !== check)
+  const yi = clampLattice(knownY, 2 ** cy, yiRef, sc.yb);
+  const position = interleave(xi, yi, sc);
+  if (checksum(position, sc) !== check)
     throw new Error('checksum failed - a word is wrong, or the reference point '
       + 'is too far away to fill in the missing words');
-  return fromPosition(position);
+  return fromPosition(position, sc);
 }
 
 // The fewest trailing words that resolve back to this point from that reference.
-function wordsNeeded(lat, lng, nearLat, nearLng) {
-  const full = encode(lat, lng, MAX_WORDS);
-  const want = indices(lat, lng);
-  for (let n = 1; n <= MAX_WORDS; n++) {
+function wordsNeeded(lat, lng, nearLat, nearLng, sc) {
+  const full = encode(lat, lng, sc.maxWords, sc);
+  const want = indices(lat, lng, sc);
+  for (let n = 1; n <= sc.maxWords; n++) {
     try {
-      const got = indices(...resolveTail(full.slice(-n), nearLat, nearLng));
+      const got = indices(...resolveTail(full.slice(-n), nearLat, nearLng, sc), sc);
       if (got[0] === want[0] && got[1] === want[1]) return n;
     } catch { /* checksum rejected this length; try a longer tail */ }
   }
-  return MAX_WORDS;
+  return sc.maxWords;
 }
 
 // '.cruel.tomato.tone' -- the leading separator says the coarse words are
@@ -348,39 +408,77 @@ const rowsEl = document.getElementById('rows');
 const emptyEl = document.getElementById('empty');
 const errEl = document.getElementById('err');
 const knowsEl = document.getElementById('knows');
+const knowsRow = document.getElementById('knowsrow');
 const localEl = document.getElementById('local');
-let marker = null, boxes = [], point = null, selected = 4;
+const tabsEl = document.getElementById('tabs');
+let marker = null, boxes = [], scopeBox = null, point = null, selected = 4;
+let scope = GLOBAL;
 
 const fmt = (m) => m >= 1000 ? `${(m / 1000).toFixed(1)} km`
   : m >= 1 ? `${m.toFixed(1)} m` : `${(m * 100).toFixed(0)} cm`;
-const cellOf = (n) => { const [w, h] = cellSize(n); return Math.sqrt(w * h); };
+const cellOf = (n, sc) => { const [w, h] = cellSize(n, sc); return Math.sqrt(w * h); };
 
-function cellBounds(lat, lng, n) {
-  const [xb, yb] = axisBits(n);
-  const [x, y] = project(lat, ((lng + 180) % 360 + 360) % 360 - 180);
-  const w = XR / 2 ** xb, h = YR / 2 ** yb;
-  const cx = X0 + Math.floor((x - X0) / w) * w, cy = Y0 + Math.floor((y - Y0) / h) * h;
+function cellBounds(lat, lng, n, sc) {
+  const [xb, yb] = axisBits(n, sc);
+  const [x, y] = project(lat, wrapLng(lng));
+  const w = sc.xr / 2 ** xb, h = sc.yr / 2 ** yb;
+  const cx = sc.x0 + Math.floor((x - sc.x0) / w) * w;
+  const cy = sc.y0 + Math.floor((y - sc.y0) / h) * h;
   return [unproject(cx, cy), unproject(cx + w, cy + h)];
 }
 
 // How few words a listener who already knows roughly where you are still needs.
 // The dropped words are the coarse ones, so their ambiguity is one tile: any
 // accuracy better than half a tile pins it down.
-function shortestFor(accuracy) {
-  for (let n = 1; n <= MAX_WORDS; n++) {
-    const [w, h] = tileSize(n);
+function shortestFor(accuracy, sc) {
+  for (let n = 1; n <= sc.maxWords; n++) {
+    const [w, h] = tileSize(n, sc);
     if (Math.min(w, h) / 2 >= accuracy) return n;
   }
-  return MAX_WORDS;
+  return sc.maxWords;
+}
+
+function buildTabs() {
+  tabsEl.replaceChildren();
+  for (const sc of [GLOBAL, UK]) {
+    const b = document.createElement('button');
+    b.className = 'tab' + (sc === scope ? ' on' : '');
+    b.textContent = `${sc.name} · ${sc.maxWords} words`;
+    b.addEventListener('click', () => {
+      scope = sc;
+      selected = Math.min(selected, sc.maxWords);
+      buildTabs();
+      if (point) show(point[0], point[1]);
+    });
+    tabsEl.appendChild(b);
+  }
 }
 
 function show(lat, lng) {
   point = [lat, lng];
   errEl.textContent = '';
-  emptyEl.hidden = true; rowsEl.hidden = false;
+  if (marker) map.removeLayer(marker);
+  marker = L.circleMarker([lat, lng],
+    { radius: 5, color: '#a8322a', weight: 2, fillOpacity: .9 }).addTo(map);
+  boxes.forEach((b) => map.removeLayer(b)); boxes = [];
+  if (scopeBox) { map.removeLayer(scopeBox); scopeBox = null; }
+
+  // Outside a scope's box there is no address in that scope, and the codec
+  // refuses rather than inventing one -- an invented address would resolve to
+  // a real place inside the box and pass its own checksum.
+  if (!covers(lat, lng, scope)) {
+    rowsEl.hidden = true; knowsRow.hidden = true; emptyEl.hidden = false;
+    emptyEl.textContent = `No ${scope.name} address here — the dashed box is `
+      + 'everything this scope covers. Switch to Global, which covers the earth.';
+    const [a, b, c, d] = scope.box;
+    scopeBox = L.rectangle([[a, c], [b, d]],
+      { color: '#1a5c4a', weight: 1, fill: false, dashArray: '5 4', opacity: .55 }).addTo(map);
+    return;
+  }
+  emptyEl.hidden = true; rowsEl.hidden = false; knowsRow.hidden = false;
   rowsEl.replaceChildren();
-  const full = encode(lat, lng, MAX_WORDS);
-  for (let n = 1; n <= MAX_WORDS; n++) {
+  const full = encode(lat, lng, scope.maxWords, scope);
+  for (let n = 1; n <= scope.maxWords; n++) {
     const tr = document.createElement('tr');
     if (n === selected) tr.className = 'sel';
     const td = document.createElement('td'); td.className = 'a';
@@ -395,20 +493,23 @@ function show(lat, lng) {
       w.textContent = word; td.appendChild(w);
     });
     const ts = document.createElement('td'); ts.className = 's';
-    ts.textContent = n === MAX_WORDS ? `${fmt(cellOf(n))} · checked` : fmt(cellOf(n));
+    ts.textContent = n === scope.maxWords
+      ? `${fmt(cellOf(n, scope))} · checked` : fmt(cellOf(n, scope));
     tr.append(td, ts);
     tr.addEventListener('click', () => { selected = n; show(lat, lng); });
     rowsEl.appendChild(tr);
   }
   renderLocal(full);
 
-  if (marker) map.removeLayer(marker);
-  marker = L.circleMarker([lat, lng],
-    { radius: 5, color: '#a8322a', weight: 2, fillOpacity: .9 }).addTo(map);
-  boxes.forEach((b) => map.removeLayer(b)); boxes = [];
-  // The nesting: each length is a box inside the previous one.
-  for (let n = 2; n <= Math.min(selected + 1, MAX_WORDS); n++) {
-    boxes.push(L.rectangle(cellBounds(lat, lng, n),
+  // The UK box, then the nesting: each length is a box inside the previous.
+  // Global's box is the whole earth, so drawing it adds nothing.
+  if (scope !== GLOBAL) {
+    const [a, b, c, d] = scope.box;
+    scopeBox = L.rectangle([[a, c], [b, d]],
+      { color: '#1a5c4a', weight: 1, fill: false, dashArray: '5 4', opacity: .45 }).addTo(map);
+  }
+  for (let n = 2; n <= Math.min(selected + 1, scope.maxWords); n++) {
+    boxes.push(L.rectangle(cellBounds(lat, lng, n, scope),
       { color: n === selected ? '#1a5c4a' : '#8a8a82',
         weight: n === selected ? 2 : 1, fill: false }).addTo(map));
   }
@@ -417,45 +518,56 @@ function show(lat, lng) {
 function renderLocal(full) {
   const accuracy = Number(knowsEl.value);
   localEl.replaceChildren();
-  if (!accuracy) {                       // they know nothing: say all of it
+  if (!accuracy) {
     localEl.append(document.createTextNode('say the whole address'));
     return;
   }
-  const n = shortestFor(accuracy);
-  const [tw, th] = tileSize(n);
+  const n = shortestFor(accuracy, scope);
+  const [tw, th] = tileSize(n, scope);
   const said = document.createElement('span');
   said.className = 'tailaddr';
-  said.textContent = formatAddress(full.slice(-n), n < MAX_WORDS);
+  said.textContent = formatAddress(full.slice(-n), n < scope.maxWords);
+  const dropped = scope.maxWords - n;
   localEl.append(
-    document.createTextNode(n === MAX_WORDS ? 'still needs all five: ' : `say ${n}: `),
+    document.createTextNode(dropped ? `say ${n}: ` : `still needs all ${n}: `),
     said,
     Object.assign(document.createElement('div'), {
       className: 'sub',
-      textContent: n === MAX_WORDS
-        ? 'no coarse word can be dropped at that accuracy'
-        : `${MAX_WORDS - n} coarse word${MAX_WORDS - n > 1 ? 's' : ''} dropped; `
-          + `ambiguity is one ${fmt(tw)} × ${fmt(th)} tile`,
+      textContent: dropped
+        ? `${dropped} coarse word${dropped > 1 ? 's' : ''} dropped; ambiguity is `
+          + `one ${fmt(tw)} × ${fmt(th)} tile`
+        : 'no coarse word can be dropped at that accuracy',
     }));
 }
 
-const wrap = (lng) => ((lng + 180) % 360 + 360) % 360 - 180;
-map.on('click', (e) => show(e.latlng.lat, wrap(e.latlng.lng)));
+map.on('click', (e) => show(e.latlng.lat, wrapLng(e.latlng.lng)));
 knowsEl.addEventListener('change', () => { if (point) show(point[0], point[1]); });
 
 document.getElementById('go').addEventListener('click', () => {
   errEl.textContent = '';
   try {
     const [parts, tail] = parseAddress(document.getElementById('dec').value);
-    // A tail is resolved against the middle of the map, which stands in for
-    // whatever the listener already knows.
-    const c = map.getCenter();
-    const [lat, lng] = tail ? resolveTail(parts, c.lat, wrap(c.lng)) : decode(parts);
-    selected = tail ? MAX_WORDS : parts.length;
-    map.fitBounds(cellBounds(lat, lng, selected), { maxZoom: 19 });
+    let lat, lng, sc = scope, note = '';
+    if (tail) {
+      // A tail is resolved against the middle of the map, which stands in for
+      // whatever the listener already knows.
+      const c = map.getCenter();
+      [lat, lng] = resolveTail(parts, c.lat, wrapLng(c.lng), scope);
+    } else {
+      let verified;
+      [lat, lng, sc, verified] = decodeAuto(parts);
+      if (!verified) note = ' (a short address carries no checksum, so this is '
+        + 'read as a coarse Global one)';
+    }
+    if (sc !== scope) { scope = sc; buildTabs(); }
+    selected = tail ? scope.maxWords : Math.min(parts.length, scope.maxWords);
+    map.fitBounds(cellBounds(lat, lng, selected, scope), { maxZoom: 19 });
     show(lat, lng);
+    if (note) errEl.textContent = note.trim();
   } catch (e) { errEl.textContent = e.message; }
 });
 
+buildTabs();
 show(51.50072, -0.12456);
 </script>
 </body>

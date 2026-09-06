@@ -8,44 +8,54 @@ Experiments in encoding geographic coordinates as short, memorable word sequence
 
 ### `demos/word-grid.html`
 
-The scheme, live. Click anywhere on earth and watch the address grow a word at a
-time, each row adding one word and shrinking the box. Click a row to pick a
-length, or resolve an address back to a point.
+The scheme, live, with a tab per scope. Click anywhere and watch the address
+grow a word at a time; click a row to pick a length, or resolve an address back
+to a point.
 
-- **One global grid.** Five [BIP-39][bip39] words name any point on earth to
-  1.35 m. No prefix, no registry, no agreement about borders.
-- An address shortens **two ways**. Drop **trailing** words for a coarser
-  address that still needs no context. Drop **leading** words to keep full
-  precision with fewer words, when whoever is listening already knows roughly
-  where you are.
-- The **checksum verifies the reconstruction**, so filling in dropped leading
-  words from a reference point is safe: the wrong tile fails the check 99.2 % of
-  the time rather than resolving quietly to the wrong place.
+**Two scopes, the same grid mechanism over a different box.**
 
-| Words | Big Ben | Cell |
-|---|---|---|
-| 3 | `leg.tunnel.slam` | 264 × 225 m |
-| 4 | `leg.tunnel.slam.subway` | 4.1 × 7.0 m |
-| 5 | `leg.tunnel.slam.subway.gown` | 1.03 × 1.75 m, and verified |
+```
+leg.tunnel.slam.subway.gown      Big Ben, Global — 5 words, 1.35 m
+play.cram.side.someone           Big Ben, UK     — 4 words, 2.43 m
+```
 
-Shortened locally, with a leading `.` marking the missing coarse words:
+- **Global** — five [BIP-39][bip39] words, anywhere on earth. No registry, no
+  agreement about borders, nothing the caller has to know.
+- **UK** — four words over a box around the United Kingdom. One word shorter,
+  self-contained, nothing to reconstruct.
+- The scope is **bound into the checksum**, so the two can never be silently
+  confused, and a terminal-length address identifies itself.
 
-| Words said | Written | Usable if the listener knows your position within |
+An address shortens **two ways** in either scope. Drop **trailing** words for a
+coarser address that needs no context. Drop **leading** words to keep full
+precision with fewer words, when whoever is listening already knows roughly
+where you are — marked with a leading `.`:
+
+| Words said | Written (Global) | Usable if the listener knows your position within |
 |---|---|---|
 | 4 | `.tunnel.slam.subway.gown` | 230 km — which country |
 | 3 | `.slam.subway.gown` | 4.2 km — which town |
 | 2 | `.subway.gown` | 112 m — which street |
 
-It falls conveniently over the UK: the whole country spans only six distinct
-first words, and most of Great Britain is `leg`. So a UK conversation drops the
-first word almost for free. Near a seam it is not free — Edinburgh is `legal`,
-Belfast is `left` — which is exactly what the checksum is there to catch.
+The **checksum verifies the reconstruction**, so filling in dropped words from a
+reference point is safe: the wrong tile fails the check 99.2 % of the time
+rather than resolving quietly to the wrong place.
 
-The fifth word does two jobs: four of its bits refine the position and seven
-carry a checksum, so it lands at 1.35 m *and* rejects a wrong word 99.2 % of the
-time. what3words is 3 m with no checksum. Five words is terminal — a sixth would
-have to reinterpret those bits. See
-[`docs/grid-scheme.md`](docs/grid-scheme.md).
+Which to use is a trade of ergonomics against resolution. Global shortened by
+one leading word is *also* four words and reaches 1.35 m against UK's 2.43 m —
+one dropped word is worth 11 bits of context where the UK box is worth 9.3. UK
+mode buys you not having to reconstruct anything.
+
+Two sharp edges, both documented in [`docs/grid-scheme.md`](docs/grid-scheme.md):
+
+- A four-word **UK address read as a global prefix decodes silently**, because a
+  prefix carries no checksum. So the UK reading is always tried first.
+- The UK box is a **rectangle, not a border** — Dublin is inside it.
+
+The last word does two jobs: four of its bits refine the position and seven
+carry a checksum, so it rejects a wrong word 99.2 % of the time. what3words is
+3 m with no checksum. Each scope's terminal length is terminal — a further word
+would have to reinterpret those bits.
 
 Open the file directly in a browser: no build step, and no secure-context
 requirement, since SHA-256 is plain JavaScript rather than `crypto.subtle`. It
