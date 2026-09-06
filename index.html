@@ -60,87 +60,136 @@
 </style>
 </head>
 <body>
-
 <header>
   <div class="wrap">
     <h1>WordMapper</h1>
-    <p class="tagline">Encoding geographic coordinates as short, memorable word sequences — an experiment in whether a small, carefully chosen vocabulary can beat a large careless one.</p>
-    <div class="addr">piano<span>.</span>tango<span>.</span>mango</div>
+    <p class="tagline">Three spoken words for any point on earth, to within a metre — by not saying the part you already know.</p>
+    <div class="addr">shoulder<span>.</span>few<span>.</span>lottery</div>
+    <p class="note">Big Ben. The same three words repeat every 70&nbsp;km; knowing roughly where you are picks the right one.</p>
   </div>
 </header>
 
 <main class="wrap">
 
-  <h2>The demo</h2>
-  <p>An interactive grid over the UK and Ireland. Click a cell to pick a word; each
-  click subdivides that cell with the same grid, so every extra word refines the
-  address. Three words gets you to about 10 × 15 m.</p>
-  <a class="cta" href="demos/uk-word-grid.html">Open the demo →</a>
-  <p class="note">Loads Leaflet and OpenStreetMap tiles from a CDN, so it needs network access.</p>
+  <h2>The trick</h2>
+  <p>The world is projected to an equal-area plane and tiled into 70&nbsp;km squares.
+  <strong>The square is never transmitted.</strong> An address names a point <em>within</em>
+  a square, and the listener supplies the square from knowing roughly where they are.</p>
 
-  <h2>How it works</h2>
-  <p>The bounding box is divided into a 43 × 43 grid. Cells are numbered along a
-  <a href="https://github.com/jakubcerveny/gilbert">generalised Hilbert curve</a>, so
-  cells that are adjacent in space are adjacent in the numbering. Each index picks a
-  word from a 1,849-word list of everyday words — exactly one word per cell, so no
-  ground is left unaddressable. No two words are within one edit of each other in spelling
-  <em>or</em> pronunciation, which is what separates <code>sail</code> from
-  <code>sale</code>.</p>
+  <p>That omission is the whole scheme. 104,095 squares cover the earth, so leaving one
+  unsaid is <strong>16.7 bits you never speak aloud</strong> — and those bits go into
+  resolution instead.</p>
+
+  <h2>Bit budget</h2>
+  <p>A <a href="https://github.com/bitcoin/bips/blob/master/bip-0039/bip-0039-wordlists.md">BIP-39</a>
+  word is exactly 11 bits, because the list is exactly 2,048 words. Nothing is wasted
+  rounding to a word boundary.</p>
 
   <div class="scroll">
   <table>
-    <thead><tr><th>Words</th><th>Cell size</th><th>Roughly</th></tr></thead>
+    <thead><tr><th>Words</th><th>Bits</th><th>Points per square</th><th>Cell</th></tr></thead>
     <tbody>
-      <tr><td class="num">1</td><td class="num">18.8 × 28.6 km</td><td>a county</td></tr>
-      <tr><td class="num">2</td><td class="num">438 × 664 m</td><td>a neighbourhood</td></tr>
-      <tr><td class="num">3</td><td class="num">10.2 × 15.4 m</td><td>a building</td></tr>
+      <tr><td class="num">2</td><td class="num">22</td><td class="num">4,194,304</td><td class="num">34.2 m</td></tr>
+      <tr><td class="num">3</td><td class="num">33</td><td class="num">8,589,934,592</td><td class="num"><strong>0.755 m</strong></td></tr>
+      <tr><td class="num">4</td><td class="num">44</td><td class="num">1.76 × 10¹³</td><td class="num">1.7 cm</td></tr>
     </tbody>
   </table>
   </div>
 
-  <p>Because each word strictly subdivides the previous cell, every prefix is already
-  a valid coarser address. A truncated address is degraded, not invalid.</p>
+  <h2>The checksum is not optional</h2>
+  <p>BIP-39 is built to be <em>typed and checksummed</em>, not spoken. Its guarantee is
+  unique four-letter prefixes, which says nothing about sound. Measured across the list:</p>
 
-  <h2>Why a small word list</h2>
-  <p>For an area <em>A</em> addressed with <em>L</em> words from a list of <em>N</em>:</p>
+  <ul>
+    <li><strong>Four outright homophones</strong> — <code>pair</code>/<code>pear</code>,
+      <code>peace</code>/<code>piece</code>, <code>right</code>/<code>write</code>,
+      <code>wear</code>/<code>where</code></li>
+    <li><strong>806</strong> pairs one letter apart, <strong>1,824</strong> one phoneme apart</li>
+    <li><strong>53 %</strong> of words have a same-or-one-phoneme twin, so <strong>89.6 %</strong>
+      of three-word addresses contain a word that one mishearing turns into a different
+      <em>valid</em> word</li>
+  </ul>
 
-  <div class="eq">cell side = sqrt( A / N<sup>L</sup> )</div>
-
-  <p>Coverage is cheap — resolution scales with the square root of area, so doubling
-  the area costs only 41 % in cell size. The vocabulary and the address length are the
-  exponential levers. Grid dimensions do not appear at all: they change the
-  <em>shape</em> of cells, never their area.</p>
-
-  <p>That reframes the usual trade. Reaching 3 m worldwide needs about 38,000 words at
-  three words per address — or about 2,750 at four. what3words took the first route.
-  The second keeps the property that makes a mnemonic list worth having:</p>
+  <p>Without check bits, such a mishearing is silently a different place. Check bits come
+  out of resolution, so this is the real trade:</p>
 
   <div class="scroll">
   <table>
-    <thead><tr><th>Address</th><th>Whole globe</th><th>Land only</th></tr></thead>
+    <thead><tr><th>Check bits</th><th>Cell</th><th>Wrong word detected</th></tr></thead>
     <tbody>
-      <tr><td class="num">3 words</td><td class="num">342 m</td><td class="num">185 m</td></tr>
-      <tr><td class="num">4 words</td><td class="num">8.5 m</td><td class="num">4.6 m</td></tr>
-      <tr><td class="num">5 words</td><td class="num">21 cm</td><td class="num">11 cm</td></tr>
+      <tr><td class="num">0</td><td class="num">0.53 × 1.07 m</td><td class="num">0 %</td></tr>
+      <tr><td class="num">4</td><td class="num">2.1 × 4.3 m</td><td class="num">93.8 %</td></tr>
+      <tr><td class="num">8</td><td class="num">8.5 × 17.1 m</td><td class="num">99.6 %</td></tr>
     </tbody>
   </table>
   </div>
+  <p class="note">Measured detection matches theory exactly. BIP-39 does get one thing
+  right that cost real effort elsewhere: it contains <strong>zero plurals</strong>.</p>
 
-  <p>Global coverage does not cost resolution. It costs one more word.</p>
+  <h2>How good must the hint be?</h2>
+  <p>Two instances of an address fall within <em>R</em> of a point exactly when the lattice
+  spacing is below 2<em>R</em>. A 35&nbsp;km guarantee therefore needs 70&nbsp;km spacing in
+  <em>both</em> directions — and an equal-area cylinder only delivers that at its standard
+  parallel. The square is 70&nbsp;km in projected units, not on the ground.</p>
+
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Latitude</th><th>E–W</th><th>N–S</th><th>Hint good to</th></tr></thead>
+    <tbody>
+      <tr><td class="num">0°</td><td class="num">80.8 km</td><td class="num">60.6 km</td><td class="num">30.3 km</td></tr>
+      <tr><td class="num">30°</td><td class="num">70.0 km</td><td class="num">70.0 km</td><td class="num">35.0 km</td></tr>
+      <tr><td class="num">51.5° London</td><td class="num">50.3 km</td><td class="num">97.4 km</td><td class="num"><strong>25.2 km</strong></td></tr>
+      <tr><td class="num">60°</td><td class="num">40.4 km</td><td class="num">121.2 km</td><td class="num">20.2 km</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="note">Fixes, none free: move the standard parallel to the region (55° makes it
+  exactly square over the UK), UTM-style latitude bands, or an equal-area cube — which
+  bounds the requirement near 27&nbsp;km worldwide.</p>
+
+  <h2>Examples</h2>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Place</th><th>Address</th></tr></thead>
+    <tbody>
+      <tr><td>Big Ben</td><td class="num">shoulder.few.lottery</td></tr>
+      <tr><td>Tower Bridge</td><td class="num">success.chase.alley</td></tr>
+      <tr><td>Stonehenge</td><td class="num">leg.athlete.trial</td></tr>
+      <tr><td>Edinburgh Castle</td><td class="num">machine.cruise.bunker</td></tr>
+      <tr><td>Sydney Opera House</td><td class="num">approve.net.merit</td></tr>
+      <tr><td>Statue of Liberty</td><td class="num">copy.tissue.cushion</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="note">Round trip verified within one cell diagonal across 4,000 random points
+  between ±60° latitude.</p>
+
+  <h2>What it gives up</h2>
+  <p>An address is no longer self-contained. <code>shoulder.few.lottery</code> means nothing
+  to someone who has no idea where you are — which is precisely the emergency-services
+  case that motivates schemes like this. The natural fix is a place-name prefix when out
+  of context: <em>“Cornwall: shoulder.few.lottery”</em>.</p>
 
   <h2>Reading</h2>
   <ul>
-    <li><a href="https://github.com/Crunchy000/WordMapper/blob/main/docs/coverage.md">Coverage and resolution</a> — how far the scheme stretches, and what global would take.</li>
-    <li><a href="https://github.com/Crunchy000/WordMapper/blob/main/docs/wordlist.md">Building the word list</a> — why phonetic distinctness, not vocabulary, sets the limit.</li>
-    <li><a href="https://github.com/Crunchy000/WordMapper/blob/main/docs/uk-word-grid-review.md">Demo review</a> — known issues and proposed improvements.</li>
+    <li><a href="https://github.com/Crunchy000/WordMapper/blob/main/docs/grid-scheme.md">The scheme in full</a> — bit budget, the checksum measurements, and the honest version of the 35&nbsp;km claim.</li>
+    <li><a href="https://github.com/Crunchy000/WordMapper/blob/main/docs/coverage.md">Coverage and resolution</a> — why coverage is cheap and vocabulary is not.</li>
     <li><a href="https://github.com/Crunchy000/WordMapper">Source on GitHub</a>.</li>
   </ul>
+
+  <h2>The old demo</h2>
+  <p><strong>Superseded.</strong> This interactive grid implements the <em>earlier</em>
+  scheme — a nested 43 × 43 grid over a UK and Ireland bounding box with a custom
+  1,849-word list, reaching 10 × 15 m. It is kept because it shows the subdivision idea
+  well, but it is not the algorithm described above.</p>
+  <a class="cta" href="demos/uk-word-grid.html">Open the old demo →</a>
+  <p class="note">Loads Leaflet and OpenStreetMap tiles from a CDN, so it needs network access.</p>
 
 </main>
 
 <footer class="wrap">
-  MIT licensed. Word list from the
-  <a href="https://web.archive.org/web/20090918202746/http://tothink.com/mnemonic/">Tirosh mnemonic encoding</a>.
+  MIT licensed. Word list is the
+  <a href="https://github.com/bitcoin/bips/blob/master/bip-0039/bip-0039-wordlists.md">BIP-39 English list</a>.
 </footer>
 
 </body>
