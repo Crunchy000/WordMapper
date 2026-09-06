@@ -130,13 +130,26 @@ def load_words(path=None):
                                 '..', '..', 'data', 'wordlist.json')
     return json.load(open(path))
 
+
+def load_aliases(path=None):
+    """Alternate spellings that decode to the same address: color -> colour."""
+    path = path or os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                '..', '..', 'data', 'aliases.json')
+    return json.load(open(path)) if os.path.exists(path) else {}
+
 def encode_words(three, words, checks=1):
     idx = {w: i for i, w in enumerate(words)}
     return [words[i] for i in encode([idx[w] for w in three], checks)]
 
-def decode_words(spoken, words):
-    """Any word not in the list is treated as a known-position erasure."""
+def decode_words(spoken, words, aliases=None):
+    """Any word not in the list is treated as a known-position erasure.
+
+    An accepted alternate spelling resolves to its canonical word first, so
+    "color" and "colour" reach the same address.
+    """
     idx = {w: i for i, w in enumerate(words)}
-    received = [idx.get(w) for w in spoken]
+    if aliases is None:
+        aliases = load_aliases()
+    received = [idx.get(aliases.get(w, w)) for w in spoken]
     out, status = decode(received)
     return ([words[i] for i in out] if out else None), status

@@ -81,6 +81,12 @@ SPELLING_KEEP = {
     'almanac',   # almanack is archaic; almanac is standard in both
     'filter',    # paired with "philtre", which is a different word entirely
 }
+
+# Words must appear in the commonest tiers of English, not merely clear the
+# frequency floor. Zipf counts written occurrences, so fashion journalism pushes
+# "couture" to 3.32 -- above the floor, and not a word anyone reaches for.
+# Cumulative tiers 10-35 are roughly the 38,000 commonest English words.
+COMMON_TIERS = ['10', '20', '35']
 US_KEEP = {'deputy', 'derby', 'grunt'}   # flagged as American, ordinary in the UK
 
 # Proper nouns whose lowercase common-noun sense is too weak to carry them.
@@ -109,12 +115,32 @@ ADULT = {'erotica', 'amour', 'deviate', 'virgin'}
 # deliberately kept -- you never need to know what an address word means, only
 # how to spell it.
 def anglo_filters():
-    """(dual-spelling, american-only) word sets, from the translator package."""
-    def single(d):
-        return {k.lower() for k in d if ' ' not in k and k.isalpha()}
-    dual = single(npm_json("require('american-british-english-translator/data/american_spellings.json')"))
-    us = single(npm_json("require('american-british-english-translator/data/american_only.json')"))
-    return dual - SPELLING_KEEP, us - US_KEEP
+    """(american -> british spelling map, american-only set).
+
+    Two accepted spellings no longer disqualify a word. Both forms decode to the
+    same address instead, so "grey" and "gray" are one entry with two written
+    forms. The British spelling is canonical, since this is a UK scheme.
+    """
+    pairs = npm_json(
+        "require('american-british-english-translator/data/american_spellings.json')")
+    aliases = {k.lower(): v.lower() for k, v in pairs.items()
+               if isinstance(v, str) and k.isalpha() and v.isalpha()
+               and k.lower() != v.lower() and k.lower() not in SPELLING_KEEP}
+    us_only = {k.lower() for k in npm_json(
+        "require('american-british-english-translator/data/american_only.json')")
+        if ' ' not in k and k.isalpha()} - US_KEEP
+    return aliases, us_only
+
+
+def common_words():
+    """The commonest tiers of English, cumulative. Both the general and the
+    British sets: the general ones are American-leaning, and would rule out
+    colour, grey, humour, catalogue and defence."""
+    out = set()
+    for tier in COMMON_TIERS:
+        for key in (f'english/{tier}', f'english/british/{tier}'):
+            out |= set(npm_json(f"require('wordlist-english')[{key!r}]"))
+    return out
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -190,10 +216,26 @@ def sensitive_filter(senses, hyper, roots_words=None, depth=None):
         return any(o in roots or (ancestors(o) & roots) for o in considered)
     return bad
 
+# Plurals no rule derives from the singular. A singular/plural PAIR in the list
+# is the dangerous case -- it is what made what3words addresses confusable -- and
+# the distinctness rules already make pairs impossible, since table/tables and
+# mouse/mice differ by one phoneme. These cover the isolated forms.
+IRREGULAR_PLURALS = {
+    'teeth', 'feet', 'geese', 'mice', 'lice', 'men', 'women', 'children',
+    'people', 'oxen', 'dice', 'pence', 'cacti', 'fungi', 'data', 'media',
+    'indices', 'crises', 'alumni', 'criteria', 'phenomena', 'stimuli', 'bacteria',
+}
+
+
 def inflected(w, nouns, verbs):
     """Plurals, gerunds, participles and agent nouns -- they add confusable
     pairs (wallop/wallops) without adding distinct concepts."""
-    if w.endswith('s') and (w[:-1] in nouns or w[:-2] in nouns or w[:-2] + 'y' in nouns):
+    if w in IRREGULAR_PLURALS:
+        return True
+    # -ies is three characters back to the singular, not two: flies -> fly.
+    if w.endswith('ies') and w[:-3] + 'y' in nouns:
+        return True
+    if w.endswith('s') and (w[:-1] in nouns or w[:-2] in nouns):
         return True
     if w.endswith('es') and w[:-2] in nouns:
         return True
@@ -207,7 +249,17 @@ def main(count=COUNT):
     from wordfreq import zipf_frequency
     src = load()
     nouns, verbs, proper, senses, hyper = wordnet(src['wndir'])
-    dual_spelling, us_only = anglo_filters()
+    to_uk, us_only = anglo_filters()
+    common = common_words()
+    # WordNet and the CMU dictionary are American, so the American spelling
+    # drives the pipeline and the British one is what gets published -- but only
+    # when the British form is itself a legal entry. "catalogue" is nine letters
+    # and "yoghurt" has no CMU pronunciation, so those stay American.
+    def display(w):
+        uk = to_uk.get(w)
+        if uk and LENGTH[0] <= len(uk) <= LENGTH[1] and uk in cmu:
+            return uk
+        return w
     sensitive = sensitive_filter(senses, hyper)
     religious = sensitive_filter(senses, hyper, FAITH_ROOTS, depth=1)
     cmu = src['cmu']
@@ -219,7 +271,8 @@ def main(count=COUNT):
             and not inflected(w, nouns, verbs)
             and not sensitive(w) and not religious(w)
             and w not in FAITH_WORDS
-            and w not in dual_spelling and w not in us_only
+            and w not in us_only
+            and (w in common or to_uk.get(w) in common)
             and w not in PROPER_NOUNS and w not in ADULT]
     freq = {w: zipf_frequency(w, 'en') for w in pool}
     pool = [w for w in pool if BAND[0] <= freq[w] <= BAND[1]]
@@ -243,10 +296,17 @@ def main(count=COUNT):
 
     # Greedy, most internationally recognisable first, so those win collisions.
     ordered = sorted(pool, key=lambda w: (-intl[w], -freq[w], w))
-    sounds, spellings, phone_nbrs, out = set(), set(), set(), []
+    sounds, spellings, phone_nbrs, out, alias_of = set(), set(), set(), [], {}
     for w in ordered:
+        # A word's alternate spelling has to be as distinct from everything else
+        # as the word itself, or a typo could land on the wrong address instead
+        # of being caught. The two forms are exempt from each other, since they
+        # decode to the same place.
+        forms = {w, display(w)}
+        # Both spellings sound the same, so one pronunciation covers the pair.
         key = phkey(w)
-        near_spelling, near_sound = dels(w), dels(key)
+        near_spelling = set().union(*(dels(f) for f in forms))
+        near_sound = dels(key)
         if key in sounds:                    # homophone: sail / sale
             continue
         if near_spelling & spellings:        # one letter apart: cat / cot
@@ -257,6 +317,8 @@ def main(count=COUNT):
         sounds.add(key)
         spellings |= near_spelling
         phone_nbrs |= near_sound
+        if len(forms) > 1:
+            alias_of[w] = display(w)         # american spelling -> published one
 
     # Truncating costs precision but sharply improves word quality: the tail of
     # the selection is whatever survived the distinctness rules, not good words.
@@ -267,8 +329,33 @@ def main(count=COUNT):
     n = len(out)
     box = 9.92141e11  # UK + Ireland bounding box, m^2
     mean = sum(intl[w] for w in out) / n
-    print(json.dumps(sorted(out), indent=0))
+    kept = set(out)
+    published_set = {display(w) for w in out}
+    aliases = {us: uk for us, uk in alias_of.items() if us in kept}
+    # Also accept the American spelling of any word that entered under its
+    # British form -- "grey" is a WordNet lemma in its own right, so "gray"
+    # would otherwise not decode. But an alias has to be as distinct as a real
+    # entry: "gray" is one edit from "grab" and "gravy", so accepting it would
+    # make a typo of those resolve silently to grey's address. Those are refused.
+    accepted = set(published_set) | set(aliases)
+    index = set().union(*(dels(f) for f in accepted))
+    for us, uk in sorted(to_uk.items()):
+        if uk not in published_set or us in accepted:
+            continue
+        near = dels(us)
+        own = dels(uk)
+        if near & (index - own):
+            continue                          # collides with a different address
+        aliases[us] = uk
+        accepted.add(us)
+        index |= near
+    published = sorted(published_set)
+    print(json.dumps(published, indent=0))
+    with open(os.path.join(HERE, '..', '..', 'data', 'aliases.json'), 'w') as fh:
+        json.dump(dict(sorted(aliases.items())), fh, indent=0)
     print(f'{full:,} words survived selection; kept top {n:,}', file=sys.stderr)
+    print(f'{len(aliases):,} accepted alternate spellings written to data/aliases.json',
+          file=sys.stderr)
     print(f'3-word cell {math.sqrt(box / n ** 3):.2f} m; '
           f'mean {mean:.1f}/{len(LANGS)} languages, worst {min(intl[w] for w in out)}',
           file=sys.stderr)

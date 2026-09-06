@@ -111,7 +111,28 @@ generates candidates and `PROPER_NOUNS` records the judgement: `berlin`, `japan`
 (garment), `ottoman` (furniture), `scribe`, `swift`, `smith`, `drake`, `ford`,
 `polo` and `cheddar` stay.
 
-**Two accepted spellings disqualifies a word.** `color`/`colour`,
+**Two accepted spellings are accepted as one address, not excluded.** `colour`
+and `color` decode to the same place, so neither is wasted and neither speaker
+is wrong. The British form is published, since this is a UK scheme; the American
+form is recorded in [`aliases.json`](../data/aliases.json).
+
+This only works where the alternate spelling is *itself* safe. `gray` is one
+edit from `grab` and `gravy`, both distinct addresses, so accepting it would make
+a typo of those resolve silently to grey's location instead of erroring — the
+verifier catches exactly this, and `gray` is refused while `grey` stays. Eleven
+of nineteen candidate spellings survive that test. British forms also have to be
+legal entries in their own right: `catalogue` is nine letters and `yoghurt` has
+no CMU pronunciation, so those stay American.
+
+**Everyday means the common tiers, not just the frequency floor.** Zipf counts
+written occurrences, so fashion journalism pushes `couture` to 3.32 — above the
+floor, and not a word anyone reaches for. Requiring membership of the commonest
+~38,000 English words (`wordlist-english` tiers 10-35, general *and* British,
+since the general sets are American-leaning and would rule out `colour` and
+`grey`) drops `couture`, `hummus`, `acacia`, `ukulele`, `duchy` and `lactose` at
+no cost to the grid: 1,865 words survive against the 1,849 needed.
+
+**Superseded — two accepted spellings used to disqualify a word.** `color`/`colour`,
 `humor`/`humour`, `catalog`/`catalogue`, `armor`/`armour`, `flavor`/`flavour` —
 a listener cannot know which to write, which is a stronger objection than
 nationality. This one is **derived from data**, not hand-listed: a hand list does

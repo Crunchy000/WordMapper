@@ -3,12 +3,14 @@
   "private": true,
   "description": "Data sources for building the mnemonic word list. Run: npm install",
   "dependencies": {
-    "american-british-english-translator": "^1.0.0",
+    "american-british-english-translator": "^0.2.1",
     "an-array-of-english-words": "^2.0.0",
+    "bip39": "^3.1.0",
     "cmu-pronouncing-dictionary": "^3.0.0",
     "naughty-words": "^1.2.0",
     "profane-words": "^1.5.0",
     "stopword": "^3.0.0",
+    "wordlist-english": "^1.2.1",
     "wordnet-db": "^3.1.0"
   }
 }
