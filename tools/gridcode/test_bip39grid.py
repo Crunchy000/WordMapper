@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify the 70 km lattice scheme. Exits non-zero on any regression."""
+"""Verify the truncatable address scheme. Exits non-zero on any regression."""
 import math, random, sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import bip39grid as g
@@ -7,75 +7,75 @@ import bip39grid as g
 WORDS = g.load_wordlist()
 fails = []
 
-def check(name, got, want, tol=None):
-    ok = (abs(got - want) <= tol) if tol is not None else (got == want)
-    print(f'  {"PASS" if ok else "FAIL"}  {name:56s} {got}')
+def check(name, got, want):
+    ok = got == want
+    print(f'  {"PASS" if ok else "FAIL"}  {name:58s} {got}')
     if not ok:
         fails.append(name)
 
-def haversine(a, b):
+def hav(a, b):
     (la1, lo1), (la2, lo2) = a, b
     dla, dlo = math.radians(la2 - la1), math.radians(lo2 - lo1)
-    h = math.sin(dla / 2) ** 2 + math.cos(math.radians(la1)) * math.cos(math.radians(la2)) * math.sin(dlo / 2) ** 2
+    h = math.sin(dla/2)**2 + math.cos(math.radians(la1))*math.cos(math.radians(la2))*math.sin(dlo/2)**2
     return 2 * g.R * math.asin(math.sqrt(h))
 
 random.seed(20260906)
-# Latitudes kept away from the poles, where an equal-area cylinder stretches
-# shape badly enough that a "70 km" square is no longer 70 km across.
-pts = [(random.uniform(-60, 60), random.uniform(-179, 179)) for _ in range(4000)]
+pts = [(random.uniform(g.BOX['latMin']+.2, g.BOX['latMax']-.2),
+        random.uniform(g.BOX['lngMin']+.2, g.BOX['lngMax']-.2)) for _ in range(4000)]
 
-for cb in (0, 4, 8):
-    cw, ch = g.cell_size(cb)
-    worst = 0.0
+# The property the whole design rests on.
+bad = 0
+for lat, lng in pts:
+    a = [g.encode(lat, lng, WORDS, n) for n in range(1, g.MAX_WORDS + 1)]
+    for i in range(len(a) - 1):
+        if a[i + 1][:len(a[i])] != a[i]:
+            bad += 1
+check('every address is a prefix of the next longer one', bad, 0)
+
+# Round trip at each length, within the cell it names.
+for n in range(1, g.MAX_WORDS + 1):
+    w, h = g.cell_size(n)
+    limit = math.hypot(w, h)
+    worst = max(hav((lat, lng), g.decode(g.encode(lat, lng, WORDS, n), WORDS))
+                for lat, lng in pts[:800])
+    check(f'{n} words: round trip inside one cell diagonal', worst <= limit, True)
+    print(f'        cell {w:.3f} x {h:.3f} m, worst error {worst:.3f} m')
+
+# No repeats: distinct points that share an address must be in the same cell.
+for n in (2, 3):
+    seen, dupes = {}, 0
+    w, h = g.cell_size(n)
     for lat, lng in pts:
-        addr = g.encode(lat, lng, WORDS, cb)
-        back = g.decode(addr, lat, lng, WORDS, cb)
-        worst = max(worst, haversine((lat, lng), back))
-    limit = math.hypot(cw, ch)          # half-diagonal plus projection slack
-    check(f'{cb} check bits: round trip within one cell diagonal', worst <= limit, True)
-    print(f'        worst error {worst:.3f} m, cell diagonal {limit:.3f} m')
+        k = '.'.join(g.encode(lat, lng, WORDS, n))
+        if k in seen and hav((lat, lng), seen[k]) > math.hypot(w, h):
+            dupes += 1
+        seen.setdefault(k, (lat, lng))
+    check(f'{n} words: no address repeats anywhere in the box', dupes, 0)
 
-# A wrong word must be caught, not silently relocate the address.
-for cb in (0, 4, 8):
-    caught = 0
-    trials = 3000
-    for _ in range(trials):
-        lat, lng = random.choice(pts)
-        addr = g.encode(lat, lng, WORDS, cb)
-        bad = list(addr)
-        i = random.randrange(g.WORDS)
-        while bad[i] == addr[i]:
-            bad[i] = random.choice(WORDS)
-        try:
-            got = g.decode(bad, lat, lng, WORDS, cb)
-            if haversine((lat, lng), got) > 1000:
-                pass                    # silently wrong, and far away
-        except ValueError:
-            caught += 1
-    rate = caught / trials * 100
-    expected = 0 if cb == 0 else (1 - 2 ** -cb) * 100
-    print(f'  ----  {cb} check bits: wrong word detected {rate:5.1f}% (theory {expected:.1f}%)')
+# The check word must catch wrong words and wrong lengths.
+caught = tot = 0
+for lat, lng in pts[:1500]:
+    n = random.randint(2, 4)
+    a = g.encode(lat, lng, WORDS, n)
+    c = g.check_word(a, WORDS)
+    bad_a = list(a)
+    i = random.randrange(n)
+    while bad_a[i] == a[i]:
+        bad_a[i] = random.choice(WORDS)
+    tot += 1
+    if not g.verify(bad_a, c, WORDS):
+        caught += 1
+print(f'  ----  check word rejects a wrong word: {caught/tot*100:.1f}% '
+      f'(theory {(1 - 1/2048)*100:.2f}%)')
 
-# Uniqueness, measured from an ARBITRARY point rather than from a lattice point.
-# Two instances are both within R of some point whenever the spacing is under 2R,
-# so the honest question is the spacing on the ground, which the equal-area
-# cylinder makes latitude-dependent.
-K = math.cos(math.radians(g.STD_PARALLEL))
-print()
-print('  ----  ground spacing of the lattice, and the hint accuracy it demands:')
-worst_lat = None
-for lat in (0, 30, 45, 51.5, 55, 60):
-    c = math.cos(math.radians(lat))
-    ew, ns = g.CHUNK * c / K, g.CHUNK / c * K
-    safe = min(ew, ns) / 2
-    print(f'        lat {lat:>4}: E-W {ew/1000:>5.1f} km, N-S {ns/1000:>6.1f} km '
-          f'-> hint must be good to {safe/1000:.1f} km')
-    if lat == 51.5:
-        worst_lat = safe
-check('a 35 km hint is enough at the standard parallel',
-      round(min(g.CHUNK, g.CHUNK) / 2), 35000)
-check('at UK latitudes the hint must be better than 35 km (documented, not a bug)',
-      worst_lat < 35000, True)
+wrong_len = sum(1 for lat, lng in pts[:500]
+                if not g.verify(g.encode(lat, lng, WORDS, 3),
+                                g.check_word(g.encode(lat, lng, WORDS, 4), WORDS), WORDS))
+check('check word is length-specific', wrong_len, 500)
+
+check('a valid address round trips its own check word',
+      all(g.verify(a, g.check_word(a, WORDS), WORDS)
+          for a in (g.encode(lat, lng, WORDS, 3) for lat, lng in pts[:500])), True)
 
 print()
 if fails:

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Word grid — 70 km lattice</title>
+<title>Word grid — say as many words as you need</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
   html, body { margin: 0; height: 100%; }
@@ -14,23 +14,34 @@
   #card { pointer-events: auto; display: inline-block; background: rgba(255,255,255,.95);
           backdrop-filter: blur(6px); border-radius: 10px; padding: 13px 16px;
           box-shadow: 0 1px 3px rgba(0,0,0,.12), 0 6px 20px rgba(0,0,0,.10); }
-  #addr { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-          font-size: 20px; color: #16171a; word-break: break-word; }
-  #addr .dot { color: #9a9a94; }
-  #addr .chk { color: #1a5c4a; }
-  .hint { font-family: inherit; font-size: 15px; color: #5c5c56; }
-  #meta { margin-top: 5px; font-size: 12px; color: #5c5c56; }
-  .row { margin-top: 9px; padding-top: 8px; border-top: 1px solid #e6e6e0;
+  table { border-collapse: collapse; font-size: 14px; }
+  td { padding: 2px 0; vertical-align: baseline; }
+  td.a { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+         padding-right: 14px; color: #b9b9b2; white-space: nowrap; }
+  td.a .new { color: #16171a; font-weight: 600; }
+  td.a .dot { color: #cfcfc8; }
+  td.s { font-size: 12px; color: #5c5c56; white-space: nowrap; }
+  tr.sel td.a .new, tr.sel td.a { color: #16171a; }
+  tr.sel td.s { color: #1a5c4a; font-weight: 600; }
+  tr:hover td.s { color: #16171a; }
+  .hint { font-size: 15px; color: #5c5c56; }
+  .row { margin-top: 10px; padding-top: 8px; border-top: 1px solid #e6e6e0;
          font-size: 12px; color: #5c5c56; }
-  label.opt { display: block; margin-top: 4px; }
+  #chk { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #1a5c4a; }
   input[type=text] { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-          font-size: 13px; padding: 4px 6px; width: 15.5em; border: 1px solid #ccc; border-radius: 5px; }
+          font-size: 13px; padding: 4px 6px; width: 16em; border: 1px solid #ccc; border-radius: 5px; }
   button { font: inherit; font-size: 12px; padding: 4px 9px; border-radius: 5px;
            border: 1px solid #ccc; background: #fff; cursor: pointer; }
   #err { color: #a8322a; margin-top: 4px; min-height: 1em; }
-  #tip { position: absolute; z-index: 1100; pointer-events: none; transform: translate(-50%,-140%);
-         background: #16171a; color: #fff; border-radius: 5px; padding: 3px 8px; font-size: 12px;
-         white-space: nowrap; }
+  /* On a phone the five-word row is wider than the screen; let it wrap and
+     shrink rather than pushing the page sideways. */
+  @media (max-width: 480px) {
+    #card { padding: 11px 13px; }
+    table { font-size: 12px; }
+    td.a { white-space: normal; word-break: break-word; padding-right: 10px; }
+    td.s { font-size: 11px; }
+    input[type=text] { width: 11em; }
+  }
 </style>
 </head>
 <body>
@@ -38,21 +49,17 @@
 <div id="map"></div>
 <div id="hud">
   <div id="card">
-    <div id="addr"><span class="hint">Click anywhere on the map</span></div>
-    <div id="meta"></div>
+    <div id="empty" class="hint">Click anywhere in the UK or Ireland</div>
+    <table id="rows" hidden></table>
+    <div class="row" id="checkrow" hidden>optional check word: <span id="chk"></span></div>
     <div class="row">
-      <label class="opt"><input type="checkbox" id="check8"> 8 check bits (12 m cell, catches 99.6% of wrong words)</label>
-      <label class="opt"><input type="checkbox" id="showreps" checked> show where this address repeats</label>
-    </div>
-    <div class="row">
-      resolve an address near the map centre:<br>
-      <input type="text" id="dec" placeholder="shoulder.few.lottery" autocomplete="off">
+      resolve an address (any length):<br>
+      <input type="text" id="dec" placeholder="plug.curtain.elder" autocomplete="off">
       <button id="go">go</button>
       <div id="err"></div>
     </div>
   </div>
 </div>
-<div id="tip" hidden></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
@@ -62,41 +69,62 @@ const WORDS = ["abandon", "ability", "able", "about", "above", "absent", "absorb
 const INDEX = new Map(WORDS.map((w, i) => [w, i]));
 
 // --- the scheme ------------------------------------------------------------
-// Must match tools/gridcode/bip39grid.py exactly; a cross-check compares them.
+// Must match tools/gridcode/bip39grid.py exactly; CI cross-checks them.
 const R = 6371008.8;
-const K = Math.cos(30 * Math.PI / 180);   // Lambert equal-area standard parallel
-const CHUNK = 70000;                      // metres, in projected (equal-area) units
-const BITS = 11, NWORDS = 3;
+const K = Math.cos(30 * Math.PI / 180);
+const BITS = 11, MAX_WORDS = 5, PRECISION = (BITS * MAX_WORDS + 1) >> 1;
+const BOX = { latMin: 49.85, latMax: 60.90, lngMin: -11.00, lngMax: 1.80 };
 
 const project = (lat, lng) => [R * (lng * Math.PI / 180) * K, R * Math.sin(lat * Math.PI / 180) / K];
 const unproject = (x, y) => [Math.asin(Math.max(-1, Math.min(1, y * K / R))) * 180 / Math.PI,
                              x / (R * K) * 180 / Math.PI];
+const [X0, Y0] = project(BOX.latMin, BOX.lngMin);
+const [X1, Y1] = project(BOX.latMax, BOX.lngMax);
 
-function bitOrder(xb, yb) {
-  const o = [];
-  for (let i = Math.max(xb, yb) - 1; i >= 0; i--) {
-    if (i < xb) o.push(['x', i]);
-    if (i < yb) o.push(['y', i]);
-  }
-  return o;
-}
-function splitBits(check) { const p = NWORDS * BITS - check; return [p, (p + 1) >> 1, p >> 1]; }
-
-// 33 bits does not fit a JS number safely, so the index is a BigInt throughout.
-function interleave(x, y, xb, yb) {
+// Interleave ONCE at full precision, then truncate, so every length is
+// genuinely a prefix. Deriving the order per length does not work: 11 bits per
+// word is odd, so 33 bits splits the axes 17/16 while 22 and 44 split evenly.
+function fullIndex(lat, lng) {
+  const [x, y] = project(lat, lng);
+  const xi = BigInt(Math.min(Math.floor((x - X0) / (X1 - X0) * 2 ** PRECISION), 2 ** PRECISION - 1));
+  const yi = BigInt(Math.min(Math.floor((y - Y0) / (Y1 - Y0) * 2 ** PRECISION), 2 ** PRECISION - 1));
   let v = 0n;
-  for (const [ax, i] of bitOrder(xb, yb)) v = (v << 1n) | (((ax === 'x' ? x : y) >> BigInt(i)) & 1n);
+  for (let i = PRECISION - 1; i >= 0; i--) {
+    v = (v << 1n) | ((xi >> BigInt(i)) & 1n);
+    v = (v << 1n) | ((yi >> BigInt(i)) & 1n);
+  }
   return v;
 }
-function deinterleave(v, xb, yb) {
-  const order = bitOrder(xb, yb);
-  let x = 0n, y = 0n;
-  order.forEach(([ax, i], pos) => {
-    const bit = (v >> BigInt(order.length - 1 - pos)) & 1n;
-    if (ax === 'x') x |= bit << BigInt(i); else y |= bit << BigInt(i);
-  });
-  return [x, y];
+const axisBits = (n) => [(BITS * n + 1) >> 1, (BITS * n) >> 1];
+
+function cellSize(n) {
+  const [xb, yb] = axisBits(n);
+  return [(X1 - X0) / 2 ** xb, (Y1 - Y0) / 2 ** yb];
 }
+
+function encode(lat, lng, n) {
+  const prefix = fullIndex(lat, lng) >> BigInt(2 * PRECISION - BITS * n);
+  const out = [];
+  for (let i = 0; i < n; i++) out.push(WORDS[Number((prefix >> BigInt(BITS * (n - 1 - i))) & 0x7ffn)]);
+  return out;
+}
+
+function decode(spoken) {
+  const unknown = spoken.filter((w) => !INDEX.has(w));
+  if (unknown.length) throw new Error(`not BIP-39 words: ${unknown.join(', ')}`);
+  if (spoken.length < 1 || spoken.length > MAX_WORDS) throw new Error(`1 to ${MAX_WORDS} words`);
+  let prefix = 0n;
+  for (const w of spoken) prefix = (prefix << BigInt(BITS)) | BigInt(INDEX.get(w));
+  const n = spoken.length, [xb, yb] = axisBits(n);
+  let xi = 0n, yi = 0n;
+  for (let pos = 0; pos < BITS * n; pos++) {
+    const bit = (prefix >> BigInt(BITS * n - 1 - pos)) & 1n;
+    if (pos % 2 === 0) xi = (xi << 1n) | bit; else yi = (yi << 1n) | bit;
+  }
+  return unproject(X0 + (Number(xi) + 0.5) / 2 ** xb * (X1 - X0),
+                   Y0 + (Number(yi) + 0.5) / 2 ** yb * (Y1 - Y0));
+}
+
 // SHA-256 in plain JS. crypto.subtle would be neater but only exists in a
 // secure context, so it is undefined when this file is opened from disk --
 // which would silently break the checksum for anyone who downloads the demo.
@@ -143,137 +171,95 @@ function sha256(bytes) {
   return H;
 }
 
-function checksum(position, bits) {
-  if (!bits) return 0n;
-  const bytes = new Uint8Array(8);
-  let p = position;
-  for (let i = 7; i >= 0; i--) { bytes[i] = Number(p & 0xffn); p >>= 8n; }
-  return BigInt(sha256(bytes)[0] >>> (32 - bits));
-}
 
-const mod = (a, n) => ((a % n) + n) % n;
-
-function encode(lat, lng, check) {
-  const [, xb, yb] = splitBits(check);
-  const [x, y] = project(lat, lng);
-  const u = mod(x, CHUNK), v = mod(y, CHUNK);
-  const xi = BigInt(Math.min(Math.floor(u / CHUNK * 2 ** xb), 2 ** xb - 1));
-  const yi = BigInt(Math.min(Math.floor(v / CHUNK * 2 ** yb), 2 ** yb - 1));
-  const position = interleave(xi, yi, xb, yb);
-  const value = (position << BigInt(check)) | checksum(position, check);
-  const out = [];
-  for (let i = 0; i < NWORDS; i++)
-    out.push(WORDS[Number((value >> BigInt(BITS * (NWORDS - 1 - i))) & 0x7ffn)]);
-  return out;
-}
-
-function decode(spoken, nearLat, nearLng, check) {
-  const unknown = spoken.filter((w) => !INDEX.has(w));
-  if (unknown.length) throw new Error(`not BIP-39 words: ${unknown.join(', ')}`);
-  let value = 0n;
-  for (const w of spoken) value = (value << BigInt(BITS)) | BigInt(INDEX.get(w));
-  const position = value >> BigInt(check);
-  if (check && (value & ((1n << BigInt(check)) - 1n)) !== checksum(position, check))
-    throw new Error('checksum failed - a word is wrong');
-  const [, xb, yb] = splitBits(check);
-  const [xi, yi] = deinterleave(position, xb, yb);
-  const u = (Number(xi) + 0.5) / 2 ** xb * CHUNK;
-  const v = (Number(yi) + 0.5) / 2 ** yb * CHUNK;
-  const [nx, ny] = project(nearLat, nearLng);
-  // Pick the lattice square nearest the position hint. This is the whole point:
-  // the square is not in the address, so the hint supplies it.
-  return unproject(Math.floor((nx - u) / CHUNK + 0.5) * CHUNK + u,
-                   Math.floor((ny - v) / CHUNK + 0.5) * CHUNK + v);
+// A checksum cannot live at every length -- its bits are where the next word's
+// position bits must go -- so it is a separate suffix. It covers the word count
+// too, so a 3-word address plus check cannot pass as a 4-word address.
+function checkWord(spoken) {
+  const bytes = new Uint8Array(1 + 2 * spoken.length);
+  bytes[0] = spoken.length;
+  spoken.forEach((w, i) => {
+    const v = INDEX.get(w);
+    bytes[1 + 2 * i] = v >> 8; bytes[2 + 2 * i] = v & 0xff;
+  });
+  return WORDS[(sha256(bytes)[0] >>> 16) & 0x7ff];
 }
 
 // --- map -------------------------------------------------------------------
-const map = L.map('map', { worldCopyJump: true }).setView([51.50072, -0.12456], 6);
+const map = L.map('map').setView([53.5, -4.0], 6);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
   maxZoom: 19,
 }).addTo(map);
+L.rectangle([[BOX.latMin, BOX.lngMin], [BOX.latMax, BOX.lngMax]],
+  { color: '#1a5c4a', weight: 1, fill: false, dashArray: '5 4' }).addTo(map);
 
-const addrEl = document.getElementById('addr');
-const metaEl = document.getElementById('meta');
+const rowsEl = document.getElementById('rows');
+const emptyEl = document.getElementById('empty');
 const errEl = document.getElementById('err');
-const tipEl = document.getElementById('tip');
-const check8 = document.getElementById('check8');
-const showReps = document.getElementById('showreps');
+const chkRow = document.getElementById('checkrow');
+const chkEl = document.getElementById('chk');
+let marker = null, boxes = [], point = null, selected = 3;
 
-let marker = null, square = null, repeats = [], point = null;
-const checkBits = () => (check8.checked ? 8 : 0);
+const fmt = (m) => m >= 1000 ? `${(m / 1000).toFixed(1)} km` : m >= 1 ? `${m.toFixed(1)} m` : `${(m * 100).toFixed(0)} cm`;
 
-function el(tag, cls, text) { const n = document.createElement(tag); n.className = cls; n.textContent = text; return n; }
-
-function renderAddress(parts, check) {
-  const nodes = [];
-  parts.forEach((w, i) => {
-    if (i) nodes.push(el('span', 'dot', '.'));
-    nodes.push(check && i === parts.length - 1 ? el('span', 'chk', w) : document.createTextNode(w));
-  });
-  addrEl.replaceChildren(...nodes);
-}
-
-function squareAround(lat, lng) {
+function cellBounds(lat, lng, n) {
+  const [xb, yb] = axisBits(n);
   const [x, y] = project(lat, lng);
-  const x0 = Math.floor(x / CHUNK) * CHUNK, y0 = Math.floor(y / CHUNK) * CHUNK;
-  const sw = unproject(x0, y0), ne = unproject(x0 + CHUNK, y0 + CHUNK);
-  return [[sw[0], sw[1]], [ne[0], ne[1]]];
-}
-
-function clearOverlays() {
-  repeats.forEach((r) => map.removeLayer(r));
-  repeats = [];
-  if (square) { map.removeLayer(square); square = null; }
+  const w = (X1 - X0) / 2 ** xb, h = (Y1 - Y0) / 2 ** yb;
+  const cx = X0 + Math.floor((x - X0) / w) * w, cy = Y0 + Math.floor((y - Y0) / h) * h;
+  const sw = unproject(cx, cy), ne = unproject(cx + w, cy + h);
+  return [sw, ne];
 }
 
 function show(lat, lng) {
   point = [lat, lng];
-  const check = checkBits();
-  const parts = encode(lat, lng, check);
-  renderAddress(parts, check);
-  const [, xb, yb] = splitBits(check);
-  metaEl.textContent = `cell ${(CHUNK / 2 ** xb).toFixed(2)} x ${(CHUNK / 2 ** yb).toFixed(2)} m`
-    + `  ·  ${check ? '8 check bits' : 'no checksum'}`;
+  emptyEl.hidden = true; rowsEl.hidden = false;
+  rowsEl.replaceChildren();
+  const full = encode(lat, lng, MAX_WORDS);
+  for (let n = 1; n <= MAX_WORDS; n++) {
+    const parts = full.slice(0, n);
+    const [w, h] = cellSize(n);
+    const tr = document.createElement('tr');
+    if (n === selected) tr.className = 'sel';
+    const td = document.createElement('td'); td.className = 'a';
+    parts.forEach((word, i) => {
+      if (i) { const d = document.createElement('span'); d.className = 'dot'; d.textContent = '.'; td.appendChild(d); }
+      // Only the word this row adds is highlighted; the rest are already said.
+      const s = document.createElement('span');
+      if (i === n - 1) s.className = 'new';
+      s.textContent = word; td.appendChild(s);
+    });
+    const ts = document.createElement('td'); ts.className = 's';
+    ts.textContent = `${fmt(Math.sqrt(w * h))}`;
+    tr.append(td, ts);
+    tr.addEventListener('click', () => { selected = n; show(lat, lng); });
+    rowsEl.appendChild(tr);
+  }
+  chkEl.textContent = checkWord(full.slice(0, selected));
+  chkRow.hidden = false;
 
   if (marker) map.removeLayer(marker);
-  marker = L.circleMarker([lat, lng], { radius: 6, color: '#a8322a', weight: 2, fillOpacity: .9 }).addTo(map);
-  clearOverlays();
-  square = L.rectangle(squareAround(lat, lng), { color: '#1a5c4a', weight: 2, fill: false, dashArray: '4 3' }).addTo(map);
-
-  if (showReps.checked) {
-    const [x, y] = project(lat, lng);
-    for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) {
-      if (!dx && !dy) continue;
-      const [la, lo] = unproject(x + dx * CHUNK, y + dy * CHUNK);
-      if (Math.abs(la) > 89) continue;
-      const km = map.distance([lat, lng], [la, lo]) / 1000;
-      const m = L.circleMarker([la, lo], { radius: 4, color: '#b8860b', weight: 2, fillOpacity: .7 }).addTo(map);
-      m.on('mouseover', (ev) => {
-        tipEl.textContent = `same address, ${km.toFixed(1)} km away`;
-        tipEl.style.left = `${ev.originalEvent.clientX}px`;
-        tipEl.style.top = `${ev.originalEvent.clientY}px`;
-        tipEl.hidden = false;
-      });
-      m.on('mouseout', () => { tipEl.hidden = true; });
-      repeats.push(m);
-    }
+  marker = L.circleMarker([lat, lng], { radius: 5, color: '#a8322a', weight: 2, fillOpacity: .9 }).addTo(map);
+  boxes.forEach((b) => map.removeLayer(b)); boxes = [];
+  // Draw the nesting: each length is a box inside the previous one.
+  for (let n = 1; n <= Math.min(selected + 1, MAX_WORDS); n++) {
+    boxes.push(L.rectangle(cellBounds(lat, lng, n),
+      { color: n === selected ? '#1a5c4a' : '#8a8a82',
+        weight: n === selected ? 2 : 1, fill: false }).addTo(map));
   }
 }
 
 map.on('click', (e) => { errEl.textContent = ''; show(e.latlng.lat, e.latlng.lng); });
-check8.addEventListener('change', () => { if (point) show(point[0], point[1]); });
-showReps.addEventListener('change', () => { if (point) show(point[0], point[1]); });
 
 document.getElementById('go').addEventListener('click', () => {
-  const raw = document.getElementById('dec').value.trim().toLowerCase();
-  const parts = raw.split(/[.\s,]+/).filter(Boolean);
+  const parts = document.getElementById('dec').value.trim().toLowerCase().split(/[.\s,]+/).filter(Boolean);
   errEl.textContent = '';
-  if (parts.length !== NWORDS) { errEl.textContent = `expected ${NWORDS} words`; return; }
   try {
-    const c = map.getCenter();
-    const [lat, lng] = decode(parts, c.lat, c.lng, checkBits());
-    map.setView([lat, lng], Math.max(map.getZoom(), 15));
+    const [lat, lng] = decode(parts);
+    selected = parts.length;
+    const [w, h] = cellSize(parts.length);
+    map.fitBounds(cellBounds(lat, lng, parts.length), { maxZoom: 19 });
     show(lat, lng);
   } catch (e) { errEl.textContent = e.message; }
 });

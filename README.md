@@ -8,25 +8,29 @@ Experiments in encoding geographic coordinates as short, memorable word sequence
 
 ### `demos/word-grid.html`
 
-The scheme, live. Click for an address; the dashed box is the 70 km square that
-is never transmitted, and the amber dots are the other places the same three
-words land. Check bits are togglable, and addresses can be resolved back.
+The scheme, live. Click anywhere and watch the address grow a word at a time,
+each row adding one word and shrinking the box. Click a row to pick a length,
+or resolve an address of any length back to a point.
 
-It carries its own JavaScript port of the codec, checked against the Python
-reference by `node tools/gridcode/check-demo.mjs` on every push.
+- An address is a **prefix of a longer address**: 2 words for a street, 3 for a
+  building, 4 for a doorstep. The words already said never change.
+- The root is a **fixed box** over the UK and Ireland, not a repeating tile, so
+  an address is unambiguous at every length and **no position hint is needed**.
+- The [BIP-39][bip39] English list: 2,048 words, exactly 11 bits each.
 
-- The world is projected to an equal-area plane and tiled into 70 km squares.
-- **The square is never transmitted.** An address names a point within one, and
-  the listener supplies the square from knowing roughly where they are. That
-  omission is 16.7 bits not spoken, and it is what buys the resolution.
-- Three [BIP-39][bip39] words are 33 bits — 8,589,934,592 points in a square,
-  a 0.755 m cell. Check bits come out of that: 8 bits gives a 12 m cell and
-  catches 99.6 % of wrong words.
+| Words | Big Ben | Area |
+|---|---|---|
+| 2 | `plug.curtain` | 486 m |
+| 3 | `plug.curtain.elder` | 10.7 m |
+| 4 | `plug.curtain.elder.scale` | 24 cm |
 
-Open the file directly in a browser — no build step, and no secure-context
-requirement, since the SHA-256 is implemented in plain JavaScript rather than
-via `crypto.subtle`. It loads Leaflet and OpenStreetMap tiles from a CDN, so it
-needs network access.
+A checksum cannot live at every length — its bits are where the next word's
+position bits go — so it is a separate optional word, rejecting a wrong word
+99.9 % of the time. See [`docs/grid-scheme.md`](docs/grid-scheme.md).
+
+Open the file directly in a browser: no build step, and no secure-context
+requirement, since SHA-256 is plain JavaScript rather than `crypto.subtle`. It
+loads Leaflet and OpenStreetMap tiles from a CDN, so it needs network access.
 
 [bip39]: https://github.com/bitcoin/bips/blob/master/bip-0039/bip-0039-wordlists.md
 
@@ -50,9 +54,9 @@ re-run the workflow and it will publish.
 - [`docs/coverage.md`](docs/coverage.md) — how far the scheme stretches: the
   Ireland extension, what global coverage would cost, and the word-list vs
   address-length trade.
-- [`docs/grid-scheme.md`](docs/grid-scheme.md) — the current scheme: a global
-  70 km lattice whose square is never transmitted, BIP-39 words, and the honest
-  version of the 35 km uniqueness claim.
+- [`docs/grid-scheme.md`](docs/grid-scheme.md) — the current scheme: truncatable
+  addresses over a fixed box, the interleaving pitfall that breaks the prefix
+  property, and why a checksum cannot live at every length.
 
 ## Word list
 

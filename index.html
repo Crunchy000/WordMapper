@@ -63,128 +63,90 @@
 <header>
   <div class="wrap">
     <h1>WordMapper</h1>
-    <p class="tagline">Three spoken words for any point on earth, to within a metre — by not saying the part you already know.</p>
-    <div class="addr">shoulder<span>.</span>few<span>.</span>lottery</div>
-    <p class="note">Big Ben. The same three words repeat every 70&nbsp;km; knowing roughly where you are picks the right one.</p>
+    <p class="tagline">Say two words for a street, three for a building, four for a doorstep. Stop whenever you have said enough — the words you have already given never change.</p>
+    <div class="addr">plug<span>.</span>curtain<span>.</span>elder</div>
+    <p class="note">Big Ben, to about 10 metres. Drop the last word and you still have Westminster to 486 m.</p>
   </div>
 </header>
 
 <main class="wrap">
 
-  <h2>The trick</h2>
-  <p>The world is projected to an equal-area plane and tiled into 70&nbsp;km squares.
-  <strong>The square is never transmitted.</strong> An address names a point <em>within</em>
-  a square, and the listener supplies the square from knowing roughly where they are.</p>
+  <h2>One address, any length</h2>
+  <p>Every address is a <strong>prefix of a longer one</strong>. Each word narrows the
+  area; none of them ever needs revising.</p>
 
-  <p>That omission is the whole scheme. 104,095 squares cover the earth, so leaving one
-  unsaid is <strong>16.7 bits you never speak aloud</strong> — and those bits go into
-  resolution instead.</p>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Words</th><th>Big Ben</th><th>Area</th></tr></thead>
+    <tbody>
+      <tr><td class="num">1</td><td class="num">plug</td><td class="num">22.0 km</td></tr>
+      <tr><td class="num">2</td><td class="num">plug.curtain</td><td class="num">486 m — a street</td></tr>
+      <tr><td class="num">3</td><td class="num">plug.curtain.elder</td><td class="num">10.7 m — a building</td></tr>
+      <tr><td class="num">4</td><td class="num">plug.curtain.elder.scale</td><td class="num">24 cm — a doorstep</td></tr>
+      <tr><td class="num">5</td><td class="num">plug.curtain.elder.scale.buffalo</td><td class="num">1 cm</td></tr>
+    </tbody>
+  </table>
+  </div>
 
-  <h2>Bit budget</h2>
-  <p>A <a href="https://github.com/bitcoin/bips/blob/master/bip-0039/bip-0039-wordlists.md">BIP-39</a>
-  word is exactly 11 bits, because the list is exactly 2,048 words. Nothing is wasted
+  <p>The root is a <strong>fixed box</strong> over the UK and Ireland rather than a
+  repeating tile, so an address is unambiguous at every length. There are no repeats to
+  disambiguate and <strong>no position hint is needed</strong> — knowing roughly where
+  someone is becomes a sanity check, not a precondition.</p>
+
+  <p>Which is the useful shape for an emergency call. A caller who manages two words
+  before the line drops has still given a real answer; one who keeps going narrows it
+  without going back on anything.</p>
+
+  <a class="cta" href="demos/word-grid.html">Open the demo →</a>
+  <p class="note">Click anywhere to watch the address grow a word at a time.</p>
+
+  <h2>The part that is easy to get wrong</h2>
+  <p>Coordinates are interleaved <em>once</em> at full precision and the bit string is
+  truncated. Deriving the interleave order per length looks equivalent and is not:
+  11 bits per word is odd, so 33 bits splits the axes 17/16 while 22 and 44 split
+  evenly. Those are three unrelated sequences.</p>
+  <p>When I built it that way the three-word address came out entirely different, while
+  the two- and four-word ones agreed with each other — so a spot check on 2 and 4 would
+  have passed. The test suite now checks every length over 4,000 points.</p>
+
+  <h2>Checksums cannot live at every length</h2>
+  <p>A checksum's bits would sit exactly where the next word's position bits must go.
+  Reserving eight bits at every length costs most of the resolution:</p>
+
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Words</th><th>No checksum</th><th>With 8 check bits</th></tr></thead>
+    <tbody>
+      <tr><td class="num">2</td><td class="num">486 m</td><td class="num">7.78 km</td></tr>
+      <tr><td class="num">3</td><td class="num">10.75 m</td><td class="num">172 m</td></tr>
+      <tr><td class="num">4</td><td class="num">24 cm</td><td class="num">3.80 m</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>So the checksum is a <strong>separate optional word</strong>, covering the word
+  count as well as the words. It rejects a wrong word 99.9 % of the time. It has to be
+  transmitted distinguishably — a different separator, or “check” spoken before it —
+  or <code>a.b.c.d</code> is ambiguous between a four-word address and a three-word one
+  with its check word.</p>
+
+  <h2>The word list</h2>
+  <p>The <a href="https://github.com/bitcoin/bips/blob/master/bip-0039/bip-0039-wordlists.md">BIP-39
+  English list</a> as published — 2,048 words, exactly 11 bits each, nothing wasted
   rounding to a word boundary.</p>
-
-  <div class="scroll">
-  <table>
-    <thead><tr><th>Words</th><th>Bits</th><th>Points per square</th><th>Cell</th></tr></thead>
-    <tbody>
-      <tr><td class="num">2</td><td class="num">22</td><td class="num">4,194,304</td><td class="num">34.2 m</td></tr>
-      <tr><td class="num">3</td><td class="num">33</td><td class="num">8,589,934,592</td><td class="num"><strong>0.755 m</strong></td></tr>
-      <tr><td class="num">4</td><td class="num">44</td><td class="num">1.76 × 10¹³</td><td class="num">1.7 cm</td></tr>
-    </tbody>
-  </table>
-  </div>
-
-  <h2>The checksum is not optional</h2>
-  <p>BIP-39 is built to be <em>typed and checksummed</em>, not spoken. Its guarantee is
-  unique four-letter prefixes, which says nothing about sound. Measured across the list:</p>
-
-  <ul>
-    <li><strong>Four outright homophones</strong> — <code>pair</code>/<code>pear</code>,
-      <code>peace</code>/<code>piece</code>, <code>right</code>/<code>write</code>,
-      <code>wear</code>/<code>where</code></li>
-    <li><strong>806</strong> pairs one letter apart, <strong>1,824</strong> one phoneme apart</li>
-    <li><strong>53 %</strong> of words have a same-or-one-phoneme twin, so <strong>89.6 %</strong>
-      of three-word addresses contain a word that one mishearing turns into a different
-      <em>valid</em> word</li>
-  </ul>
-
-  <p>Without check bits, such a mishearing is silently a different place. Check bits come
-  out of resolution, so this is the real trade:</p>
-
-  <div class="scroll">
-  <table>
-    <thead><tr><th>Check bits</th><th>Cell</th><th>Wrong word detected</th></tr></thead>
-    <tbody>
-      <tr><td class="num">0</td><td class="num">0.53 × 1.07 m</td><td class="num">0 %</td></tr>
-      <tr><td class="num">4</td><td class="num">2.1 × 4.3 m</td><td class="num">93.8 %</td></tr>
-      <tr><td class="num">8</td><td class="num">8.5 × 17.1 m</td><td class="num">99.6 %</td></tr>
-    </tbody>
-  </table>
-  </div>
-  <p class="note">Measured detection matches theory exactly. BIP-39 does get one thing
-  right that cost real effort elsewhere: it contains <strong>zero plurals</strong>.</p>
-
-  <h2>How good must the hint be?</h2>
-  <p>Two instances of an address fall within <em>R</em> of a point exactly when the lattice
-  spacing is below 2<em>R</em>. A 35&nbsp;km guarantee therefore needs 70&nbsp;km spacing in
-  <em>both</em> directions — and an equal-area cylinder only delivers that at its standard
-  parallel. The square is 70&nbsp;km in projected units, not on the ground.</p>
-
-  <div class="scroll">
-  <table>
-    <thead><tr><th>Latitude</th><th>E–W</th><th>N–S</th><th>Hint good to</th></tr></thead>
-    <tbody>
-      <tr><td class="num">0°</td><td class="num">80.8 km</td><td class="num">60.6 km</td><td class="num">30.3 km</td></tr>
-      <tr><td class="num">30°</td><td class="num">70.0 km</td><td class="num">70.0 km</td><td class="num">35.0 km</td></tr>
-      <tr><td class="num">51.5° London</td><td class="num">50.3 km</td><td class="num">97.4 km</td><td class="num"><strong>25.2 km</strong></td></tr>
-      <tr><td class="num">60°</td><td class="num">40.4 km</td><td class="num">121.2 km</td><td class="num">20.2 km</td></tr>
-    </tbody>
-  </table>
-  </div>
-  <p class="note">Fixes, none free: move the standard parallel to the region (55° makes it
-  exactly square over the UK), UTM-style latitude bands, or an equal-area cube — which
-  bounds the requirement near 27&nbsp;km worldwide.</p>
-
-  <h2>Examples</h2>
-  <div class="scroll">
-  <table>
-    <thead><tr><th>Place</th><th>Address</th></tr></thead>
-    <tbody>
-      <tr><td>Big Ben</td><td class="num">shoulder.few.lottery</td></tr>
-      <tr><td>Tower Bridge</td><td class="num">success.chase.alley</td></tr>
-      <tr><td>Stonehenge</td><td class="num">leg.athlete.trial</td></tr>
-      <tr><td>Edinburgh Castle</td><td class="num">machine.cruise.bunker</td></tr>
-      <tr><td>Sydney Opera House</td><td class="num">approve.net.merit</td></tr>
-      <tr><td>Statue of Liberty</td><td class="num">copy.tissue.cushion</td></tr>
-    </tbody>
-  </table>
-  </div>
-  <p class="note">Round trip verified within one cell diagonal across 4,000 random points
-  between ±60° latitude.</p>
-
-  <h2>What it gives up</h2>
-  <p>An address is no longer self-contained. <code>shoulder.few.lottery</code> means nothing
-  to someone who has no idea where you are — which is precisely the emergency-services
-  case that motivates schemes like this. The natural fix is a place-name prefix when out
-  of context: <em>“Cornwall: shoulder.few.lottery”</em>.</p>
+  <p>It is designed to be <em>typed and checksummed</em>, not spoken. It contains
+  <code>pair</code>/<code>pear</code>, <code>peace</code>/<code>piece</code>,
+  <code>right</code>/<code>write</code> and <code>wear</code>/<code>where</code>, and
+  53 % of its words have a same-or-one-phoneme twin — so 89.6 % of three-word addresses
+  contain a word that one mishearing turns into a different <em>valid</em> word. The
+  check word is what stands against that, not the list.</p>
 
   <h2>Reading</h2>
   <ul>
-    <li><a href="https://github.com/Crunchy000/WordMapper/blob/main/docs/grid-scheme.md">The scheme in full</a> — bit budget, the checksum measurements, and the honest version of the 35&nbsp;km claim.</li>
+    <li><a href="https://github.com/Crunchy000/WordMapper/blob/main/docs/grid-scheme.md">The scheme in full</a> — bit budget, the truncation pitfall, and what is verified.</li>
     <li><a href="https://github.com/Crunchy000/WordMapper/blob/main/docs/coverage.md">Coverage and resolution</a> — why coverage is cheap and vocabulary is not.</li>
     <li><a href="https://github.com/Crunchy000/WordMapper">Source on GitHub</a>.</li>
   </ul>
-
-  <h2>Try it</h2>
-  <p>Click anywhere for its address. The dashed box is the 70&nbsp;km square you are not
-  transmitting, and the amber dots are the <em>other</em> places the same three words
-  land — which is what the position hint is for. Toggle check bits to watch the last
-  word change and the cell grow. Paste an address back in to resolve it near the map
-  centre.</p>
-  <a class="cta" href="demos/word-grid.html">Open the demo →</a>
-  <p class="note">Loads Leaflet and OpenStreetMap tiles from a CDN, so it needs network access.</p>
 
 </main>
 

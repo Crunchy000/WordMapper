@@ -1,104 +1,93 @@
-# Local word addresses on a 70 km lattice
+# Truncatable word addresses
 
-Reference implementation: [`tools/gridcode/bip39grid.py`](../tools/gridcode/bip39grid.py),
+Reference: [`tools/gridcode/bip39grid.py`](../tools/gridcode/bip39grid.py),
 tests in [`test_bip39grid.py`](../tools/gridcode/test_bip39grid.py).
 Setup: `npm install --prefix tools/gridcode`.
 
 ## The idea
 
-The world is projected to an equal-area plane and tiled into 70 km squares. **The
-square is not transmitted.** An address names a point *within* a square, and the
-listener supplies the square from knowing roughly where they are.
+An address is a **prefix of a longer address**. Say as many words as you need
+and stop; each one narrows the area, and the words already said never change.
 
-That omission is the whole trick. 104,095 squares cover the earth, so not saying
-which one is **16.7 bits you never have to speak**, and those bits go into
-resolution instead.
-
-## Bit budget
-
-A BIP-39 word is exactly 11 bits, because the list is exactly 2,048 words.
-
-| Words | Bits | Points per 70 km square | Cell |
-|---|---|---|---|
-| 2 | 22 | 4,194,304 | 34.2 m |
-| **3** | **33** | **8,589,934,592** | **0.755 m** |
-| 4 | 44 | 1.76 × 10¹³ | 1.7 cm |
-
-Check bits come out of resolution:
-
-| Check bits | Cell | Wrong word detected |
+| Words | Big Ben | Area |
 |---|---|---|
-| 0 | 0.53 × 1.07 m | 0 % |
-| 4 | 2.1 × 4.3 m | 93.8 % |
-| 8 | 8.5 × 17.1 m | 99.6 % |
+| 1 | `plug` | 22.0 km |
+| 2 | `plug.curtain` | 486 m — a street |
+| 3 | `plug.curtain.elder` | 10.7 m — a building |
+| 4 | `plug.curtain.elder.scale` | 24 cm — a doorstep |
+| 5 | `plug.curtain.elder.scale.buffalo` | 1 cm |
 
-Measured detection matches theory exactly.
+The root is a **fixed bounding box** (UK and Ireland), not a repeating tile, so
+an address is unambiguous at every length. There are no repeats to disambiguate
+and **no position hint is required** — an approximate location becomes a sanity
+check rather than a precondition.
 
-## The checksum is not optional
+That is the useful shape for an emergency call: a caller who manages two words
+before the line drops has still given a real answer, and one who keeps going
+narrows it without repeating themselves.
 
-BIP-39 is built to be **typed and checksummed**, not spoken. Its guarantee is
-unique four-letter prefixes, which says nothing about sound. Measured against the
-whole list:
+## Why the prefix property needs care
 
-- **4 outright homophones**: `pair`/`pear`, `peace`/`piece`, `right`/`write`, `wear`/`where`
-- **806** pairs one letter apart, **1,824** pairs one phoneme apart
-- **53 %** of words have a same-or-one-phoneme twin, so **89.6 %** of three-word
-  addresses contain a word that a single mishearing turns into a different valid word
+Coordinates are interleaved **once at full precision** and the resulting bit
+string is truncated. Deriving the interleave order per length does not work,
+and fails in a way that is easy to miss: 11 bits per word is odd, so 33 bits
+splits the axes 17/16 while 22 and 44 split evenly. Those are three unrelated
+sequences, not prefixes of one another. Measured, the three-word address came
+out completely different from the two- and four-word ones, which agreed with
+each other — so a spot check on 2 and 4 would have passed.
 
-Without check bits, such a mishearing is silently a different place. With 8 check
-bits it is caught 99.6 % of the time. Choose accordingly.
+The test suite checks this directly, at every length, over 4,000 points.
 
-BIP-39 does get one thing right that cost real effort elsewhere: **zero plurals**.
+## Checksums cannot live at every length
 
-## Uniqueness, and the honest version of the 35 km claim
+A checksum's bits would sit exactly where the next word's position bits must
+go. Reserving 8 bits at every length costs most of the resolution:
 
-The address repeats on the lattice, so two instances are both within *R* of some
-point exactly when the spacing is below 2*R*. A 35 km guarantee therefore needs
-**70 km spacing in both directions** — and an equal-area cylinder only delivers
-that at its standard parallel:
+| Words | No checksum | With 8 check bits |
+|---|---|---|
+| 2 | 486 m | 7.78 km |
+| 3 | 10.75 m | 172 m |
+| 4 | 24 cm | 3.80 m |
 
-| Latitude | E–W spacing | N–S spacing | Hint must be good to |
-|---|---|---|---|
-| 0° | 80.8 km | 60.6 km | 30.3 km |
-| **30° (standard parallel)** | **70.0 km** | **70.0 km** | **35.0 km** |
-| 45° | 57.2 km | 85.7 km | 28.6 km |
-| 51.5° (London) | 50.3 km | 97.4 km | **25.2 km** |
-| 60° | 40.4 km | 121.2 km | 20.2 km |
+So the checksum is a **separate optional suffix** — one extra word, covering
+the word count as well as the words, so a three-word address plus check cannot
+pass as a four-word address. It rejects a wrong word 99.9 % of the time
+(theory: 1 − 1/2048 = 99.95 %).
 
-So the 70 km square is 70 km in *equal-area units*, not on the ground. At UK
-latitudes it is roughly 50 km × 97 km, and the position hint has to be good to
-about 25 km rather than 35 km.
+It must be transmitted **distinguishably** — a different separator, or "check"
+spoken before it. Otherwise `a.b.c.d` is ambiguous between a four-word address
+and a three-word address with its check word.
 
-Three ways to fix it, none free:
+## The word list
 
-1. **Move the standard parallel to the region** — 55° makes the lattice exactly
-   70 km square over the UK, and worse elsewhere. Fine for a national scheme.
-2. **Latitude bands**, as UTM does. Standard practice, more machinery.
-3. **An equal-area cube** (S2/Snyder). Shape distortion bounded near 1.3:1
-   everywhere, so the hint requirement never falls below ~27 km globally.
+The [BIP-39 English list][bip39] as published, 2,048 words, exactly 11 bits
+each. It is designed to be *typed and checksummed*, not spoken: it contains
+`pair`/`pear`, `peace`/`piece`, `right`/`write` and `wear`/`where`, and 53 % of
+its words have a same-or-one-phoneme twin, so 89.6 % of three-word addresses
+contain a word one mishearing turns into a different valid word. The check word
+is what stands against that, not the list.
 
-## Worked examples
+It does contain **zero plurals**, which is the failure mode that made other
+schemes' addresses confusable.
 
-| Place | Address (0 check bits) |
-|---|---|
-| Big Ben | `shoulder.few.lottery` |
-| Tower Bridge | `success.chase.alley` |
-| Stonehenge | `leg.athlete.trial` |
-| Edinburgh Castle | `machine.cruise.bunker` |
-| Sydney Opera House | `approve.net.merit` |
-| Statue of Liberty | `copy.tissue.cushion` |
+## Projection
 
-Round trip is within one cell diagonal at every check-bit setting, over 4,000
-random points between ±60° latitude.
+Lambert cylindrical equal-area, standard parallel 30°. Cell *areas* are
+constant across the box; cell *shapes* stretch with latitude, so the 3-word
+cell is about 9.4 × 12.3 m rather than square. An equal-area cube would bound
+that distortion if the box ever went global.
 
-## What this gives up
+## Verified
 
-An address is no longer self-contained. `shoulder.few.lottery` is meaningless
-without knowing which 70 km square, so it cannot be read out to a stranger who
-has no idea where you are — which is precisely the emergency-services case. The
-natural fix is to prefix a place name when out of context: *"Cornwall:
-shoulder.few.lottery"*.
+`python3 tools/gridcode/test_bip39grid.py`:
 
-Ordering is Z-order (Morton) rather than Hilbert: the high bits still narrow the
-location, so a prefix is meaningful, but locality is a little worse than a
-Hilbert curve would give.
+- every address is a prefix of the next longer one, 4,000 points × 5 lengths
+- round trip inside one cell diagonal at every length
+- no address repeats anywhere in the box, at 2 and 3 words
+- the check word rejects a wrong word 99.9 % of the time, and is length-specific
+
+`node tools/gridcode/check-demo.mjs` runs the demo's own JavaScript port against
+a fixture from the Python reference — encodings, truncation and check words — so
+the two implementations cannot drift. CI runs both on every push.
+
+[bip39]: https://github.com/bitcoin/bips/blob/master/bip-0039/bip-0039-wordlists.md
