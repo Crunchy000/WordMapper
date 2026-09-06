@@ -8,8 +8,10 @@ Experiments in encoding geographic coordinates as short, memorable word sequence
 
 ### `demos/uk-word-grid.html`
 
-An interactive proof-of-concept that addresses locations in the UK and Ireland
-with a sequence of three words.
+**Superseded.** This demo implements the earlier scheme — a nested grid over a
+UK + Ireland bounding box with a custom 1,849-word list, inlined in the file so
+it still runs standalone. It has not yet been rebuilt on the 70 km lattice
+described in [`docs/grid-scheme.md`](docs/grid-scheme.md).
 
 - The bounding box (49.85–60.90 °N, −11.00–1.80 °E) is divided into a 43×43 grid.
 - Cells are numbered along a [generalised Hilbert curve][gilbert] so that
@@ -49,10 +51,9 @@ re-run the workflow and it will publish.
 - [`docs/coverage.md`](docs/coverage.md) — how far the scheme stretches: the
   Ireland extension, what global coverage would cost, and the word-list vs
   address-length trade.
-- [`docs/wordlist.md`](docs/wordlist.md) — building a soundalike-free word list,
-  and why phonetic distinctness caps three-word precision at about 6 m.
-- [`docs/error-correction.md`](docs/error-correction.md) — addresses that repair
-  themselves, and why four words suffice where the textbook bound wants five.
+- [`docs/grid-scheme.md`](docs/grid-scheme.md) — the current scheme: a global
+  70 km lattice whose square is never transmitted, BIP-39 words, and the honest
+  version of the 35 km uniqueness claim.
 
 ## Word list
 
