@@ -14,8 +14,7 @@ and stop; each one narrows the area, and the words already said never change.
 | 1 | `plug` | 22.0 km |
 | 2 | `plug.curtain` | 486 m — a street |
 | 3 | `plug.curtain.elder` | 10.7 m — a building |
-| 4 | `plug.curtain.elder.scale` | 24 cm — a doorstep |
-| 5 | `plug.curtain.elder.scale.buffalo` | 1 cm |
+| 4 | `plug.curtain.elder.script` | **2.69 m, and verified** |
 
 The root is a **fixed bounding box** (UK and Ireland), not a repeating tile, so
 an address is unambiguous at every length. There are no repeats to disambiguate
@@ -38,25 +37,30 @@ each other — so a spot check on 2 and 4 would have passed.
 
 The test suite checks this directly, at every length, over 4,000 points.
 
-## Checksums cannot live at every length
+## The fourth word does two jobs
 
-A checksum's bits would sit exactly where the next word's position bits must
-go. Reserving 8 bits at every length costs most of the resolution:
+Three words alone reach 10.75 m, which is wide. A whole fourth word of position
+would reach 24 cm, which is finer than anyone needs. So the fourth word's 11
+bits are **split between refinement and checksum**:
 
-| Words | No checksum | With 8 check bits |
-|---|---|---|
-| 2 | 486 m | 7.78 km |
-| 3 | 10.75 m | 172 m |
-| 4 | 24 cm | 3.80 m |
+| Refine | Check | 4-word cell | Wrong word caught |
+|---|---|---|---|
+| 2 | 9 | 5.37 m | 99.80 % |
+| 3 | 8 | 3.80 m | 99.61 % |
+| **4** | **7** | **2.69 m** | **99.22 %** |
+| 5 | 6 | 1.90 m | 98.44 % |
+| 6 | 5 | 1.34 m | 96.88 % |
 
-So the checksum is a **separate optional suffix** — one extra word, covering
-the word count as well as the words, so a three-word address plus check cannot
-pass as a four-word address. It rejects a wrong word 99.9 % of the time
-(theory: 1 − 1/2048 = 99.95 %).
+Shipped at **4 refine + 7 check**. For comparison, what3words is 3 m with no
+checksum at all — this is finer *and* verified.
 
-It must be transmitted **distinguishably** — a different separator, or "check"
-spoken before it. Otherwise `a.b.c.d` is ambiguous between a four-word address
-and a three-word address with its check word.
+A checksum genuinely cannot live at *every* length: its bits would sit exactly
+where the next word's position bits must go. Reserving 8 bits at every length
+would take 2 words from 486 m to 7.78 km. Putting it in the last word instead
+costs nothing at lengths 1–3, which are simply unverified.
+
+**Four words is therefore terminal** — a fifth would have to reinterpret the
+checksum bits. Nothing is ambiguous, because the fourth word is always last.
 
 ## The word list
 
@@ -74,8 +78,23 @@ schemes' addresses confusable.
 
 Lambert cylindrical equal-area, standard parallel 30°. Cell *areas* are
 constant across the box; cell *shapes* stretch with latitude, so the 3-word
-cell is about 9.4 × 12.3 m rather than square. An equal-area cube would bound
-that distortion if the box ever went global.
+cell is about 9.4 × 12.3 m rather than square, and the 4-word one 2.4 × 3.1 m.
+An equal-area cube would bound that distortion if the box ever went global.
+
+## Locality
+
+Sharing *k* words means being in the same level-*k* cell — exact, in both
+directions. So a shared prefix **proves** proximity: two addresses sharing two
+words are within 602 × 393 m of each other, no exceptions.
+
+The converse leaks at cell boundaries. Two points a metre apart share their
+first two words 99.8 % of the time and all three words 87.8 % of the time, but
+not always. Treat a matching prefix as confirmation and a mismatch as worth
+asking again, rather than as an error.
+
+This is a property of the grid partition, not of the curve used to order cells:
+a Hilbert ordering would change which word is assigned to each cell, never
+which cell a point falls in.
 
 ## Verified
 
@@ -84,7 +103,9 @@ that distortion if the box ever went global.
 - every address is a prefix of the next longer one, 4,000 points × 5 lengths
 - round trip inside one cell diagonal at every length
 - no address repeats anywhere in the box, at 2 and 3 words
-- the check word rejects a wrong word 99.9 % of the time, and is length-specific
+- a wrong word in a four-word address is rejected 99.1 % of the time, within a
+  point of the 99.22 % theory for 7 check bits
+- one-, two- and three-word addresses decode without needing a checksum
 
 `node tools/gridcode/check-demo.mjs` runs the demo's own JavaScript port against
 a fixture from the Python reference — encodings, truncation and check words — so

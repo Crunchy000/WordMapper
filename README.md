@@ -22,11 +22,12 @@ or resolve an address of any length back to a point.
 |---|---|---|
 | 2 | `plug.curtain` | 486 m |
 | 3 | `plug.curtain.elder` | 10.7 m |
-| 4 | `plug.curtain.elder.scale` | 24 cm |
+| 4 | `plug.curtain.elder.script` | 2.69 m, and verified |
 
-A checksum cannot live at every length — its bits are where the next word's
-position bits go — so it is a separate optional word, rejecting a wrong word
-99.9 % of the time. See [`docs/grid-scheme.md`](docs/grid-scheme.md).
+The fourth word does two jobs: four of its bits refine the position and seven
+carry a checksum, so it lands at 2.69 m *and* rejects a wrong word 99.2 % of the
+time. what3words is 3 m with no checksum. Four words is terminal — a fifth would
+have to reinterpret those bits. See [`docs/grid-scheme.md`](docs/grid-scheme.md).
 
 Open the file directly in a browser: no build step, and no secure-context
 requirement, since SHA-256 is plain JavaScript rather than `crypto.subtle`. It

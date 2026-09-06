@@ -51,7 +51,6 @@
   <div id="card">
     <div id="empty" class="hint">Click anywhere in the UK or Ireland</div>
     <table id="rows" hidden></table>
-    <div class="row" id="checkrow" hidden>optional check word: <span id="chk"></span></div>
     <div class="row">
       resolve an address (any length):<br>
       <input type="text" id="dec" placeholder="plug.curtain.elder" autocomplete="off">
@@ -72,7 +71,13 @@ const INDEX = new Map(WORDS.map((w, i) => [w, i]));
 // Must match tools/gridcode/bip39grid.py exactly; CI cross-checks them.
 const R = 6371008.8;
 const K = Math.cos(30 * Math.PI / 180);
-const BITS = 11, MAX_WORDS = 5, PRECISION = (BITS * MAX_WORDS + 1) >> 1;
+const BITS = 11, MAX_WORDS = 4;
+// The last word does two jobs: 4 bits refine the position, 7 carry a checksum.
+// Three words alone is 10.75 m (wide); a whole fourth word of position would be
+// 24 cm (finer than needed). Split, it lands at 2.69 m and verified.
+const REFINE_BITS = 4, CHECK_BITS = BITS - REFINE_BITS;
+const POSITION_BITS = BITS * (MAX_WORDS - 1) + REFINE_BITS;
+const PRECISION = (POSITION_BITS + 1) >> 1;
 const BOX = { latMin: 49.85, latMax: 60.90, lngMin: -11.00, lngMax: 1.80 };
 
 const project = (lat, lng) => [R * (lng * Math.PI / 180) * K, R * Math.sin(lat * Math.PI / 180) / K];
@@ -80,50 +85,6 @@ const unproject = (x, y) => [Math.asin(Math.max(-1, Math.min(1, y * K / R))) * 1
                              x / (R * K) * 180 / Math.PI];
 const [X0, Y0] = project(BOX.latMin, BOX.lngMin);
 const [X1, Y1] = project(BOX.latMax, BOX.lngMax);
-
-// Interleave ONCE at full precision, then truncate, so every length is
-// genuinely a prefix. Deriving the order per length does not work: 11 bits per
-// word is odd, so 33 bits splits the axes 17/16 while 22 and 44 split evenly.
-function fullIndex(lat, lng) {
-  const [x, y] = project(lat, lng);
-  const xi = BigInt(Math.min(Math.floor((x - X0) / (X1 - X0) * 2 ** PRECISION), 2 ** PRECISION - 1));
-  const yi = BigInt(Math.min(Math.floor((y - Y0) / (Y1 - Y0) * 2 ** PRECISION), 2 ** PRECISION - 1));
-  let v = 0n;
-  for (let i = PRECISION - 1; i >= 0; i--) {
-    v = (v << 1n) | ((xi >> BigInt(i)) & 1n);
-    v = (v << 1n) | ((yi >> BigInt(i)) & 1n);
-  }
-  return v;
-}
-const axisBits = (n) => [(BITS * n + 1) >> 1, (BITS * n) >> 1];
-
-function cellSize(n) {
-  const [xb, yb] = axisBits(n);
-  return [(X1 - X0) / 2 ** xb, (Y1 - Y0) / 2 ** yb];
-}
-
-function encode(lat, lng, n) {
-  const prefix = fullIndex(lat, lng) >> BigInt(2 * PRECISION - BITS * n);
-  const out = [];
-  for (let i = 0; i < n; i++) out.push(WORDS[Number((prefix >> BigInt(BITS * (n - 1 - i))) & 0x7ffn)]);
-  return out;
-}
-
-function decode(spoken) {
-  const unknown = spoken.filter((w) => !INDEX.has(w));
-  if (unknown.length) throw new Error(`not BIP-39 words: ${unknown.join(', ')}`);
-  if (spoken.length < 1 || spoken.length > MAX_WORDS) throw new Error(`1 to ${MAX_WORDS} words`);
-  let prefix = 0n;
-  for (const w of spoken) prefix = (prefix << BigInt(BITS)) | BigInt(INDEX.get(w));
-  const n = spoken.length, [xb, yb] = axisBits(n);
-  let xi = 0n, yi = 0n;
-  for (let pos = 0; pos < BITS * n; pos++) {
-    const bit = (prefix >> BigInt(BITS * n - 1 - pos)) & 1n;
-    if (pos % 2 === 0) xi = (xi << 1n) | bit; else yi = (yi << 1n) | bit;
-  }
-  return unproject(X0 + (Number(xi) + 0.5) / 2 ** xb * (X1 - X0),
-                   Y0 + (Number(yi) + 0.5) / 2 ** yb * (Y1 - Y0));
-}
 
 // SHA-256 in plain JS. crypto.subtle would be neater but only exists in a
 // secure context, so it is undefined when this file is opened from disk --
@@ -172,17 +133,68 @@ function sha256(bytes) {
 }
 
 
-// A checksum cannot live at every length -- its bits are where the next word's
-// position bits must go -- so it is a separate suffix. It covers the word count
-// too, so a 3-word address plus check cannot pass as a 4-word address.
-function checkWord(spoken) {
-  const bytes = new Uint8Array(1 + 2 * spoken.length);
-  bytes[0] = spoken.length;
-  spoken.forEach((w, i) => {
-    const v = INDEX.get(w);
-    bytes[1 + 2 * i] = v >> 8; bytes[2 + 2 * i] = v & 0xff;
-  });
-  return WORDS[(sha256(bytes)[0] >>> 16) & 0x7ff];
+// The checksum lives in the low bits of the last word, which is why four words
+// is terminal: a fifth would have to reinterpret them.
+function checksum(position) {
+  const bytes = new Uint8Array(8);
+  let p = position;
+  for (let i = 7; i >= 0; i--) { bytes[i] = Number(p & 0xffn); p >>= 8n; }
+  return BigInt(sha256(bytes)[0] >>> (32 - CHECK_BITS));
+}
+
+// Interleave ONCE at full precision, then truncate, so every length is
+// genuinely a prefix. Deriving the order per length does not work: 11 bits per
+// word is odd, so 33 bits splits the axes 17/16 while 22 and 44 split evenly.
+function fullIndex(lat, lng) {
+  const [x, y] = project(lat, lng);
+  const xi = BigInt(Math.min(Math.floor((x - X0) / (X1 - X0) * 2 ** PRECISION), 2 ** PRECISION - 1));
+  const yi = BigInt(Math.min(Math.floor((y - Y0) / (Y1 - Y0) * 2 ** PRECISION), 2 ** PRECISION - 1));
+  let v = 0n;
+  for (let i = PRECISION - 1; i >= 0; i--) {
+    v = (v << 1n) | ((xi >> BigInt(i)) & 1n);
+    v = (v << 1n) | ((yi >> BigInt(i)) & 1n);
+  }
+  return v;
+}
+const positionBits = (n) => (n < MAX_WORDS ? BITS * n : POSITION_BITS);
+const axisBits = (n) => { const b = positionBits(n); return [(b + 1) >> 1, b >> 1]; };
+
+function cellSize(n) {
+  const [xb, yb] = axisBits(n);
+  return [(X1 - X0) / 2 ** xb, (Y1 - Y0) / 2 ** yb];
+}
+
+function encode(lat, lng, n) {
+  const position = fullIndex(lat, lng) >> BigInt(2 * PRECISION - positionBits(n));
+  const value = n < MAX_WORDS ? position
+    : (position << BigInt(CHECK_BITS)) | checksum(position);
+  const out = [];
+  for (let i = 0; i < n; i++) out.push(WORDS[Number((value >> BigInt(BITS * (n - 1 - i))) & 0x7ffn)]);
+  return out;
+}
+
+function decode(spoken) {
+  const unknown = spoken.filter((w) => !INDEX.has(w));
+  if (unknown.length) throw new Error(`not BIP-39 words: ${unknown.join(', ')}`);
+  if (spoken.length < 1 || spoken.length > MAX_WORDS) throw new Error(`1 to ${MAX_WORDS} words`);
+  let value = 0n;
+  for (const w of spoken) value = (value << BigInt(BITS)) | BigInt(INDEX.get(w));
+  const n = spoken.length;
+  let prefix;
+  if (n < MAX_WORDS) prefix = value;
+  else {
+    prefix = value >> BigInt(CHECK_BITS);
+    if ((value & ((1n << BigInt(CHECK_BITS)) - 1n)) !== checksum(prefix))
+      throw new Error('checksum failed - a word is wrong');
+  }
+  const bits = positionBits(n), [xb, yb] = axisBits(n);
+  let xi = 0n, yi = 0n;
+  for (let pos = 0; pos < bits; pos++) {
+    const bit = (prefix >> BigInt(bits - 1 - pos)) & 1n;
+    if (pos % 2 === 0) xi = (xi << 1n) | bit; else yi = (yi << 1n) | bit;
+  }
+  return unproject(X0 + (Number(xi) + 0.5) / 2 ** xb * (X1 - X0),
+                   Y0 + (Number(yi) + 0.5) / 2 ** yb * (Y1 - Y0));
 }
 
 // --- map -------------------------------------------------------------------
@@ -197,8 +209,6 @@ L.rectangle([[BOX.latMin, BOX.lngMin], [BOX.latMax, BOX.lngMax]],
 const rowsEl = document.getElementById('rows');
 const emptyEl = document.getElementById('empty');
 const errEl = document.getElementById('err');
-const chkRow = document.getElementById('checkrow');
-const chkEl = document.getElementById('chk');
 let marker = null, boxes = [], point = null, selected = 3;
 
 const fmt = (m) => m >= 1000 ? `${(m / 1000).toFixed(1)} km` : m >= 1 ? `${m.toFixed(1)} m` : `${(m * 100).toFixed(0)} cm`;
@@ -231,14 +241,11 @@ function show(lat, lng) {
       s.textContent = word; td.appendChild(s);
     });
     const ts = document.createElement('td'); ts.className = 's';
-    ts.textContent = `${fmt(Math.sqrt(w * h))}`;
+    ts.textContent = n === MAX_WORDS ? `${fmt(Math.sqrt(w * h))} · checked` : fmt(Math.sqrt(w * h));
     tr.append(td, ts);
     tr.addEventListener('click', () => { selected = n; show(lat, lng); });
     rowsEl.appendChild(tr);
   }
-  chkEl.textContent = checkWord(full.slice(0, selected));
-  chkRow.hidden = false;
-
   if (marker) map.removeLayer(marker);
   marker = L.circleMarker([lat, lng], { radius: 5, color: '#a8322a', weight: 2, fillOpacity: .9 }).addTo(map);
   boxes.forEach((b) => map.removeLayer(b)); boxes = [];

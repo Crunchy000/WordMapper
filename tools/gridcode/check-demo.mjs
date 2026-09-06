@@ -12,7 +12,7 @@ const fixture = JSON.parse(readFileSync(join(here, 'fixture.json'), 'utf8'));
 const words = html.match(/const WORDS = (\[[^\n]*\]);/)[1];
 const start = html.indexOf('const INDEX = new Map');
 const end = html.indexOf('// --- map ---');
-const src = `const WORDS = ${words};\n${html.slice(start, end)}\nexport { encode, decode, checkWord };`;
+const src = `const WORDS = ${words};\n${html.slice(start, end)}\nexport { encode, decode };`;
 const mod = await import('data:text/javascript,' + encodeURIComponent(src));
 
 let bad = 0;
@@ -34,10 +34,10 @@ for (const c of fixture) {
       bad++; console.error(`  NOT A PREFIX at ${n}: ${expected.join('.')}`);
     }
   }
-  if (mod.checkWord(c.words['3']) !== c.check3) {
-    bad++; console.error(`  CHECK WORD ${c.lat},${c.lng}: js ${mod.checkWord(c.words['3'])} vs py ${c.check3}`);
-  }
+  // a four-word address must pass its own embedded checksum
+  try { mod.decode(c.words[String(Object.keys(c.words).length)]); }
+  catch (e) { bad++; console.error(`  CHECKSUM ${c.lat},${c.lng}: ${e.message}`); }
 }
-console.log(`demo codec vs python reference: ${fixture.length} points x 5 lengths, plus check words`);
+console.log(`demo codec vs python reference: ${fixture.length} points x ${Object.keys(fixture[0].words).length} lengths`);
 if (bad) { console.error(`FAIL: ${bad} problem(s)`); process.exit(1); }
-console.log('OK: agrees with the reference, truncation holds, check words match');
+console.log('OK: agrees with the reference, truncation holds, checksums verify');

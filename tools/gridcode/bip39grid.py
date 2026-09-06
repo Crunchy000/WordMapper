@@ -8,7 +8,13 @@ stop; each one narrows the area, and the words already said never change:
 
     plug.curtain                      486 m    a street
     plug.curtain.elder                 11 m    a building
-    plug.curtain.elder.scale           24 cm   a doorstep
+    plug.curtain.elder.<4th>          2.7 m    a doorstep, and verified
+
+The fourth word does two jobs at once. Three words alone reach 10.75 m, which
+is wide, but a whole fourth word of position would reach 24 cm, which is finer
+than anyone needs. So its 11 bits are split: 4 refine the position and 7 carry
+a checksum. That lands at 2.69 m -- better than what3words' 3 m -- while
+catching a wrong word 99.2% of the time, which what3words does not do at all.
 
 The root is a fixed bounding box rather than a repeating tile, so an address
 is unambiguous at every length -- there are no repeats to disambiguate and no
@@ -23,19 +29,22 @@ interleave order per length instead does not work: 11 bits per word is odd, so
 orders are unrelated sequences rather than prefixes of one another.
 
 CHECKSUMS. A checksum cannot live at every length: its bits would sit exactly
-where the next word's position bits must go. It is therefore a separate
-optional suffix, and must be transmitted distinguishably (a different
-separator, or "check" spoken before it) -- otherwise a three-word address plus
-check is indistinguishable from a four-word address. The checksum covers the
-word count as well as the words.
+where the next word's position bits must go. Rather than pay for one at every
+length, the four-word form carries it inside its own last word, which is why
+four words is terminal -- a fifth word would have to reinterpret those bits.
+One to three words are position only and unverified; four words is refined and
+verified. Nothing is ambiguous, because the fourth word is always the last.
 """
 import hashlib, json, math, os, subprocess, sys
 
 R = 6371008.8               # mean earth radius, metres
 STD_PARALLEL = 30.0         # Lambert equal-area standard parallel
 BITS_PER_WORD = 11          # log2(2048), exactly
-MAX_WORDS = 5
-PRECISION = (BITS_PER_WORD * MAX_WORDS + 1) // 2   # bits per axis at full depth
+MAX_WORDS = 4               # terminal: the last word carries the checksum
+REFINE_BITS = 4             # of the last word's 11 bits, how many refine position
+CHECK_BITS = BITS_PER_WORD - REFINE_BITS
+POSITION_BITS = BITS_PER_WORD * (MAX_WORDS - 1) + REFINE_BITS
+PRECISION = (POSITION_BITS + 1) // 2               # bits per axis at full depth
 
 # UK and Ireland. Any box works; it fixes the resolution at every length.
 BOX = {'latMin': 49.85, 'latMax': 60.90, 'lngMin': -11.00, 'lngMax': 1.80}
@@ -80,8 +89,16 @@ def _full_index(lat, lng):
     return v
 
 
+def _position_bits(n_words):
+    """Position bits an n-word address carries. The last word contributes only
+    REFINE_BITS, the rest all 11."""
+    if n_words < MAX_WORDS:
+        return BITS_PER_WORD * n_words
+    return POSITION_BITS
+
+
 def _axis_bits(n_words):
-    bits = BITS_PER_WORD * n_words
+    bits = _position_bits(n_words)
     return (bits + 1) // 2, bits // 2      # x gets the odd bit
 
 
@@ -94,27 +111,49 @@ def cell_size(n_words):
 def encode(lat, lng, words, n_words=3):
     if not 1 <= n_words <= MAX_WORDS:
         raise ValueError(f'1..{MAX_WORDS} words')
-    prefix = _full_index(lat, lng) >> (2 * PRECISION - BITS_PER_WORD * n_words)
-    return [words[(prefix >> (BITS_PER_WORD * (n_words - 1 - i))) & 0x7ff]
+    bits = _position_bits(n_words)
+    position = _full_index(lat, lng) >> (2 * PRECISION - bits)
+    if n_words < MAX_WORDS:
+        value = position
+    else:
+        # last word = REFINE_BITS of position, then the checksum over all of it
+        value = (position << CHECK_BITS) | _checksum(position)
+    return [words[(value >> (BITS_PER_WORD * (n_words - 1 - i))) & 0x7ff]
             for i in range(n_words)]
 
 
+def _checksum(position):
+    payload = position.to_bytes(8, 'big')
+    digest = hashlib.sha256(payload).digest()
+    return int.from_bytes(digest[:2], 'big') >> (16 - CHECK_BITS)
+
+
 def decode(spoken, words):
-    """Resolve an address of any length. No position hint is needed."""
+    """Resolve an address of any length. No position hint is needed.
+
+    A four-word address is checked; raises ValueError if a word is wrong.
+    """
     index = {w: i for i, w in enumerate(words)}
     unknown = [w for w in spoken if w not in index]
     if unknown:
         raise ValueError(f'not BIP-39 words: {unknown}')
     if not 1 <= len(spoken) <= MAX_WORDS:
         raise ValueError(f'1..{MAX_WORDS} words')
-    prefix = 0
+    value = 0
     for w in spoken:
-        prefix = (prefix << BITS_PER_WORD) | index[w]
+        value = (value << BITS_PER_WORD) | index[w]
+    if len(spoken) < MAX_WORDS:
+        prefix = value
+    else:
+        prefix = value >> CHECK_BITS
+        if (value & (2 ** CHECK_BITS - 1)) != _checksum(prefix):
+            raise ValueError('checksum failed - a word is wrong')
     # De-interleave the truncated sequence back into partial x and y.
+    bits = _position_bits(len(spoken))
     xb, yb = _axis_bits(len(spoken))
     xi = yi = 0
-    for pos in range(BITS_PER_WORD * len(spoken)):
-        bit = (prefix >> (BITS_PER_WORD * len(spoken) - 1 - pos)) & 1
+    for pos in range(bits):
+        bit = (prefix >> (bits - 1 - pos)) & 1
         if pos % 2 == 0:
             xi = (xi << 1) | bit
         else:
@@ -122,17 +161,3 @@ def decode(spoken, words):
     x = _X0 + (xi + 0.5) / 2 ** xb * (_X1 - _X0)
     y = _Y0 + (yi + 0.5) / 2 ** yb * (_Y1 - _Y0)
     return unproject(x, y)
-
-
-def check_word(spoken, words):
-    """An optional verification suffix. Covers the word count too, so a
-    three-word address plus check cannot pass as a different length."""
-    index = {w: i for i, w in enumerate(words)}
-    payload = bytes([len(spoken)]) + b''.join(
-        index[w].to_bytes(2, 'big') for w in spoken)
-    digest = hashlib.sha256(payload).digest()
-    return words[int.from_bytes(digest[:2], 'big') & 0x7ff]
-
-
-def verify(spoken, check, words):
-    return check_word(spoken, words) == check

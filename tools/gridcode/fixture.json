@@ -19,17 +19,9 @@
     "plug",
     "curtain",
     "elder",
-    "scale"
-   ],
-   "5": [
-    "plug",
-    "curtain",
-    "elder",
-    "scale",
-    "buffalo"
+    "script"
    ]
-  },
-  "check3": "average"
+  }
  },
  {
   "lat": 51.5055,
@@ -51,17 +43,9 @@
     "plug",
     "glow",
     "unit",
-    "stove"
-   ],
-   "5": [
-    "plug",
-    "glow",
-    "unit",
-    "stove",
-    "pumpkin"
+    "spoil"
    ]
-  },
-  "check3": "fragile"
+  }
  },
  {
   "lat": 51.17889,
@@ -83,17 +67,9 @@
     "mixed",
     "infant",
     "path",
-    "online"
-   ],
-   "5": [
-    "mixed",
-    "infant",
-    "path",
-    "online",
-    "mind"
+    "ocean"
    ]
-  },
-  "check3": "element"
+  }
  },
  {
   "lat": 55.94859,
@@ -115,17 +91,9 @@
     "senior",
     "parent",
     "banana",
-    "apple"
-   ],
-   "5": [
-    "senior",
-    "parent",
-    "banana",
-    "apple",
-    "mandate"
+    "august"
    ]
-  },
-  "check3": "ripple"
+  }
  },
  {
   "lat": 52.9715,
@@ -147,17 +115,9 @@
     "base",
     "wheat",
     "field",
-    "high"
-   ],
-   "5": [
-    "base",
-    "wheat",
-    "field",
-    "high",
-    "monitor"
+    "hammer"
    ]
-  },
-  "check3": "shield"
+  }
  },
  {
   "lat": 50.06569,
@@ -179,17 +139,9 @@
     "chuckle",
     "oyster",
     "museum",
-    "miss"
-   ],
-   "5": [
-    "chuckle",
-    "oyster",
-    "museum",
-    "miss",
-    "attract"
+    "lion"
    ]
-  },
-  "check3": "avocado"
+  }
  },
  {
   "lat": 58.64389,
@@ -211,17 +163,9 @@
     "squirrel",
     "evoke",
     "volcano",
-    "moral"
-   ],
-   "5": [
-    "squirrel",
-    "evoke",
-    "volcano",
-    "moral",
-    "club"
+    "minute"
    ]
-  },
-  "check3": "tilt"
+  }
  },
  {
   "lat": 53.46308,
@@ -243,17 +187,9 @@
     "okay",
     "heart",
     "clown",
-    "manage"
-   ],
-   "5": [
-    "okay",
-    "heart",
-    "clown",
-    "manage",
-    "jar"
+    "month"
    ]
-  },
-  "check3": "muffin"
+  }
  },
  {
   "lat": 54.5,
@@ -275,17 +211,9 @@
     "dial",
     "sting",
     "room",
-    "fetch"
-   ],
-   "5": [
-    "dial",
-    "sting",
-    "room",
-    "fetch",
-    "salt"
+    "front"
    ]
-  },
-  "check3": "purse"
+  }
  },
  {
   "lat": 60.1,
@@ -307,16 +235,8 @@
     "virtual",
     "primary",
     "aware",
-    "melt"
-   ],
-   "5": [
-    "virtual",
-    "primary",
-    "aware",
-    "melt",
-    "fence"
+    "mad"
    ]
-  },
-  "check3": "box"
+  }
  }
 ]

@@ -52,30 +52,36 @@ for n in (2, 3):
         seen.setdefault(k, (lat, lng))
     check(f'{n} words: no address repeats anywhere in the box', dupes, 0)
 
-# The check word must catch wrong words and wrong lengths.
+# The fourth word carries the checksum, so a wrong word must be rejected.
 caught = tot = 0
-for lat, lng in pts[:1500]:
-    n = random.randint(2, 4)
-    a = g.encode(lat, lng, WORDS, n)
-    c = g.check_word(a, WORDS)
+for lat, lng in pts[:2000]:
+    a = g.encode(lat, lng, WORDS, g.MAX_WORDS)
     bad_a = list(a)
-    i = random.randrange(n)
+    i = random.randrange(g.MAX_WORDS)
     while bad_a[i] == a[i]:
         bad_a[i] = random.choice(WORDS)
     tot += 1
-    if not g.verify(bad_a, c, WORDS):
+    try:
+        g.decode(bad_a, WORDS)
+    except ValueError:
         caught += 1
-print(f'  ----  check word rejects a wrong word: {caught/tot*100:.1f}% '
-      f'(theory {(1 - 1/2048)*100:.2f}%)')
+theory = (1 - 2 ** -g.CHECK_BITS) * 100
+print(f'  ----  4 words: a wrong word is rejected {caught/tot*100:.1f}% '
+      f'(theory {theory:.2f}%, {g.CHECK_BITS} check bits)')
+check('detection is within a point of theory', abs(caught/tot*100 - theory) < 1.0, True)
 
-wrong_len = sum(1 for lat, lng in pts[:500]
-                if not g.verify(g.encode(lat, lng, WORDS, 3),
-                                g.check_word(g.encode(lat, lng, WORDS, 4), WORDS), WORDS))
-check('check word is length-specific', wrong_len, 500)
+check('a valid 4-word address always passes its own checksum',
+      all(g.decode(g.encode(lat, lng, WORDS, g.MAX_WORDS), WORDS) is not None
+          for lat, lng in pts[:500]), True)
 
-check('a valid address round trips its own check word',
-      all(g.verify(a, g.check_word(a, WORDS), WORDS)
-          for a in (g.encode(lat, lng, WORDS, 3) for lat, lng in pts[:500])), True)
+# Shorter forms carry no checksum and must not be rejected for lacking one.
+check('1-3 word addresses decode without a checksum',
+      all(g.decode(g.encode(lat, lng, WORDS, n), WORDS) is not None
+          for n in (1, 2, 3) for lat, lng in pts[:200]), True)
+
+w, h = g.cell_size(g.MAX_WORDS)
+print(f'  ----  4 words: {math.sqrt(w*h):.2f} m with {g.REFINE_BITS} refine + '
+      f'{g.CHECK_BITS} check bits (3 words alone is {math.sqrt(math.prod(g.cell_size(3))):.2f} m)')
 
 print()
 if fails:

@@ -13,7 +13,7 @@ if __name__ == '__main__':
     out = [{'lat': la, 'lng': lo,
             'words': {str(n): g.encode(la, lo, words, n)
                       for n in range(1, g.MAX_WORDS + 1)},
-            'check3': g.check_word(g.encode(la, lo, words, 3), words)}
+            }
            for la, lo in POINTS]
     path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fixture.json')
     with open(path, 'w') as fh:
