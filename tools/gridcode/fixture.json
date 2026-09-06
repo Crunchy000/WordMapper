@@ -1,248 +1,955 @@
 {
  "points": [
   {
+   "code": "GB",
    "lat": 51.50072,
    "lng": -0.12456,
+   "covering": [
+    "GB",
+    "XZ"
+   ],
    "words": {
     "1": [
-     "plug"
+     "pilot"
     ],
     "2": [
-     "plug",
-     "curtain"
+     "pilot",
+     "eagle"
     ],
     "3": [
-     "plug",
-     "curtain",
-     "elder"
+     "pilot",
+     "eagle",
+     "evolve"
     ],
     "4": [
-     "plug",
-     "curtain",
-     "elder",
-     "script"
+     "pilot",
+     "eagle",
+     "evolve",
+     "network"
     ]
    }
   },
   {
-   "lat": 51.5055,
-   "lng": -0.0754,
-   "words": {
-    "1": [
-     "plug"
-    ],
-    "2": [
-     "plug",
-     "glow"
-    ],
-    "3": [
-     "plug",
-     "glow",
-     "unit"
-    ],
-    "4": [
-     "plug",
-     "glow",
-     "unit",
-     "spoil"
-    ]
-   }
-  },
-  {
-   "lat": 51.17889,
-   "lng": -1.82624,
-   "words": {
-    "1": [
-     "mixed"
-    ],
-    "2": [
-     "mixed",
-     "infant"
-    ],
-    "3": [
-     "mixed",
-     "infant",
-     "path"
-    ],
-    "4": [
-     "mixed",
-     "infant",
-     "path",
-     "ocean"
-    ]
-   }
-  },
-  {
+   "code": "GB",
    "lat": 55.94859,
    "lng": -3.19951,
+   "covering": [
+    "GB",
+    "XZ"
+   ],
    "words": {
     "1": [
-     "senior"
+     "hill"
     ],
     "2": [
-     "senior",
-     "parent"
+     "hill",
+     "tail"
     ],
     "3": [
-     "senior",
-     "parent",
-     "banana"
+     "hill",
+     "tail",
+     "review"
     ],
     "4": [
-     "senior",
-     "parent",
-     "banana",
-     "august"
+     "hill",
+     "tail",
+     "review",
+     "hurry"
     ]
    }
   },
   {
-   "lat": 52.9715,
-   "lng": -9.4309,
-   "words": {
-    "1": [
-     "base"
-    ],
-    "2": [
-     "base",
-     "wheat"
-    ],
-    "3": [
-     "base",
-     "wheat",
-     "field"
-    ],
-    "4": [
-     "base",
-     "wheat",
-     "field",
-     "hammer"
-    ]
-   }
-  },
-  {
+   "code": "GB",
    "lat": 50.06569,
    "lng": -5.71531,
+   "covering": [
+    "GB",
+    "XZ"
+   ],
    "words": {
     "1": [
-     "chuckle"
+     "apple"
     ],
     "2": [
-     "chuckle",
-     "oyster"
+     "apple",
+     "invite"
     ],
     "3": [
-     "chuckle",
-     "oyster",
-     "museum"
+     "apple",
+     "invite",
+     "arm"
     ],
     "4": [
-     "chuckle",
-     "oyster",
-     "museum",
-     "lion"
+     "apple",
+     "invite",
+     "arm",
+     "cherry"
     ]
    }
   },
   {
-   "lat": 58.64389,
-   "lng": -3.07,
+   "code": "IE",
+   "lat": 53.3498,
+   "lng": -6.2603,
+   "covering": [
+    "IE",
+    "GB",
+    "XZ"
+   ],
    "words": {
     "1": [
-     "squirrel"
+     "sadness"
     ],
     "2": [
-     "squirrel",
-     "evoke"
+     "sadness",
+     "warfare"
     ],
     "3": [
-     "squirrel",
-     "evoke",
-     "volcano"
+     "sadness",
+     "warfare",
+     "antique"
     ],
     "4": [
-     "squirrel",
-     "evoke",
-     "volcano",
-     "minute"
+     "sadness",
+     "warfare",
+     "antique",
+     "olive"
     ]
    }
   },
   {
-   "lat": 53.46308,
-   "lng": -2.29139,
+   "code": "IE",
+   "lat": 52.9715,
+   "lng": -9.4309,
+   "covering": [
+    "IE",
+    "XZ"
+   ],
    "words": {
     "1": [
-     "okay"
+     "burden"
     ],
     "2": [
-     "okay",
-     "heart"
+     "burden",
+     "relief"
     ],
     "3": [
-     "okay",
-     "heart",
-     "clown"
+     "burden",
+     "relief",
+     "fluid"
     ],
     "4": [
-     "okay",
-     "heart",
-     "clown",
-     "month"
+     "burden",
+     "relief",
+     "fluid",
+     "color"
     ]
    }
   },
   {
-   "lat": 54.5,
-   "lng": -6.0,
+   "code": "FR",
+   "lat": 48.8566,
+   "lng": 2.3522,
+   "covering": [
+    "FR",
+    "XZ"
+   ],
    "words": {
     "1": [
-     "dial"
+     "kit"
     ],
     "2": [
-     "dial",
-     "sting"
+     "kit",
+     "extend"
     ],
     "3": [
-     "dial",
-     "sting",
-     "room"
+     "kit",
+     "extend",
+     "minor"
     ],
     "4": [
-     "dial",
-     "sting",
-     "room",
-     "front"
+     "kit",
+     "extend",
+     "minor",
+     "asthma"
     ]
    }
   },
   {
-   "lat": 60.1,
-   "lng": -1.2,
+   "code": "US",
+   "lat": 40.758,
+   "lng": -73.9855,
+   "covering": [
+    "US-NJ",
+    "US-NY",
+    "US",
+    "XZ"
+   ],
    "words": {
     "1": [
-     "virtual"
+     "tube"
     ],
     "2": [
-     "virtual",
+     "tube",
+     "raw"
+    ],
+    "3": [
+     "tube",
+     "raw",
+     "jar"
+    ],
+    "4": [
+     "tube",
+     "raw",
+     "jar",
+     "dry"
+    ]
+   }
+  },
+  {
+   "code": "US-NY",
+   "lat": 40.758,
+   "lng": -73.9855,
+   "covering": [
+    "US-NJ",
+    "US-NY",
+    "US",
+    "XZ"
+   ],
+   "words": {
+    "1": [
+     "merit"
+    ],
+    "2": [
+     "merit",
+     "fat"
+    ],
+    "3": [
+     "merit",
+     "fat",
+     "glue"
+    ],
+    "4": [
+     "merit",
+     "fat",
+     "glue",
+     "galaxy"
+    ]
+   }
+  },
+  {
+   "code": "US-CA",
+   "lat": 37.8199,
+   "lng": -122.4786,
+   "covering": [
+    "US-CA",
+    "US",
+    "XZ"
+   ],
+   "words": {
+    "1": [
+     "enrich"
+    ],
+    "2": [
+     "enrich",
+     "card"
+    ],
+    "3": [
+     "enrich",
+     "card",
+     "senior"
+    ],
+    "4": [
+     "enrich",
+     "card",
+     "senior",
+     "minimum"
+    ]
+   }
+  },
+  {
+   "code": "RU",
+   "lat": 55.7558,
+   "lng": 37.6173,
+   "covering": [
+    "RU-MOS",
+    "RU-MOW",
+    "RU-TVE",
+    "RU",
+    "XZ"
+   ],
+   "words": {
+    "1": [
+     "dream"
+    ],
+    "2": [
+     "dream",
+     "hybrid"
+    ],
+    "3": [
+     "dream",
+     "hybrid",
+     "metal"
+    ],
+    "4": [
+     "dream",
+     "hybrid",
+     "metal",
+     "potato"
+    ]
+   }
+  },
+  {
+   "code": "FJ",
+   "lat": -18.1416,
+   "lng": 178.4419,
+   "covering": [
+    "FJ",
+    "XZ"
+   ],
+   "words": {
+    "1": [
+     "nest"
+    ],
+    "2": [
+     "nest",
+     "bunker"
+    ],
+    "3": [
+     "nest",
+     "bunker",
+     "approve"
+    ],
+    "4": [
+     "nest",
+     "bunker",
+     "approve",
+     "junior"
+    ]
+   }
+  },
+  {
+   "code": "FJ",
+   "lat": -16.5,
+   "lng": -179.9,
+   "covering": [
+    "FJ",
+    "XZ"
+   ],
+   "words": {
+    "1": [
+     "there"
+    ],
+    "2": [
+     "there",
+     "peasant"
+    ],
+    "3": [
+     "there",
+     "peasant",
+     "recycle"
+    ],
+    "4": [
+     "there",
+     "peasant",
+     "recycle",
+     "limb"
+    ]
+   }
+  },
+  {
+   "code": "KI",
+   "lat": 1.8711,
+   "lng": -157.3672,
+   "covering": [
+    "KI",
+    "XZ"
+   ],
+   "words": {
+    "1": [
+     "video"
+    ],
+    "2": [
+     "video",
+     "snack"
+    ],
+    "3": [
+     "video",
+     "snack",
+     "speak"
+    ],
+    "4": [
+     "video",
+     "snack",
+     "speak",
+     "fragile"
+    ]
+   }
+  },
+  {
+   "code": "SG",
+   "lat": 1.2897,
+   "lng": 103.8501,
+   "covering": [
+    "SG",
+    "ID-KR",
+    "MY",
+    "ID",
+    "XZ"
+   ],
+   "words": {
+    "1": [
+     "mouse"
+    ],
+    "2": [
+     "mouse",
+     "kitten"
+    ],
+    "3": [
+     "mouse",
+     "kitten",
+     "agree"
+    ],
+    "4": [
+     "mouse",
+     "kitten",
+     "agree",
+     "dog"
+    ]
+   }
+  },
+  {
+   "code": "XZ",
+   "lat": -33.8688,
+   "lng": 151.2093,
+   "covering": [
+    "AU-NSW",
+    "AU",
+    "XZ"
+   ],
+   "words": {
+    "1": [
+     "punch"
+    ],
+    "2": [
+     "punch",
+     "file"
+    ],
+    "3": [
+     "punch",
+     "file",
+     "brass"
+    ],
+    "4": [
+     "punch",
+     "file",
+     "brass",
+     "slice"
+    ]
+   }
+  },
+  {
+   "code": "XZ",
+   "lat": 64.1466,
+   "lng": -21.9426,
+   "covering": [
+    "IS",
+    "GL",
+    "XZ"
+   ],
+   "words": {
+    "1": [
+     "lecture"
+    ],
+    "2": [
+     "lecture",
+     "city"
+    ],
+    "3": [
+     "lecture",
+     "city",
+     "embrace"
+    ],
+    "4": [
+     "lecture",
+     "city",
+     "embrace",
+     "ladder"
+    ]
+   }
+  },
+  {
+   "code": "GB",
+   "lat": 49.9714,
+   "lng": -8.194799999999987,
+   "covering": [
+    "GB",
+    "XZ"
+   ],
+   "words": {
+    "1": [
+     "abandon"
+    ],
+    "2": [
+     "abandon",
+     "abandon"
+    ],
+    "3": [
+     "abandon",
+     "abandon",
+     "abandon"
+    ],
+    "4": [
+     "abandon",
+     "abandon",
+     "abandon",
+     "album"
+    ]
+   }
+  },
+  {
+   "code": "GB",
+   "lat": 49.9714,
+   "lng": 1.7966000000000122,
+   "covering": [
+    "GB",
+    "FR",
+    "XZ"
+   ],
+   "words": {
+    "1": [
+     "primary"
+    ],
+    "2": [
+     "primary",
+     "fetch"
+    ],
+    "3": [
+     "primary",
+     "fetch",
+     "primary"
+    ],
+    "4": [
+     "primary",
+     "fetch",
+     "primary",
+     "fault"
+    ]
+   }
+  },
+  {
+   "code": "GB",
+   "lat": 60.8819,
+   "lng": -8.194799999999987,
+   "covering": [
+    "GB",
+    "NO",
+    "XZ"
+   ],
+   "words": {
+    "1": [
+     "fetch"
+    ],
+    "2": [
+     "fetch",
      "primary"
     ],
     "3": [
-     "virtual",
+     "fetch",
      "primary",
-     "aware"
+     "fetch"
     ],
     "4": [
-     "virtual",
+     "fetch",
      "primary",
-     "aware",
-     "mad"
+     "fetch",
+     "pilot"
     ]
    }
   },
   {
-   "lat": 49.85,
-   "lng": -11.0,
+   "code": "GB",
+   "lat": 60.8819,
+   "lng": 1.7966000000000122,
+   "covering": [
+    "GB",
+    "NO",
+    "XZ"
+   ],
+   "words": {
+    "1": [
+     "zoo"
+    ],
+    "2": [
+     "zoo",
+     "zoo"
+    ],
+    "3": [
+     "zoo",
+     "zoo",
+     "zoo"
+    ],
+    "4": [
+     "zoo",
+     "zoo",
+     "zoo",
+     "wife"
+    ]
+   }
+  },
+  {
+   "code": "FJ",
+   "lat": -21.7559,
+   "lng": 174.53719999999998,
+   "covering": [
+    "FJ",
+    "XZ"
+   ],
+   "words": {
+    "1": [
+     "abandon"
+    ],
+    "2": [
+     "abandon",
+     "abandon"
+    ],
+    "3": [
+     "abandon",
+     "abandon",
+     "abandon"
+    ],
+    "4": [
+     "abandon",
+     "abandon",
+     "abandon",
+     "achieve"
+    ]
+   }
+  },
+  {
+   "code": "FJ",
+   "lat": -21.7559,
+   "lng": -178.2011,
+   "covering": [
+    "FJ",
+    "XZ"
+   ],
+   "words": {
+    "1": [
+     "primary"
+    ],
+    "2": [
+     "primary",
+     "fetch"
+    ],
+    "3": [
+     "primary",
+     "fetch",
+     "primary"
+    ],
+    "4": [
+     "primary",
+     "fetch",
+     "primary",
+     "fox"
+    ]
+   }
+  },
+  {
+   "code": "FJ",
+   "lat": -12.427,
+   "lng": 174.53719999999998,
+   "covering": [
+    "FJ",
+    "XZ"
+   ],
+   "words": {
+    "1": [
+     "fetch"
+    ],
+    "2": [
+     "fetch",
+     "primary"
+    ],
+    "3": [
+     "fetch",
+     "primary",
+     "fetch"
+    ],
+    "4": [
+     "fetch",
+     "primary",
+     "fetch",
+     "pond"
+    ]
+   }
+  },
+  {
+   "code": "FJ",
+   "lat": -12.427,
+   "lng": -178.2011,
+   "covering": [
+    "FJ",
+    "XZ"
+   ],
+   "words": {
+    "1": [
+     "zoo"
+    ],
+    "2": [
+     "zoo",
+     "zoo"
+    ],
+    "3": [
+     "zoo",
+     "zoo",
+     "zoo"
+    ],
+    "4": [
+     "zoo",
+     "zoo",
+     "zoo",
+     "what"
+    ]
+   }
+  },
+  {
+   "code": "KI",
+   "lat": -11.5068,
+   "lng": 169.47289999999998,
+   "covering": [
+    "KI",
+    "XZ"
+   ],
+   "words": {
+    "1": [
+     "abandon"
+    ],
+    "2": [
+     "abandon",
+     "abandon"
+    ],
+    "3": [
+     "abandon",
+     "abandon",
+     "abandon"
+    ],
+    "4": [
+     "abandon",
+     "abandon",
+     "abandon",
+     "argue"
+    ]
+   }
+  },
+  {
+   "code": "KI",
+   "lat": -11.5068,
+   "lng": -151.7326,
+   "covering": [
+    "KI",
+    "XZ"
+   ],
+   "words": {
+    "1": [
+     "primary"
+    ],
+    "2": [
+     "primary",
+     "fetch"
+    ],
+    "3": [
+     "primary",
+     "fetch",
+     "primary"
+    ],
+    "4": [
+     "primary",
+     "fetch",
+     "primary",
+     "flight"
+    ]
+   }
+  },
+  {
+   "code": "KI",
+   "lat": 3.9735,
+   "lng": 169.47289999999998,
+   "covering": [
+    "KI",
+    "XZ"
+   ],
+   "words": {
+    "1": [
+     "fetch"
+    ],
+    "2": [
+     "fetch",
+     "primary"
+    ],
+    "3": [
+     "fetch",
+     "primary",
+     "fetch"
+    ],
+    "4": [
+     "fetch",
+     "primary",
+     "fetch",
+     "peasant"
+    ]
+   }
+  },
+  {
+   "code": "KI",
+   "lat": 3.9735,
+   "lng": -151.7326,
+   "covering": [
+    "KI",
+    "XZ"
+   ],
+   "words": {
+    "1": [
+     "zoo"
+    ],
+    "2": [
+     "zoo",
+     "zoo"
+    ],
+    "3": [
+     "zoo",
+     "zoo",
+     "zoo"
+    ],
+    "4": [
+     "zoo",
+     "zoo",
+     "zoo",
+     "vault"
+    ]
+   }
+  },
+  {
+   "code": "XZ",
+   "lat": -90.0,
+   "lng": -180.0,
+   "covering": [
+    "XZ"
+   ],
+   "words": {
+    "1": [
+     "abandon"
+    ],
+    "2": [
+     "abandon",
+     "abandon"
+    ],
+    "3": [
+     "abandon",
+     "abandon",
+     "abandon"
+    ],
+    "4": [
+     "abandon",
+     "abandon",
+     "abandon",
+     "ahead"
+    ]
+   }
+  },
+  {
+   "code": "XZ",
+   "lat": -90.0,
+   "lng": -180.0,
+   "covering": [
+    "XZ"
+   ],
+   "words": {
+    "1": [
+     "abandon"
+    ],
+    "2": [
+     "abandon",
+     "abandon"
+    ],
+    "3": [
+     "abandon",
+     "abandon",
+     "abandon"
+    ],
+    "4": [
+     "abandon",
+     "abandon",
+     "abandon",
+     "ahead"
+    ]
+   }
+  },
+  {
+   "code": "XZ",
+   "lat": 90.0,
+   "lng": -180.0,
+   "covering": [
+    "XZ"
+   ],
+   "words": {
+    "1": [
+     "fetch"
+    ],
+    "2": [
+     "fetch",
+     "primary"
+    ],
+    "3": [
+     "fetch",
+     "primary",
+     "fetch"
+    ],
+    "4": [
+     "fetch",
+     "primary",
+     "fetch",
+     "question"
+    ]
+   }
+  },
+  {
+   "code": "XZ",
+   "lat": 90.0,
+   "lng": -180.0,
+   "covering": [
+    "XZ"
+   ],
+   "words": {
+    "1": [
+     "fetch"
+    ],
+    "2": [
+     "fetch",
+     "primary"
+    ],
+    "3": [
+     "fetch",
+     "primary",
+     "fetch"
+    ],
+    "4": [
+     "fetch",
+     "primary",
+     "fetch",
+     "question"
+    ]
+   }
+  },
+  {
+   "code": "US-CA",
+   "lat": 32.4834,
+   "lng": -124.4217,
+   "covering": [
+    "US-CA",
+    "US",
+    "XZ"
+   ],
    "words": {
     "1": [
      "abandon"
@@ -265,8 +972,16 @@
    }
   },
   {
-   "lat": 49.85,
-   "lng": 1.8,
+   "code": "US-CA",
+   "lat": 32.4834,
+   "lng": -114.075,
+   "covering": [
+    "US-AZ",
+    "US-CA",
+    "MX",
+    "US",
+    "XZ"
+   ],
    "words": {
     "1": [
      "primary"
@@ -284,13 +999,21 @@
      "primary",
      "fetch",
      "primary",
-     "feature"
+     "fuel"
     ]
    }
   },
   {
-   "lat": 60.9,
-   "lng": -11.0,
+   "code": "US-CA",
+   "lat": 42.0508,
+   "lng": -124.4217,
+   "covering": [
+    "US-OR",
+    "US-CA",
+    "CA",
+    "US",
+    "XZ"
+   ],
    "words": {
     "1": [
      "fetch"
@@ -308,13 +1031,23 @@
      "fetch",
      "primary",
      "fetch",
-     "program"
+     "permit"
     ]
    }
   },
   {
-   "lat": 60.9,
-   "lng": 1.8,
+   "code": "US-CA",
+   "lat": 42.0508,
+   "lng": -114.075,
+   "covering": [
+    "US-UT",
+    "US-ID",
+    "US-NV",
+    "US-CA",
+    "CA",
+    "US",
+    "XZ"
+   ],
    "words": {
     "1": [
      "zoo"
@@ -332,51 +1065,80 @@
      "zoo",
      "zoo",
      "zoo",
-     "wife"
+     "walk"
     ]
    }
   }
  ],
  "outside": [
   {
+   "code": "GB",
    "lat": 48.8566,
    "lng": 2.3522
   },
   {
-   "lat": 40.4168,
-   "lng": -3.7038
-  },
-  {
+   "code": "GB",
    "lat": 40.7128,
    "lng": -74.006
   },
   {
-   "lat": -33.8688,
-   "lng": 151.2093
+   "code": "IE",
+   "lat": 51.5007,
+   "lng": -0.1246
   },
   {
-   "lat": 64.1466,
-   "lng": -21.9426
+   "code": "FR",
+   "lat": 51.5007,
+   "lng": -0.1246
   },
   {
-   "lat": 0.0,
-   "lng": 0.0
+   "code": "SG",
+   "lat": 3.139,
+   "lng": 101.6869
   },
   {
-   "lat": 49.84,
-   "lng": -2.0
-  },
-  {
-   "lat": 60.91,
-   "lng": -2.0
-  },
-  {
-   "lat": 55.0,
-   "lng": -11.01
-  },
-  {
-   "lat": 55.0,
-   "lng": 1.81
+   "code": "US-CA",
+   "lat": 40.758,
+   "lng": -73.9855
   }
- ]
+ ],
+ "wrong_region": [
+  {
+   "minted": "IE",
+   "claimed": "GB",
+   "lat": 53.3498,
+   "lng": -6.2603,
+   "words": [
+    "sadness",
+    "warfare",
+    "antique",
+    "olive"
+   ]
+  },
+  {
+   "minted": "GB",
+   "claimed": "IE",
+   "lat": 54.6,
+   "lng": -6.0,
+   "words": [
+    "buzz",
+    "mask",
+    "way",
+    "derive"
+   ]
+  },
+  {
+   "minted": "US-NY",
+   "claimed": "US-NJ",
+   "lat": 40.758,
+   "lng": -73.9855,
+   "words": [
+    "merit",
+    "fat",
+    "glue",
+    "galaxy"
+   ]
+  }
+ ],
+ "regions": 541
 }

@@ -1,26 +1,42 @@
 #!/usr/bin/env python3
-"""Truncatable word addresses over a fixed box, using the BIP-39 word list.
+"""Truncatable word addresses over a registry of regions, using BIP-39 words.
 
     npm install --prefix tools/gridcode
 
-An address is a prefix of a longer address. Say as many words as you need and
-stop; each one narrows the area, and the words already said never change:
+An address is a region code and up to four words:
 
-    plug.curtain                      486 m    a street
-    plug.curtain.elder                 11 m    a building
-    plug.curtain.elder.<4th>          2.7 m    a doorstep, and verified
+    GB.plug.curtain                   486 m    a street
+    GB.plug.curtain.elder              11 m    a building
+    GB.plug.curtain.elder.<4th>       2.4 m    a doorstep, and verified
 
-The fourth word does two jobs at once. Three words alone reach 10.75 m, which
-is wide, but a whole fourth word of position would reach 24 cm, which is finer
-than anyone needs. So its 11 bits are split: 4 refine the position and 7 carry
-a checksum. That lands at 2.69 m -- better than what3words' 3 m -- while
-catching a wrong word 99.2% of the time, which what3words does not do at all.
+THE REGION IS CARRIED LIKE A DIALLING CODE. It costs nothing from the four
+words, because it travels out of band and is dropped whenever both ends
+already know it -- the way nobody says +44 to a neighbour. Every region code
+is a published identifier, ISO 3166-1 for a country and ISO 3166-2 for a
+subdivision, because a prefix is only worth having if the caller already knows
+it: "which country" and "which state" are known, "which numbered box" is not.
 
-The root is a fixed bounding box rather than a repeating tile, so an address
-is unambiguous at every length -- there are no repeats to disambiguate and no
-position hint is needed. An approximate location is then a sanity check rather
-than a requirement, which is the useful shape for emergency calls: a partial
-address is still a real answer.
+WHAT THE PREFIX BUYS. Resolution depends on the area addressed, so scoping to
+a region rather than the globe is what keeps four words at metres instead of
+tens of metres -- 61 m worldwide, 2.4 m in the UK. It does not buy resolution
+over simply saying more words: five words worldwide would reach 1.35 m. It
+buys three other things. Four words stays the spoken length everywhere. A
+mistaken word lands somewhere in the same region rather than another
+continent. And the region is checked by a channel the words do not travel on,
+because a dispatcher already knows roughly where the caller is.
+
+REGIONS OVERLAP, DELIBERATELY. US-CA sits inside US; a point in California has
+a valid address under either. Overlap is what lets a caller say as much as
+they actually know -- the country alone, or the state for a finer cell -- and
+it is why border towns need no special case. The registry is built by
+tools/regions/build_regions.py; see docs/regions.md.
+
+THE FOURTH WORD does two jobs. Three words alone reach a wide cell, but a
+whole fourth word of position would be finer than anyone needs, so its 11 bits
+are split: 4 refine the position and 7 carry a checksum, over the region code
+as well as the words. Saying the wrong region therefore fails the same check
+as saying the wrong word, 99.2% of the time. Four words is terminal: a fifth
+would have to reinterpret the check bits.
 
 HOW THE PREFIX PROPERTY IS KEPT. The x and y coordinates are interleaved ONCE
 at full precision and the resulting bit string is truncated. Deriving the
@@ -28,21 +44,11 @@ interleave order per length instead does not work: 11 bits per word is odd, so
 33 bits splits the axes 17/16 while 22 and 44 split evenly, and the three
 orders are unrelated sequences rather than prefixes of one another.
 
-COVERAGE. The box is the whole world as far as this codec is concerned, so a
-coordinate outside it has no address and encode() refuses it. That refusal is
-load-bearing rather than tidiness: decode maps addresses onto the box and
-nowhere else, so a point outside would otherwise alias onto some real address
-inside it -- silently, and passing its own checksum, because the checksum
-covers transmission of the address and cannot know where the caller was
-standing. Widening coverage means widening the box, which costs resolution
-everywhere; see docs/coverage.md.
-
-CHECKSUMS. A checksum cannot live at every length: its bits would sit exactly
-where the next word's position bits must go. Rather than pay for one at every
-length, the four-word form carries it inside its own last word, which is why
-four words is terminal -- a fifth word would have to reinterpret those bits.
-One to three words are position only and unverified; four words is refined and
-verified. Nothing is ambiguous, because the fourth word is always the last.
+COVERAGE. A coordinate outside a region's box has no address in that region,
+and encode refuses it rather than inventing one -- decode maps onto the box
+and nowhere else, so an outside point would alias onto an address belonging to
+a real place inside it, and pass its own checksum. Nowhere is unaddressable:
+the XZ region is the whole earth, at 61 m.
 """
 import hashlib, json, math, os, subprocess, sys
 
@@ -54,12 +60,19 @@ REFINE_BITS = 4             # of the last word's 11 bits, how many refine positi
 CHECK_BITS = BITS_PER_WORD - REFINE_BITS
 POSITION_BITS = BITS_PER_WORD * (MAX_WORDS - 1) + REFINE_BITS
 PRECISION = (POSITION_BITS + 1) // 2               # bits per axis at full depth
-
-# UK and Ireland. Any box works; it fixes the resolution at every length.
-BOX = {'latMin': 49.85, 'latMax': 60.90, 'lngMin': -11.00, 'lngMax': 1.80}
+SEP = '.'
+EPS = 1e-9                  # degrees of slack on a box edge, for float error
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _K = math.cos(math.radians(STD_PARALLEL))
+
+
+class OutsideBox(ValueError):
+    """Raised for a coordinate the named region does not cover."""
+
+
+class UnknownRegion(ValueError):
+    """Raised for a region code that is not in the registry."""
 
 
 def load_wordlist():
@@ -71,9 +84,17 @@ def load_wordlist():
     return words
 
 
+def load_regions():
+    with open(os.path.join(_HERE, 'regions.json')) as fh:
+        return {r['code']: r for r in json.load(fh)}
+
+
+REGIONS = load_regions()
+
+
 def project(lat, lng):
     """Lambert cylindrical equal-area: area-true, which keeps cell areas equal
-    across the box. Shape stretches with latitude."""
+    across a box. Shape stretches with latitude."""
     return R * math.radians(lng) * _K, R * math.sin(math.radians(lat)) / _K
 
 
@@ -82,35 +103,90 @@ def unproject(x, y):
             math.degrees(x / (R * _K)))
 
 
-_X0, _Y0 = project(BOX['latMin'], BOX['lngMin'])
-_X1, _Y1 = project(BOX['latMax'], BOX['lngMax'])
+def region(code):
+    try:
+        return REGIONS[code]
+    except KeyError:
+        raise UnknownRegion(f'no region {code!r} in the registry') from None
 
 
-class OutsideBox(ValueError):
-    """Raised for a coordinate the box does not cover. See the module note."""
+def _frame(code):
+    """Projected origin and extent of a region's box, cached on the entry."""
+    r = region(code)
+    if '_frame' not in r:
+        latMin, latMax, lngMin, lngMax = r['box']
+        x0, y0 = project(latMin, lngMin)
+        x1, y1 = project(latMax, lngMax)
+        r['_frame'] = (x0, y0, x1, y1)
+    return r['_frame']
 
 
-def covers(lat, lng):
-    """True if the box covers this point. Edges are inclusive."""
-    return (BOX['latMin'] <= lat <= BOX['latMax']
-            and BOX['lngMin'] <= lng <= BOX['lngMax'])
+def normalise_lng(lng, code):
+    """Bring a longitude into the region's frame.
+
+    A region straddling the antimeridian has a box running past 180 -- Fiji is
+    176.9 to 182.0 -- so a point there arrives as -179 and must be read as 181.
+    """
+    lngMin, lngMax = region(code)['box'][2:]
+    if lngMin - EPS <= lng <= lngMax + EPS:
+        # Already in frame. Short-circuiting matters: a value a hair BELOW
+        # lngMin would otherwise wrap to nearly lngMin + 360, throwing a point
+        # on the western edge clean out of its own box.
+        return lng
+    return lngMin + (lng - lngMin) % 360.0
 
 
-def _full_index(lat, lng):
+def covers(lat, lng, code):
+    """True if the region's box covers this point. Edges are inclusive."""
+    latMin, latMax, lngMin, lngMax = region(code)['box']
+    # A hair of tolerance, because normalising a longitude across the seam is
+    # not exact in binary and a point on the boundary must not fall out of its
+    # own box. EPS degrees is well under a millimetre.
+    return (latMin - EPS <= lat <= latMax + EPS
+            and lngMin - EPS <= normalise_lng(lng, code) <= lngMax + EPS)
+
+
+def box_area(code):
+    x0, y0, x1, y1 = _frame(code)
+    return abs((x1 - x0) * (y1 - y0))
+
+
+def regions_covering(lat, lng):
+    """Every region whose box covers the point, tightest first.
+
+    Tightest first because a smaller box is a finer cell, so the head of this
+    list is the best address available and the tail is the most widely known.
+    """
+    found = [c for c in REGIONS if covers(lat, lng, c)]
+    return sorted(found, key=lambda c: (box_area(c), c))
+
+
+def best_region(lat, lng):
+    found = regions_covering(lat, lng)
+    if not found:
+        raise OutsideBox(f'{lat:.5f}, {lng:.5f} is in no region')  # XZ makes this
+        # unreachable in practice, but the registry is data and may be edited
+    return found[0]
+
+
+def _full_index(lat, lng, code):
     """x and y interleaved at full precision, coarse bits first."""
-    if not covers(lat, lng):
-        raise OutsideBox(
-            f'{lat:.5f}, {lng:.5f} is outside the covered box '
-            f"({BOX['latMin']}..{BOX['latMax']}, {BOX['lngMin']}..{BOX['lngMax']})")
-    x, y = project(lat, lng)
-    # Both ends must be clamped. The top end saturates a point on the boundary
-    # into the last cell, which is what an inclusive edge means. The bottom end
-    # can only be reached by floating-point slop at the boundary itself, since
-    # covers() has already refused anything genuinely outside -- but an
-    # unclamped negative index would sign-extend under >> and mint a plausible
-    # address for the wrong place, so it is clamped rather than trusted.
-    xi = min(max(int((x - _X0) / (_X1 - _X0) * 2 ** PRECISION), 0), 2 ** PRECISION - 1)
-    yi = min(max(int((y - _Y0) / (_Y1 - _Y0) * 2 ** PRECISION), 0), 2 ** PRECISION - 1)
+    if not covers(lat, lng, code):
+        latMin, latMax, lngMin, lngMax = region(code)['box']
+        raise OutsideBox(f'{lat:.5f}, {lng:.5f} is outside {code} '
+                         f'({latMin}..{latMax}, {lngMin}..{lngMax})')
+    x0, y0, x1, y1 = _frame(code)
+    x, y = project(lat, normalise_lng(lng, code))
+    # Both ends are clamped. The top saturates a point on the boundary into the
+    # last cell, which is what an inclusive edge means. The bottom is only
+    # reachable by floating-point slop at the boundary, since covers() has
+    # refused anything genuinely outside -- but an unclamped negative index
+    # would sign-extend under >> and mint a plausible address for the wrong
+    # place, so it is clamped rather than trusted.
+    def cell(v, lo, hi):
+        return min(max(int((v - lo) / (hi - lo) * 2 ** PRECISION), 0),
+                   2 ** PRECISION - 1)
+    xi, yi = cell(x, x0, x1), cell(y, y0, y1)
     v = 0
     for i in range(PRECISION - 1, -1, -1):
         v = (v << 1) | ((xi >> i) & 1)
@@ -131,37 +207,45 @@ def _axis_bits(n_words):
     return (bits + 1) // 2, bits // 2      # x gets the odd bit
 
 
-def cell_size(n_words):
+def cell_size(n_words, code):
     """(width, height) in metres of the cell an n-word address names."""
+    x0, y0, x1, y1 = _frame(code)
     xb, yb = _axis_bits(n_words)
-    return (_X1 - _X0) / 2 ** xb, (_Y1 - _Y0) / 2 ** yb
+    return abs(x1 - x0) / 2 ** xb, abs(y1 - y0) / 2 ** yb
 
 
-def encode(lat, lng, words, n_words=3):
-    if not 1 <= n_words <= MAX_WORDS:
-        raise ValueError(f'1..{MAX_WORDS} words')
-    bits = _position_bits(n_words)
-    position = _full_index(lat, lng) >> (2 * PRECISION - bits)
-    if n_words < MAX_WORDS:
-        value = position
-    else:
-        # last word = REFINE_BITS of position, then the checksum over all of it
-        value = (position << CHECK_BITS) | _checksum(position)
-    return [words[(value >> (BITS_PER_WORD * (n_words - 1 - i))) & 0x7ff]
-            for i in range(n_words)]
-
-
-def _checksum(position):
-    payload = position.to_bytes(8, 'big')
+def _checksum(position, code):
+    """Over the region as well as the position, so naming the wrong region
+    fails the same check as saying the wrong word."""
+    payload = code.encode() + b'\0' + position.to_bytes(8, 'big')
     digest = hashlib.sha256(payload).digest()
     return int.from_bytes(digest[:2], 'big') >> (16 - CHECK_BITS)
 
 
-def decode(spoken, words):
-    """Resolve an address of any length. No position hint is needed.
+def encode(lat, lng, words, n_words=3, code=None):
+    """Words for a point. With no region, the tightest one covering it."""
+    if not 1 <= n_words <= MAX_WORDS:
+        raise ValueError(f'1..{MAX_WORDS} words')
+    if code is None:
+        code = best_region(lat, lng)
+    bits = _position_bits(n_words)
+    position = _full_index(lat, lng, code) >> (2 * PRECISION - bits)
+    if n_words < MAX_WORDS:
+        value = position
+    else:
+        # last word = REFINE_BITS of position, then the checksum over all of it
+        value = (position << CHECK_BITS) | _checksum(position, code)
+    return [words[(value >> (BITS_PER_WORD * (n_words - 1 - i))) & 0x7ff]
+            for i in range(n_words)]
 
-    A four-word address is checked; raises ValueError if a word is wrong.
+
+def decode(spoken, words, code):
+    """Resolve an address within a region.
+
+    A four-word address is checked; raises ValueError if a word or the region
+    is wrong.
     """
+    region(code)                                    # reject an unknown region first
     index = {w: i for i, w in enumerate(words)}
     unknown = [w for w in spoken if w not in index]
     if unknown:
@@ -175,8 +259,8 @@ def decode(spoken, words):
         prefix = value
     else:
         prefix = value >> CHECK_BITS
-        if (value & (2 ** CHECK_BITS - 1)) != _checksum(prefix):
-            raise ValueError('checksum failed - a word is wrong')
+        if (value & (2 ** CHECK_BITS - 1)) != _checksum(prefix, code):
+            raise ValueError('checksum failed - a word or the region is wrong')
     # De-interleave the truncated sequence back into partial x and y.
     bits = _position_bits(len(spoken))
     xb, yb = _axis_bits(len(spoken))
@@ -187,6 +271,24 @@ def decode(spoken, words):
             xi = (xi << 1) | bit
         else:
             yi = (yi << 1) | bit
-    x = _X0 + (xi + 0.5) / 2 ** xb * (_X1 - _X0)
-    y = _Y0 + (yi + 0.5) / 2 ** yb * (_Y1 - _Y0)
-    return unproject(x, y)
+    x0, y0, x1, y1 = _frame(code)
+    x = x0 + (xi + 0.5) / 2 ** xb * (x1 - x0)
+    y = y0 + (yi + 0.5) / 2 ** yb * (y1 - y0)
+    lat, lng = unproject(x, y)
+    return lat, (lng + 180.0) % 360.0 - 180.0       # back into -180..180
+
+
+def format_address(code, spoken):
+    return SEP.join([code] + list(spoken))
+
+
+def parse_address(text):
+    """Split 'GB.plug.curtain' into ('GB', ['plug', 'curtain']).
+
+    The region is the first token. It never collides with a word: BIP-39 has no
+    word shorter than three letters and none containing a digit or a hyphen.
+    """
+    parts = [p for p in text.replace(',', SEP).replace(' ', SEP).split(SEP) if p]
+    if not parts:
+        raise ValueError('empty address')
+    return parts[0].upper(), [p.lower() for p in parts[1:]]

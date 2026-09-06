@@ -12,26 +12,32 @@ The scheme, live. Click anywhere and watch the address grow a word at a time,
 each row adding one word and shrinking the box. Click a row to pick a length,
 or resolve an address of any length back to a point.
 
-- An address is a **prefix of a longer address**: 2 words for a street, 3 for a
-  building, 4 for a doorstep. The words already said never change.
-- The root is a **fixed box** over the UK and Ireland, not a repeating tile, so
-  an address is unambiguous at every length and **no position hint is needed**.
+- An address is a **region code and up to four words**, and each length is a
+  **prefix of the next**: 2 words for a street, 3 for a building, 4 for a
+  doorstep. The words already said never change.
+- The region is carried **like a dialling code** — out of band, and dropped
+  whenever both ends already know it. Every code is ISO 3166: `GB`, `FR`,
+  `US-CA`. 541 regions, worldwide coverage.
 - The [BIP-39][bip39] English list: 2,048 words, exactly 11 bits each.
-- The box is the **limit of coverage**. Outside it there is no address, and the
-  codec refuses rather than inventing one — an invented address would resolve
-  to a real place inside the box and pass its checksum. See
-  [`docs/grid-scheme.md`](docs/grid-scheme.md#outside-the-box) for what a wider
-  box would cost.
+- Outside a region's box there is no address, and the codec **refuses rather
+  than inventing one** — an invented address would resolve to a real place
+  inside the box and pass its checksum. Nowhere is unaddressable: `XZ` is the
+  whole earth, at 61 m.
 
 | Words | Big Ben | Area |
 |---|---|---|
-| 2 | `plug.curtain` | 486 m |
-| 3 | `plug.curtain.elder` | 10.7 m |
-| 4 | `plug.curtain.elder.script` | 2.69 m, and verified |
+| 2 | `GB.pilot.eagle` | 427 m |
+| 3 | `GB.pilot.eagle.evolve` | 9.4 m |
+| 4 | `GB.pilot.eagle.evolve.network` | 2.36 m, and verified |
+
+A median region gives 1.25 m at four words and 95 % are under 5 m. Large
+countries lean on subdivisions a caller can name: `RU` alone is 17.1 m, but
+`RU-MOW` is 0.85 m.
 
 The fourth word does two jobs: four of its bits refine the position and seven
-carry a checksum, so it lands at 2.69 m *and* rejects a wrong word 99.2 % of the
-time. what3words is 3 m with no checksum. Four words is terminal — a fifth would
+carry a checksum, so in `GB` it lands at 2.36 m *and* rejects a wrong word 99.2 %
+of the time. The checksum covers the region code too, so naming the wrong region
+fails the same check. what3words is 3 m with no checksum. Four words is terminal — a fifth would
 have to reinterpret those bits. See [`docs/grid-scheme.md`](docs/grid-scheme.md).
 
 Open the file directly in a browser: no build step, and no secure-context
@@ -58,11 +64,14 @@ re-run the workflow and it will publish.
 - [`docs/uk-word-grid-review.md`](docs/uk-word-grid-review.md) — a review of the
   original imported demo. Historical: that demo and its scheme are gone.
 - [`docs/coverage.md`](docs/coverage.md) — how far the scheme stretches: the
-  Ireland extension, what global coverage would cost, and the word-list vs
-  address-length trade.
+  square-root law relating area to resolution, and the word-list vs
+  address-length trade. Predates the region registry.
 - [`docs/grid-scheme.md`](docs/grid-scheme.md) — the current scheme: truncatable
-  addresses over a fixed box, the interleaving pitfall that breaks the prefix
+  addresses over a region box, the interleaving pitfall that breaks the prefix
   property, and why a checksum cannot live at every length.
+- [`docs/regions.md`](docs/regions.md) — the region registry: why a prefix
+  rather than a fifth word, why every code is ISO 3166 and none are invented,
+  why boxes overlap on purpose, and what the whole thing costs.
 
 ## Word list
 
