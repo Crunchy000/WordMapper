@@ -1,4 +1,4 @@
-# Truncatable word addresses
+# A global word grid
 
 Reference: [`tools/gridcode/bip39grid.py`](../tools/gridcode/bip39grid.py),
 tests in [`test_bip39grid.py`](../tools/gridcode/test_bip39grid.py).
@@ -6,146 +6,173 @@ Setup: `npm install --prefix tools/gridcode`.
 
 ## The idea
 
-An address is a **prefix of a longer address**. Say as many words as you need
-and stop; each one narrows the area, and the words already said never change.
+One grid over the whole world. Five [BIP-39][bip39] words name any point on
+earth to 1.35 m. No prefix, no registry, no agreement about borders, nothing
+the caller has to know about where they are.
 
-| Words | Big Ben | Area |
+```
+leg.tunnel.slam.subway.gown          Big Ben
+```
+
+An address shortens in **two directions**, and they do different jobs.
+
+## Drop trailing words: coarser, needs no context
+
+Each word narrows the area, and the words already said never change — every
+address is a prefix of a longer one.
+
+| Words | Big Ben | Cell |
 |---|---|---|
-| 1 | `GB.pilot` | 19.3 km |
-| 2 | `GB.pilot.eagle` | 427 m — a street |
-| 3 | `GB.pilot.eagle.evolve` | 9.4 m — a building |
-| 4 | `GB.pilot.eagle.evolve.network` | **2.36 m, and verified** |
+| 1 | `leg` | 542 × 460 km |
+| 2 | `leg.tunnel` | 8.5 × 14.4 km |
+| 3 | `leg.tunnel.slam` | 264 × 225 m |
+| 4 | `leg.tunnel.slam.subway` | 4.1 × 7.0 m |
+| 5 | `leg.tunnel.slam.subway.gown` | **1.03 × 1.75 m, and verified** |
 
-The root is a **region**: a bounding box from a registry of 541, keyed by ISO
-3166 code. The region is carried the way a dialling code is — out of band, and
-dropped whenever both ends already know it. See [`regions.md`](regions.md).
+## Drop leading words: same precision, fewer words, needs context
 
-Within a region an address is unambiguous at every length. There are no repeats
-to disambiguate and **no position hint is required** — an approximate location
-becomes a sanity check rather than a precondition.
+The leading words are the coarse ones, so whoever is listening can supply them
+if they already know roughly where you are — exactly the way nobody dials +44
+or an area code to a neighbour. Dropping *k* leading words leaves an ambiguity
+of exactly one tile, and any accuracy better than half a tile pins it down.
 
-That is the useful shape for an emergency call: a caller who manages two words
-before the line drops has still given a real answer, and one who keeps going
-narrows it without repeating themselves.
+| Words said | Written | Ambiguity | Usable if the listener knows your position within |
+|---|---|---|---|
+| 5 | `leg.tunnel.slam.subway.gown` | none | nothing at all |
+| 4 | `.tunnel.slam.subway.gown` | 542 × 460 km | 230 km — which country |
+| 3 | `.slam.subway.gown` | 8.5 × 14.4 km | 4.2 km — which town |
+| 2 | `.subway.gown` | 264 × 225 m | 112 m — which street |
+| 1 | `.gown` | 4.1 × 7.0 m | 2 m — you can already see them |
+
+The leading separator is the whole notation: it says the coarse words are
+missing and context must supply them. That is the difference between an address
+that is merely vague and one that is precise but local.
+
+A local exchange settles on however few words its own accuracy allows, and the
+same words become a global address the moment the context is written down.
+
+### The checksum verifies the reconstruction
+
+This is what makes shortening safe rather than a leap of faith. The 7 check
+bits cover the *whole* position, so when the missing coarse words are filled in
+from a reference point, guessing the wrong tile fails the check **99.2 %** of
+the time. Measured at 99.4 % against references chosen at random from anywhere
+on earth.
+
+So a tail that resolves is almost certainly the place meant, and a reference
+too far away to fill in the gap says so rather than answering confidently with
+the wrong place.
+
+### How it falls over the UK
+
+Luck rather than design, but useful luck: the whole UK bounding box spans only
+**six** distinct first words — `lecture`, `left`, `leg`, `legal`, `present`,
+`pretty` — and most of Great Britain is `leg`.
+
+```
+London      leg.tunnel.slab.company.confirm
+Manchester  leg.stable.divert.copper.trophy
+Cardiff     leg.hamster.spring.steel.hat
+Plymouth    leg.country.initial.monster.picnic
+Edinburgh   legal.december.exist.frozen.mixture
+Belfast     left.prevent.giraffe.pulse.unit
+```
+
+So a UK conversation drops the first word almost for free, and four words
+reaches anywhere in the country. It also shows the catch: Edinburgh and Belfast
+fall on the other side of a seam, and near a seam the dropped word is not
+predictable from "we are both in Britain". That is precisely the case the
+checksum catches rather than resolving quietly to the wrong place.
 
 ## Why the prefix property needs care
 
 Coordinates are interleaved **once at full precision** and the resulting bit
-string is truncated. Deriving the interleave order per length does not work,
-and fails in a way that is easy to miss: 11 bits per word is odd, so 33 bits
-splits the axes 17/16 while 22 and 44 split evenly. Those are three unrelated
-sequences, not prefixes of one another. Measured, the three-word address came
-out completely different from the two- and four-word ones, which agreed with
-each other — so a spot check on 2 and 4 would have passed.
+string is truncated. Deriving the interleave order per length does not work, and
+fails in a way that is easy to miss: 11 bits per word is odd, so 33 bits splits
+the axes 17/16 while 22 and 44 split evenly. Those are unrelated sequences, not
+prefixes of one another. Measured, the three-word address came out completely
+different from the two- and four-word ones, which agreed with each other — so a
+spot check on 2 and 4 would have passed.
 
-The test suite checks this directly, at every length, over 4,000 points.
+The tests check this at every length over 1,500 points.
 
-## The fourth word does two jobs
+## Which axis gets each bit
 
-Three words alone reach 9.4 m in `GB`, which is wide. A whole fourth word of position
-would reach 21 cm, which is finer than anyone needs. So the fourth word's 11
-bits are **split between refinement and checksum**:
+Not a plain alternation. The projected world is 34,667 × 14,713 km, an aspect of
+2.36, and alternating bits carries that aspect straight down into every cell:
+2.07 × 0.88 m at full depth.
 
-| Refine | Check | 4-word cell | Wrong word caught |
+Giving each bit to whichever axis is currently *wider* keeps cells near square
+at every length — 1.70 : 1 at worst, 1.18 : 1 at half the lengths — for exactly
+the same cell area, since the projection is equal-area and only the shape
+changes. x ends up with 25 bits and y with 23.
+
+```
+x x y x y x y x y x y x y x y x y x y x y x y x y ...
+```
+
+## The last word does two jobs
+
+A whole fifth word of position would reach 8 cm, finer than anyone needs. So its
+11 bits are split between refinement and checksum:
+
+| Refine | Check | Cell | Wrong word caught |
 |---|---|---|---|
-| 2 | 9 | 5.37 m | 99.80 % |
-| 3 | 8 | 3.33 m | 99.61 % |
-| **4** | **7** | **2.36 m** | **99.22 %** |
-| 5 | 6 | 1.67 m | 98.44 % |
-| 6 | 5 | 1.34 m | 96.88 % |
+| 3 | 8 | 1.90 m | 99.61 % |
+| **4** | **7** | **1.35 m** | **99.22 %** |
+| 5 | 6 | 0.95 m | 98.44 % |
 
 Shipped at **4 refine + 7 check**. For comparison, what3words is 3 m with no
 checksum at all — this is finer *and* verified.
 
 A checksum genuinely cannot live at *every* length: its bits would sit exactly
 where the next word's position bits must go. Reserving 8 bits at every length
-would take 2 words from 427 m to 6.83 km. Putting it in the last word instead
-costs nothing at lengths 1–3, which are simply unverified.
+would take 2 words from 11 km to 177 km. Putting it in the last word instead
+costs nothing at the shorter lengths, which are simply unverified.
 
-**Four words is therefore terminal** — a fifth would have to reinterpret the
-checksum bits. Nothing is ambiguous, because the fourth word is always last.
+**Five words is therefore terminal** — a sixth would have to reinterpret the
+check bits.
 
 ## The word list
 
-The [BIP-39 English list][bip39] as published, 2,048 words, exactly 11 bits
-each. It is designed to be *typed and checksummed*, not spoken: it contains
-`pair`/`pear`, `peace`/`piece`, `right`/`write` and `wear`/`where`, and 53 % of
-its words have a same-or-one-phoneme twin, so 89.6 % of three-word addresses
-contain a word one mishearing turns into a different valid word. The check word
-is what stands against that, not the list.
-
-It does contain **zero plurals**, which is the failure mode that made other
-schemes' addresses confusable.
+[BIP-39][bip39] English: exactly 2,048 words, so exactly 11 bits each, with no
+waste and no ambiguity about how many bits a word carries. Every word is 3–8
+letters with a unique 4-letter prefix, which is a typing property rather than a
+sound property — the list was designed for written seed phrases, not for being
+read aloud over a bad line. The checksum is what covers that gap here.
 
 ## Projection
 
-Lambert cylindrical equal-area, standard parallel 30°. Cell *areas* are
-constant across the box; cell *shapes* stretch with latitude, so the 3-word
-cell is about 9.4 × 12.3 m rather than square, and the 4-word one 2.4 × 3.1 m.
-An equal-area cube would bound that distortion if the box ever went global.
+Lambert cylindrical equal-area, standard parallel 30°. Area-true, so every cell
+at a given length has the same area anywhere on earth.
 
-## Locality
-
-Sharing *k* words means being in the same level-*k* cell — exact, in both
-directions. So a shared prefix **proves** proximity: two addresses sharing two
-words are within 602 × 393 m of each other, no exceptions.
-
-The converse leaks at cell boundaries. Two points a metre apart share their
-first two words 99.8 % of the time and all three words 87.8 % of the time, but
-not always. Treat a matching prefix as confirmation and a mismatch as worth
-asking again, rather than as an error.
-
-This is a property of the grid partition, not of the curve used to order cells:
-a Hilbert ordering would change which word is assigned to each cell, never
-which cell a point falls in.
-
-## Outside a region
-
-A coordinate outside a region's box has no address in that region, and `encode`
-refuses it rather than inventing one.
-
-That refusal is load-bearing, not tidiness. `decode` maps addresses onto the
-box and nowhere else, so a point outside would alias onto an address that
-genuinely belongs to somewhere inside it — and the checksum cannot catch that,
-because it covers the address and the region, not where the caller was
-standing. Before this was guarded, 99.7 % of out-of-box points produced a
-checksum-valid address for the wrong place; Sydney encoded to the North Sea.
-
-Nowhere is unaddressable: the `XZ` region is the whole earth, at 60.9 m. Every
-point has at least one address, and nearly all land has a much finer one — a
-median region gives 1.25 m.
-
-The alternative to a region prefix was a fifth word, and it is worth being
-clear that the prefix does not win on resolution:
-
-| | coverage | 4-word cell | needs |
-|---|---|---|---|
-| one fixed box (before) | UK and Ireland only | 2.69 m | nothing |
-| region prefix | global | 1.25 m median, 61 m worst | a registry |
-| five words, flat global | global | 1.35 m everywhere | nothing |
-
-Five flat words beat region-scoped four words nearly everywhere, because 11
-extra bits (2,048×) swamp the area reduction. The prefix is chosen for what it
-does instead: four words stays the spoken length everywhere, a mistaken word
-stays in the same country, and the region is confirmed by a channel the words
-do not travel on. [`regions.md`](regions.md) has the argument in full.
+Shape is not preserved. Cells stretch with latitude, so a five-word cell that is
+1.03 × 1.75 m in the tropics is the same area but much taller on the ground near
+the poles — up to about 100 m at extreme latitude. The tests measure round-trip
+error in the projection for that reason: ground distance is the wrong ruler for
+a claim about cells.
 
 ## Verified
 
 `python3 tools/gridcode/test_bip39grid.py`:
 
-- every address is a prefix of the next longer one, 4,000 points × 5 lengths
+- every point on earth encodes, the poles and both sides of the antimeridian
+  included
+- every address is a prefix of the next longer one, every length
 - round trip inside one cell diagonal at every length
-- no address repeats anywhere in a region, at 2 and 3 words
-- a region outside its box is refused, and every box corner still round trips
-- an address minted in one region fails in another, 99.5 % of the time
-- a point across the antimeridian resolves in its own region
-- a wrong word in a four-word address is rejected 99.1 % of the time, within a
-  point of the 99.22 % theory for 7 check bits
-- one-, two- and three-word addresses decode without needing a checksum
+- no address repeats anywhere on earth, at 2 and 3 words
+- dropping leading words and filling them back in from a reference inside the
+  tile reconstructs the address exactly, at every length
+- a reference too far away is caught 99.4 % of the time, within a point of the
+  99.22 % the check bits allow
+- a wrong word in a five-word address is rejected 99.1 %, likewise
+- no cell is worse than 1.7 : 1
 
 `node tools/gridcode/check-demo.mjs` runs the demo's own JavaScript port against
-a fixture from the Python reference — encodings, truncation and check words — so
-the two implementations cannot drift. CI runs both on every push.
+a fixture generated from the Python reference, so the two cannot drift:
+encodings, truncation, checksums, tail resolution across the antimeridian,
+refusal of hopeless references, the bit order itself, and address parsing.
+
+Both run in CI on every push.
 
 [bip39]: https://github.com/bitcoin/bips/blob/master/bip-0039/bip-0039-wordlists.md

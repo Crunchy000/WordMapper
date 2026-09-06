@@ -1,52 +1,67 @@
 #!/usr/bin/env python3
 """Regenerate fixture.json from the Python reference, for check-demo.mjs."""
-import json, os, sys
+import json, math, os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import bip39grid as g
 
-# A spread of regions: the flagship, an overlapping pair, a subdivision, two
-# boxes crossing the antimeridian, a tiny one and the global fallback.
+# A spread over the whole world, including the seams the codec has to survive:
+# both poles, both sides of the antimeridian, and the equator.
 POINTS = [
-    ('GB', 51.50072, -0.12456), ('GB', 55.94859, -3.19951),
-    ('GB', 50.06569, -5.71531), ('IE', 53.34980, -6.26030),
-    ('IE', 52.97150, -9.43090), ('FR', 48.85660, 2.35220),
-    ('US', 40.75800, -73.98550), ('US-NY', 40.75800, -73.98550),
-    ('US-CA', 37.81990, -122.47860), ('RU', 55.75580, 37.61730),
-    ('FJ', -18.14160, 178.44190), ('FJ', -16.50000, -179.90000),
-    ('KI', 1.87110, -157.36720), ('SG', 1.28970, 103.85010),
-    ('XZ', -33.86880, 151.20930), ('XZ', 64.14660, -21.94260),
+    (51.50072, -0.12456), (55.94859, -3.19951), (50.06569, -5.71531),
+    (53.34980, -6.26030), (48.85660, 2.35220), (40.75800, -73.98550),
+    (37.81990, -122.47860), (55.75580, 37.61730), (-33.86880, 151.20930),
+    (1.28970, 103.85010), (-18.14160, 178.44190), (-16.50000, -179.90000),
+    (64.14660, -21.94260), (0.00000, 0.00000), (12.00000, -40.00000),
+    (-90.0, 0.0), (90.0, 0.0), (0.0, 180.0), (0.0, -180.0), (89.9999, 179.9999),
 ]
-# Coordinates each named region does not cover: both ports must refuse them.
-OUTSIDE = [('GB', 48.8566, 2.3522), ('GB', 40.7128, -74.0060),
-           ('IE', 51.5007, -0.1246), ('FR', 51.5007, -0.1246),
-           ('SG', 3.1390, 101.6869), ('US-CA', 40.7580, -73.9855)]
-# The region is inside the checksum, so an address minted in one region must
-# fail in another: this is what stops Dublin resolving in Britain.
-WRONG_REGION = [('IE', 'GB', 53.34980, -6.26030), ('GB', 'IE', 54.60000, -6.00000),
-                ('US-NY', 'US-NJ', 40.75800, -73.98550)]
+# Tails resolved from a reference: (lat, lng, n_said, ref_lat, ref_lng).
+TAILS = [
+    (51.50072, -0.12456, 2, 51.50100, -0.12500),
+    (51.50072, -0.12456, 3, 51.51000, -0.13000),
+    (51.50072, -0.12456, 4, 52.48620, -1.89040),
+    (-16.50000, -179.99000, 3, -16.49000, -179.97000),
+    # The reference sits on the far side of the antimeridian, 2 km away on the
+    # ground but a world apart in index terms. x has to wrap.
+    (-16.50000, -179.99000, 3, -16.49000, 179.99000)
+]
+# References far enough away that the reconstruction must be refused rather
+# than resolving quietly to the wrong tile.
+HOPELESS = [(51.50072, -0.12456, 3, 40.71280, -74.00600),
+            (51.50072, -0.12456, 2, 48.85660, 2.35220)]
+
+def refused(la, lo, n, rla, rlo, words):
+    """True if resolving this tail from this reference fails, as it should."""
+    try:
+        got = g.resolve_tail(g.encode(la, lo, words)[-n:], words, rla, rlo)
+    except ValueError:
+        return True
+    return g._indices(*got) != g._indices(la, lo)
+
 
 if __name__ == '__main__':
     words = g.load_wordlist()
-    corners = []
-    for code in ('GB', 'FJ', 'KI', 'XZ', 'US-CA'):
-        latMin, latMax, lngMin, lngMax = g.REGIONS[code]['box']
-        for lat in (latMin, latMax):
-            for lng in (lngMin, lngMax):
-                corners.append((code, lat, (lng + 180.0) % 360.0 - 180.0))
     out = {
-        'points': [{'code': c, 'lat': la, 'lng': lo,
-                    'covering': g.regions_covering(la, lo),
-                    'words': {str(n): g.encode(la, lo, words, n, c)
+        'points': [{'lat': la, 'lng': lo,
+                    'words': {str(n): g.encode(la, lo, words, n)
                               for n in range(1, g.MAX_WORDS + 1)}}
-                   for c, la, lo in POINTS + corners],
-        'outside': [{'code': c, 'lat': la, 'lng': lo} for c, la, lo in OUTSIDE],
-        'wrong_region': [{'minted': m, 'claimed': c, 'lat': la, 'lng': lo,
-                          'words': g.encode(la, lo, words, g.MAX_WORDS, m)}
-                         for m, c, la, lo in WRONG_REGION],
-        'regions': len(g.REGIONS),
+                   for la, lo in POINTS],
+        'tails': [{'lat': la, 'lng': lo, 'n': n, 'ref': [rla, rlo],
+                   'words': g.encode(la, lo, words)[-n:],
+                   'resolved': list(g.resolve_tail(
+                       g.encode(la, lo, words)[-n:], words, rla, rlo))}
+                  for la, lo, n, rla, rlo in TAILS],
+        # Kept only where the reference really is too far: the checksum
+        # catches that 99.2% of the time, so a case can slip through by luck
+        # and must not be baked into the fixture as an expected refusal.
+        'hopeless': [{'n': n, 'ref': [rla, rlo],
+                      'words': g.encode(la, lo, words)[-n:]}
+                     for la, lo, n, rla, rlo in HOPELESS
+                     if refused(la, lo, n, rla, rlo, words)],
+        'order': ''.join('xy'[a] for a in g._ORDER),
+        'axis_bits': [g._XB, g._YB],
     }
     path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fixture.json')
     with open(path, 'w') as fh:
         json.dump(out, fh, indent=1)
-    print(f"{len(out['points'])} points, {len(out['outside'])} outside, "
-          f"{len(out['wrong_region'])} wrong-region -> {path}")
+    print(f"{len(out['points'])} points, {len(out['tails'])} tails, "
+          f"{len(out['hopeless'])} hopeless -> {path}")

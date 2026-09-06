@@ -7,20 +7,18 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const root = join(here, '..', '..');
-const html = readFileSync(join(root, 'demos', 'word-grid.html'), 'utf8');
+const html = readFileSync(join(here, '..', '..', 'demos', 'word-grid.html'), 'utf8');
 const fixture = JSON.parse(readFileSync(join(here, 'fixture.json'), 'utf8'));
-const regions = JSON.parse(readFileSync(join(here, 'regions.json'), 'utf8'));
 
 const words = html.match(/const WORDS = (\[[^\n]*\]);/)[1];
 const start = html.indexOf('const INDEX = new Map');
 const end = html.indexOf('// --- map ---');
 const src = `const WORDS = ${words};\n${html.slice(start, end)}\n`
-  + 'export { encode, decode, covers, regionsCovering, cellSize, region,'
-  + ' parseAddress, formatAddress, REGION_LIST };';
-// Written to a real file rather than a data: URL. The extracted module is
-// ~100 KB once the word list and the registry are in it, and a data: URL that
-// size fails to import with the URL itself as the message.
+  + 'export { encode, decode, resolveTail, wordsNeeded, cellSize, tileSize,'
+  + ' indices, parseAddress, formatAddress, ORDER, XB, YB };';
+// Written to a real file rather than a data: URL: the extracted module is
+// ~30 KB and a data: URL of that size fails to import with the URL itself as
+// the message, which is not a debuggable error.
 const tmp = join(tmpdir(), `word-grid-check-${process.pid}.mjs`);
 writeFileSync(tmp, src);
 let mod;
@@ -29,59 +27,66 @@ try { mod = await import(pathToFileURL(tmp).href); } finally { rmSync(tmp, { for
 let bad = 0;
 const fail = (msg) => { bad++; console.error(`  ${msg}`); };
 
-// The registry the demo embeds must be the registry on disk, entry for entry.
-if (mod.REGION_LIST.length !== regions.length)
-  fail(`registry size: demo ${mod.REGION_LIST.length} vs file ${regions.length}`);
-for (const r of regions) {
-  const d = mod.REGION_LIST.find((x) => x[0] === r.code);
-  if (!d) { fail(`registry: demo is missing ${r.code}`); continue; }
-  if (d.slice(2).join(',') !== r.box.join(','))
-    fail(`registry: ${r.code} box ${d.slice(2)} vs ${r.box}`);
-}
+// The bit order decides the shape of every cell, so the two ports must agree
+// on it exactly, not merely on the totals.
+const order = mod.ORDER.map((a) => 'xy'[a]).join('');
+if (order !== fixture.order) fail(`bit order: js ${order} vs py ${fixture.order}`);
+if (mod.XB !== fixture.axis_bits[0] || mod.YB !== fixture.axis_bits[1])
+  fail(`axis bits: js ${[mod.XB, mod.YB]} vs py ${fixture.axis_bits}`);
 
 for (const c of fixture.points) {
   for (const [n, expected] of Object.entries(c.words)) {
-    const got = mod.encode(c.lat, c.lng, Number(n), c.code);
+    const got = mod.encode(c.lat, c.lng, Number(n));
     if (got.join('.') !== expected.join('.'))
-      fail(`MISMATCH ${c.code} ${c.lat},${c.lng} @${n}: js ${got.join('.')} vs py ${expected.join('.')}`);
-    const [lat, lng] = mod.decode(expected, c.code);
+      fail(`MISMATCH ${c.lat},${c.lng} @${n}: js ${got.join('.')} vs py ${expected.join('.')}`);
+    const [lat, lng] = mod.decode(expected);
     if (!Number.isFinite(lat) || !Number.isFinite(lng))
-      fail(`BAD DECODE ${c.code}.${expected.join('.')}`);
+      fail(`BAD DECODE ${expected.join('.')}`);
   }
   // truncation: every length must be a prefix of the longest
   const longest = c.words[String(Object.keys(c.words).length)];
   for (const [n, expected] of Object.entries(c.words))
     if (longest.slice(0, Number(n)).join('.') !== expected.join('.'))
       fail(`NOT A PREFIX at ${n}: ${expected.join('.')}`);
-  // a four-word address must pass its own embedded checksum
-  try { mod.decode(longest, c.code); }
-  catch (e) { fail(`CHECKSUM ${c.code} ${c.lat},${c.lng}: ${e.message}`); }
-  // and both ports must agree on which regions cover the point at all
-  const cov = mod.regionsCovering(c.lat, c.lng);
-  if (cov.join(',') !== c.covering.join(','))
-    fail(`COVERING ${c.lat},${c.lng}: js [${cov}] vs py [${c.covering}]`);
+  // the full address must pass its own embedded checksum
+  try { mod.decode(longest); }
+  catch (e) { fail(`CHECKSUM ${c.lat},${c.lng}: ${e.message}`); }
 }
 
-// Coverage must stop in the same place in both ports. A point outside a region
-// that slipped through would be given an address belonging to somewhere inside
-// it, and would pass its own checksum.
-for (const c of fixture.outside) {
-  if (mod.covers(c.lat, c.lng, c.code)) fail(`COVERS ${c.code} at ${c.lat},${c.lng}`);
-  let refused = false;
-  try { mod.encode(c.lat, c.lng, 4, c.code); } catch { refused = true; }
-  if (!refused) fail(`ENCODED an outside point ${c.code} ${c.lat},${c.lng}`);
+// Dropping leading words and filling them back in from a reference point,
+// including across the antimeridian where x has to wrap.
+for (const t of fixture.tails) {
+  let got;
+  try { got = mod.resolveTail(t.words, t.ref[0], t.ref[1]); }
+  catch (e) { fail(`TAIL .${t.words.join('.')} from ${t.ref}: ${e.message}`); continue; }
+  const a = mod.indices(got[0], got[1]), b = mod.indices(t.resolved[0], t.resolved[1]);
+  if (a[0] !== b[0] || a[1] !== b[1])
+    fail(`TAIL .${t.words.join('.')} from ${t.ref}: js ${got} vs py ${t.resolved}`);
 }
 
-// The region is inside the checksum, so claiming the wrong one must fail.
-for (const c of fixture.wrong_region) {
+// A reference too far away to pick the right tile must be refused, not
+// resolved quietly to the wrong place.
+for (const h of fixture.hopeless) {
   let refused = false;
-  try { mod.decode(c.words, c.claimed); } catch { refused = true; }
-  if (!refused) fail(`ACCEPTED ${c.minted} address under ${c.claimed}`);
+  try {
+    const got = mod.resolveTail(h.words, h.ref[0], h.ref[1]);
+    refused = !Number.isFinite(got[0]);
+  } catch { refused = true; }
+  if (!refused) fail(`RESOLVED a hopeless tail .${h.words.join('.')} from ${h.ref}`);
+}
+
+// The leading separator is the whole notation for a tail, so parsing it back
+// has to survive the round trip in both ports.
+for (const [text, n, tail] of [['leg.tunnel.slam', 3, false],
+                               ['.slam.subway.gown', 3, true],
+                               ['  LEG tunnel Slam ', 3, false]]) {
+  const [parts, isTail] = mod.parseAddress(text);
+  if (parts.length !== n || isTail !== tail)
+    fail(`PARSE ${JSON.stringify(text)} -> ${parts.length} words, tail=${isTail}`);
 }
 
 console.log(`demo codec vs python reference: ${fixture.points.length} points x `
   + `${Object.keys(fixture.points[0].words).length} lengths, `
-  + `${fixture.outside.length} outside, ${fixture.wrong_region.length} wrong-region, `
-  + `${regions.length} regions`);
+  + `${fixture.tails.length} tails, ${fixture.hopeless.length} hopeless`);
 if (bad) { console.error(`FAIL: ${bad} problem(s)`); process.exit(1); }
-console.log('OK: codecs agree, truncation holds, checksums verify, registries match');
+console.log('OK: codecs agree, truncation holds, checksums verify, tails resolve');

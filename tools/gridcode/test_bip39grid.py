@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Checks for the region-scoped codec. Run: python3 tools/gridcode/test_bip39grid.py"""
+"""Checks for the global grid. Run: python3 tools/gridcode/test_bip39grid.py"""
 import math, random, sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import bip39grid as g
@@ -16,6 +16,20 @@ def check(label, got, want):
         fails.append(label)
 
 
+def proj_err(a, b):
+    """Distance in the projection the grid is built in.
+
+    Ground distance is the wrong ruler for a cell bound. The projection is
+    equal-area, so cells hold their area but stretch in shape with latitude;
+    near the poles a cell is very tall and the haversine between two points in
+    the same cell exceeds its projected diagonal. The guarantee is that a point
+    round trips into its own cell, which is a statement about the grid, so it
+    is measured on the grid."""
+    x1, y1 = g.project(*a)
+    x2, y2 = g.project(*b)
+    return math.hypot(x1 - x2, y1 - y2)
+
+
 def hav(a, b):
     (la1, lo1), (la2, lo2) = a, b
     p1, p2 = math.radians(la1), math.radians(la2)
@@ -24,196 +38,163 @@ def hav(a, b):
     return 2 * g.R * math.asin(min(1, math.sqrt(h)))
 
 
-def sample(code, n):
-    """Random points inside a region's box, in real -180..180 longitude."""
-    latMin, latMax, lngMin, lngMax = g.REGIONS[code]['box']
-    out = []
-    for _ in range(n):
-        lat = random.uniform(latMin, latMax)
-        lng = random.uniform(lngMin, lngMax)
-        out.append((lat, (lng + 180.0) % 360.0 - 180.0))
-    return out
+def anywhere(n):
+    """Uniform over the sphere by area, which is uniform in sin(lat)."""
+    return [(math.degrees(math.asin(random.uniform(-1, 1))),
+             random.uniform(-180, 180)) for _ in range(n)]
 
 
-print('\nregistry')
-codes = list(g.REGIONS)
-check('every code is unique', len(codes), len(set(codes)))
-check('every box is well formed',
-      all(r['box'][0] < r['box'][1] and r['box'][2] < r['box'][3]
-          for r in g.REGIONS.values()), True)
-check('XZ covers every point sampled',
-      all(g.covers(lat, lng, 'XZ')
-          for lat, lng in [(random.uniform(-90, 90), random.uniform(-180, 180))
-                           for _ in range(2000)]), True)
-check('nowhere is unaddressable',
-      all(g.regions_covering(lat, lng) != []
-          for lat, lng in [(random.uniform(-90, 90), random.uniform(-180, 180))
-                           for _ in range(500)]), True)
-check('regions_covering is tightest first',
-      all(g.box_area(cs[0]) <= g.box_area(cs[-1])
-          for cs in [g.regions_covering(*p) for p in sample('GB', 50)]), True)
+PTS = anywhere(4000)
 
-# A spread of regions: the flagship, an overlapping pair, two antimeridian
-# boxes, a subdivision, a tiny box and the global fallback.
-SPREAD = ['GB', 'IE', 'FR', 'US', 'US-CA', 'RU', 'FJ', 'KI', 'SG', 'XZ']
+print('\nthe grid')
+check('every point on earth encodes',
+      all(len(g.encode(lat, lng, WORDS)) == g.MAX_WORDS for lat, lng in PTS), True)
+check('the poles and the antimeridian encode',
+      all(len(g.encode(lat, lng, WORDS)) == g.MAX_WORDS
+          for lat in (-90, -89.999, 0, 89.999, 90)
+          for lng in (-180, -179.999, 0, 179.999, 180)), True)
+# Not a plain alternation: the world is 2.36 times wider than tall in this
+# projection, and alternating bits carries that aspect into every cell.
+check('bit order gives x the extra bits', (g._XB, g._YB), (25, 23))
+worst = max(max(w, h) / min(w, h) for w, h in
+            (g.cell_size(n) for n in range(1, g.MAX_WORDS + 1)))
+check('no cell is worse than 1.7:1', worst < 1.75, True)
 
-print('\ngeometry, over a spread of regions')
-worst_prefix = 0
-for code in SPREAD:
-    pts = sample(code, 400)
-    bad = 0
-    for lat, lng in pts:
-        full = g.encode(lat, lng, WORDS, g.MAX_WORDS, code)
-        for n in range(1, g.MAX_WORDS):
-            if g.encode(lat, lng, WORDS, n, code) != full[:n]:
-                bad += 1
-    worst_prefix += bad
-check('every address is a prefix of the next longer one', worst_prefix, 0)
+print('\ntrailing words: coarser, no context needed')
+bad = 0
+for lat, lng in PTS[:1500]:
+    full = g.encode(lat, lng, WORDS)
+    for n in range(1, g.MAX_WORDS):
+        if g.encode(lat, lng, WORDS, n) != full[:n]:
+            bad += 1
+check('every address is a prefix of the next longer one', bad, 0)
 
-def proj_err(a, b):
-    """Distance in the projection the grid is actually built in.
+for n in range(1, g.MAX_WORDS + 1):
+    w, h = g.cell_size(n)
+    worst = max(proj_err((lat, lng), g.decode(g.encode(lat, lng, WORDS, n), WORDS))
+                for lat, lng in PTS[:800])
+    check(f'{n} words: round trip inside one cell diagonal',
+          worst < math.hypot(w, h), True)
 
-    Ground distance is the wrong ruler for this bound. The projection is
-    equal-area, so cells hold their area but stretch in shape with latitude;
-    near the poles a cell is enormously long in latitude and the haversine
-    between two points in the same cell exceeds its projected diagonal. The
-    codec's guarantee is that a point round trips into its own cell, which is
-    a statement about the grid, so it is measured on the grid."""
-    (la1, lo1), (la2, lo2) = a, b
-    x1, y1 = g.project(la1, lo1)
-    x2, y2 = g.project(la2, lo2)
-    return math.hypot(x1 - x2, y1 - y2)
+for n in (2, 3):
+    seen, dupes = {}, 0
+    w, h = g.cell_size(n)
+    for lat, lng in PTS:
+        k = tuple(g.encode(lat, lng, WORDS, n))
+        if k in seen and proj_err((lat, lng), seen[k]) > math.hypot(w, h):
+            dupes += 1
+        seen.setdefault(k, (lat, lng))
+    check(f'{n} words never repeat anywhere on earth', dupes, 0)
 
+print('\nleading words: same precision, fewer words, needs context')
+# Dropping the coarse words leaves an ambiguity of exactly one tile, so a
+# reference anywhere inside half a tile must reconstruct the address exactly.
+# Only the lengths that actually drop something: at MAX_WORDS nothing is
+# dropped, the "tile" is the whole world, and no reference is involved -- that
+# case is checked on its own below.
+for n in range(1, g.MAX_WORDS):
+    tw, th = g.tile_size(n)
+    # Offset the reference in index space, by strictly less than half the
+    # ambiguity period on each axis. That is exactly the guarantee -- nearer
+    # than half a tile -- stated in the units the reconstruction works in, so
+    # index truncation cannot eat the margin at the smallest tiles.
+    cx, cy = g._known_low(n)
+    ok = True
+    for lat, lng in PTS[:400]:
+        full = g.encode(lat, lng, WORDS)
+        xi, yi = g._indices(lat, lng)
+        rx = (xi + random.randint(-(2 ** cx // 2 - 1), 2 ** cx // 2 - 1)) % 2 ** g._XB
+        ry = min(max(yi + random.randint(-(2 ** cy // 2 - 1), 2 ** cy // 2 - 1), 0),
+                 2 ** g._YB - 1)
+        ref = g.unproject(g._X0 + (rx + 0.5) / 2 ** g._XB * g._XR,
+                          g._Y0 + (ry + 0.5) / 2 ** g._YB * g._YR)
+        try:
+            got = g.resolve_tail(full[-n:], WORDS, *ref)
+        except ValueError:
+            ok = False; break
+        if g._indices(*got) != (xi, yi):
+            ok = False; break
+    f = lambda v: f'{v/1000:.1f} km' if v >= 1000 else f'{v:.0f} m'
+    check(f'{n} words resolve from a reference inside their {f(tw)} x {f(th)} tile',
+          ok, True)
 
-for code in SPREAD:
-    worst = worst_ground = 0.0
-    for lat, lng in sample(code, 300):
-        back = g.decode(g.encode(lat, lng, WORDS, g.MAX_WORDS, code), WORDS, code)
-        worst = max(worst, proj_err((lat, lng), back))
-        worst_ground = max(worst_ground, hav((lat, lng), back))
-    w, h = g.cell_size(g.MAX_WORDS, code)
-    ok = worst < math.hypot(w, h)
-    check(f'{code}: 4 words round trip inside one cell diagonal', ok, True)
-    if not ok:
-        print(f'        cell {w:.3f} x {h:.3f} m, worst error {worst:.3f} m')
-    if code == 'XZ':
-        # Worth seeing: the same address is metres wide in the tropics and
-        # kilometres tall near the poles, because equal area is not equal shape.
-        print(f'  ----  XZ on the ground: up to {worst_ground/1000:.1f} km from a '
-              f'{math.sqrt(w*h):.0f} m cell, at extreme latitude')
+check('a full address needs no reference at all',
+      all(g._indices(*g.resolve_tail(g.encode(lat, lng, WORDS), WORDS, 0.0, 0.0))
+          == g._indices(lat, lng) for lat, lng in PTS[:200]), True)
 
-print('\nno repeats inside a region')
-for code in ('GB', 'US-CA'):
-    for n in (2, 3):
-        seen, dupes = {}, 0
-        w, h = g.cell_size(n, code)
-        for lat, lng in sample(code, 4000):
-            k = tuple(g.encode(lat, lng, WORDS, n, code))
-            if k in seen and hav((lat, lng), seen[k]) > math.hypot(w, h):
-                dupes += 1
-            seen.setdefault(k, (lat, lng))
-        check(f'{code}: {n} words never repeat in the region', dupes, 0)
+# The checksum covers the whole reconstruction, so a reference too far away to
+# pick the right tile is caught rather than resolving quietly to the wrong place.
+theory = (1 - 2 ** -g.CHECK_BITS) * 100
+caught = tot = 0
+for lat, lng in PTS[:2000]:
+    full = g.encode(lat, lng, WORDS)
+    far = anywhere(1)[0]
+    if g._indices(*far) == g._indices(lat, lng):
+        continue
+    tot += 1
+    try:
+        got = g.resolve_tail(full[-3:], WORDS, *far)
+    except ValueError:
+        caught += 1
+        continue
+    if g._indices(*got) == g._indices(lat, lng):
+        caught += 1              # got lucky and landed on the right tile anyway
+print(f'  ----  a reference too far away is caught {caught/tot*100:.1f}% '
+      f'(theory {theory:.2f}%, {g.CHECK_BITS} check bits)')
+check('a hopeless reference is caught within a point of theory',
+      abs(caught / tot * 100 - theory) < 1.0, True)
+
+print('\nhow few words, in practice')
+BIG_BEN = (51.50072, -0.12456)
+for ref, label in [((51.5010, -0.1250), 'the same street'),
+                   ((51.5100, -0.1300), 'a mile away'),
+                   ((51.5, -0.2), 'across London'),
+                   ((52.4862, -1.8904), 'Birmingham'),
+                   ((48.8566, 2.3522), 'Paris'),
+                   ((40.7128, -74.0060), 'New York')]:
+    n = g.words_needed(*BIG_BEN, *ref, WORDS)
+    print(f'  ----  from {label:16s} {n} words: '
+          f'{g.format_address(g.encode(*BIG_BEN, WORDS)[-n:], tail=n < g.MAX_WORDS)}')
 
 print('\nthe checksum')
 caught = tot = 0
-for lat, lng in sample('GB', 2000):
-    a = g.encode(lat, lng, WORDS, g.MAX_WORDS, 'GB')
+for lat, lng in PTS[:2000]:
+    a = g.encode(lat, lng, WORDS)
     bad_a = list(a)
     i = random.randrange(g.MAX_WORDS)
     while bad_a[i] == a[i]:
         bad_a[i] = random.choice(WORDS)
     tot += 1
     try:
-        g.decode(bad_a, WORDS, 'GB')
+        g.decode(bad_a, WORDS)
     except ValueError:
         caught += 1
-theory = (1 - 2 ** -g.CHECK_BITS) * 100
-print(f'  ----  a wrong word is rejected {caught/tot*100:.1f}% '
-      f'(theory {theory:.2f}%, {g.CHECK_BITS} check bits)')
-check('wrong-word detection is within a point of theory',
+print(f'  ----  a wrong word is rejected {caught/tot*100:.1f}% (theory {theory:.2f}%)')
+check('detection is within a point of theory',
       abs(caught / tot * 100 - theory) < 1.0, True)
-
-# The region is inside the checksum, so naming the wrong one fails the same
-# check. This is what stops an address minted in Ireland resolving in Britain.
-caught = tot = 0
-for lat, lng in sample('IE', 2000):
-    a = g.encode(lat, lng, WORDS, g.MAX_WORDS, 'IE')
-    tot += 1
-    try:
-        g.decode(a, WORDS, 'GB')
-    except ValueError:
-        caught += 1
-print(f'  ----  the wrong region is rejected {caught/tot*100:.1f}% (theory {theory:.2f}%)')
-check('wrong-region detection is within a point of theory',
-      abs(caught / tot * 100 - theory) < 1.0, True)
-
-check('a valid 4-word address always passes its own checksum',
-      all(g.decode(g.encode(lat, lng, WORDS, g.MAX_WORDS, c), WORDS, c) is not None
-          for c in SPREAD for lat, lng in sample(c, 100)), True)
-check('1-3 word addresses decode without a checksum',
-      all(g.decode(g.encode(lat, lng, WORDS, n, 'GB'), WORDS, 'GB') is not None
-          for n in (1, 2, 3) for lat, lng in sample('GB', 100)), True)
-
-print('\ncoverage')
-# Outside a region there is no address, and inventing one is worse than
-# refusing: decode maps onto the box, so an outside point aliases onto a real
-# address inside it and passes the checksum, which covers the address and the
-# region but not where the caller was standing.
-outside = [(48.8566, 2.3522), (40.4168, -3.7038), (40.7128, -74.0060),
-           (-33.8688, 151.2093), (64.1466, -21.9426), (0.0, 0.0)]
-refused = 0
-for lat, lng in outside:
-    try:
-        g.encode(lat, lng, WORDS, g.MAX_WORDS, 'GB')
-    except g.OutsideBox:
-        refused += 1
-check('a coordinate outside the region is refused, not aliased', refused, len(outside))
-
-corners = []
-for code in SPREAD:
-    latMin, latMax, lngMin, lngMax = g.REGIONS[code]['box']
-    for lat in (latMin, latMax):
-        for lng in (lngMin, lngMax):
-            corners.append((code, lat, (lng + 180.0) % 360.0 - 180.0))
-check('every box corner still encodes',
-      all(len(g.encode(lat, lng, WORDS, g.MAX_WORDS, c)) == g.MAX_WORDS
-          for c, lat, lng in corners), True)
-# A corner sits exactly on a cell boundary, where rounding can land the index
-# one past either end; both ends are clamped, so a corner round trips.
-check('every box corner round trips inside one cell diagonal',
-      all(proj_err((lat, lng),
-                   g.decode(g.encode(lat, lng, WORDS, g.MAX_WORDS, c), WORDS, c))
-          < math.hypot(*g.cell_size(g.MAX_WORDS, c)) for c, lat, lng in corners), True)
-try:
-    g.encode(51.5, -0.12, WORDS, 4, 'ZZ')
-    check('an unknown region code is refused', False, True)
-except g.UnknownRegion:
-    check('an unknown region code is refused', True, True)
-
-print('\nthe antimeridian')
-# Fiji's box runs 176.9 to 182.0, so a point there arrives as -179 and must be
-# read as 181. Without normalisation the box would span the globe instead.
-check('boxes past 180 exist in the registry',
-      any(r['box'][3] > 180 for r in g.REGIONS.values()), True)
-check('FJ covers a point on the far side of the antimeridian',
-      g.covers(-16.5, -179.9, 'FJ'), True)
-check('such a point round trips',
-      hav((-16.5, -179.9),
-          g.decode(g.encode(-16.5, -179.9, WORDS, 4, 'FJ'), WORDS, 'FJ'))
-      < math.hypot(*g.cell_size(4, 'FJ')), True)
+check('a valid address always passes its own checksum',
+      all(g.decode(g.encode(lat, lng, WORDS), WORDS) is not None
+          for lat, lng in PTS[:500]), True)
+check('shorter addresses decode without a checksum',
+      all(g.decode(g.encode(lat, lng, WORDS, n), WORDS) is not None
+          for n in range(1, g.MAX_WORDS) for lat, lng in PTS[:120]), True)
 
 print('\naddress strings')
-a = g.format_address('GB', g.encode(51.50072, -0.12456, WORDS, 4, 'GB'))
-check('format is region-first, dot separated', a.startswith('GB.') and a.count('.') == 4, True)
-check('parse round trips', g.parse_address(a), ('GB', a.split('.')[1:]))
-check('parse accepts spaces and lower case',
-      g.parse_address('gb plug curtain'), ('GB', ['plug', 'curtain']))
+full = g.encode(*BIG_BEN, WORDS)
+check('an absolute address has no leading separator',
+      g.format_address(full), SEP_FULL := '.'.join(full))
+check('a tail is marked with one', g.format_address(full[-3:], tail=True),
+      '.' + '.'.join(full[-3:]))
+check('parse round trips absolute', g.parse_address(SEP_FULL), (full, False))
+check('parse round trips a tail',
+      g.parse_address(g.format_address(full[-3:], tail=True)), (full[-3:], True))
+check('parse accepts spaces and case',
+      g.parse_address('  LEG tunnel Slam '), (['leg', 'tunnel', 'slam'], False))
 
 print()
-w, h = g.cell_size(g.MAX_WORDS, 'GB')
-print(f'  ----  GB: 4 words is {math.sqrt(w*h):.2f} m; '
-      f'3 words alone is {math.sqrt(math.prod(g.cell_size(3, "GB"))):.2f} m')
-print(f'  ----  {len(g.REGIONS)} regions in the registry')
+w, h = g.cell_size(g.MAX_WORDS)
+print(f'  ----  5 words is {w:.2f} x {h:.2f} m ({math.sqrt(w*h):.2f} m square-equivalent)')
+print(f'  ----  4 words alone is {math.sqrt(math.prod(g.cell_size(4))):.2f} m')
 print()
 if fails:
     print(f'{len(fails)} FAILURE(S): ' + ', '.join(fails)); sys.exit(1)

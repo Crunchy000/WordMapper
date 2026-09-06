@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>WordMapper — locations as memorable words</title>
-<meta name="description" content="Encoding geographic coordinates as an ISO region code and up to four BIP-39 words, over a nested grid.">
+<meta name="description" content="Encoding geographic coordinates as five BIP-39 words, over one global nested grid.">
 <style>
   :root {
     --bg: #fbfbf9; --fg: #1c1c1a; --muted: #5c5c56; --rule: #e2e2dc;
@@ -69,68 +69,61 @@
 <header>
   <div class="wrap">
     <h1>WordMapper</h1>
-    <p class="tagline">Say two words for a street, three for a building, four for a doorstep. Stop whenever you have said enough — the words you have already given never change.</p>
-    <div class="addr">GB<span>.</span>pilot<span>.</span>eagle<span>.</span>evolve<span>.</span>network</div>
-    <p class="note">Big Ben, to 2.4 m and checksummed. Drop the last word for 9.4 m, the one before for 427 m. <code>GB</code> travels like a dialling code &mdash; dropped whenever both ends already know it.</p>
+    <p class="tagline">Five words name any point on earth to a metre. Say fewer for a coarser place — or, if whoever is listening already knows roughly where you are, drop the leading words and keep every metre.</p>
+    <div class="addr">leg<span>.</span>tunnel<span>.</span>slam<span>.</span>subway<span>.</span>gown</div>
+    <p class="note">Big Ben, to 1.35 m and checksummed. One global grid &mdash; no prefix, no registry, no agreement about borders.</p>
   </div>
 </header>
 
 <main class="wrap">
 
-  <h2>One address, any length</h2>
-  <p>Every address is a <strong>prefix of a longer one</strong>. Each word narrows the
-  area; none of them ever needs revising.</p>
+  <h2>Drop trailing words: coarser, needs no context</h2>
+  <p>Each word narrows the area, and the words already said never change &mdash; every
+  address is a prefix of a longer one.</p>
 
   <div class="scroll">
   <table>
-    <thead><tr><th>Words</th><th>Big Ben</th><th>Area</th></tr></thead>
+    <thead><tr><th>Words</th><th>Big Ben</th><th>Cell</th></tr></thead>
     <tbody>
-      <tr><td class="num">1</td><td class="num">GB.pilot</td><td class="num">19.3 km</td></tr>
-      <tr><td class="num">2</td><td class="num">GB.pilot.eagle</td><td class="num">427 m — a street</td></tr>
-      <tr><td class="num">3</td><td class="num">GB.pilot.eagle.evolve</td><td class="num">9.4 m — a building</td></tr>
-      <tr><td class="num">4</td><td class="num">GB.pilot.eagle.evolve.network</td><td class="num">2.36 m — and verified</td></tr>
+      <tr><td class="num">1</td><td class="num">leg</td><td class="num">542 &times; 460 km</td></tr>
+      <tr><td class="num">2</td><td class="num">leg.tunnel</td><td class="num">8.5 &times; 14.4 km</td></tr>
+      <tr><td class="num">3</td><td class="num">leg.tunnel.slam</td><td class="num">264 &times; 225 m</td></tr>
+      <tr><td class="num">4</td><td class="num">leg.tunnel.slam.subway</td><td class="num">4.1 &times; 7.0 m</td></tr>
+      <tr><td class="num">5</td><td class="num">leg.tunnel.slam.subway.gown</td><td class="num">1.03 &times; 1.75 m &mdash; and verified</td></tr>
     </tbody>
   </table>
   </div>
 
-  <p>The root is a <strong>region</strong> rather than a repeating tile, so an address
-  is unambiguous at every length. There are no repeats to disambiguate and <strong>no
-  position hint is needed</strong> — knowing roughly where someone is becomes a sanity
-  check, not a precondition.</p>
+  <h2>Drop leading words: same precision, fewer words</h2>
+  <p>The leading words are the coarse ones, so whoever is listening can supply them if
+  they already know roughly where you are &mdash; the way nobody dials +44 or an area
+  code to a neighbour. Dropping words leaves an ambiguity of exactly one tile, and any
+  accuracy better than half a tile pins it down. A leading dot marks the missing
+  words.</p>
 
-  <p>The region is carried the way a dialling code is: out of band, costing nothing from
-  the four words, and dropped whenever both ends already know it. Nobody says +44 to a
-  neighbour. Every code is a published identifier &mdash; ISO&nbsp;3166-1 for a country,
-  ISO&nbsp;3166-2 for a subdivision &mdash; because a prefix is only worth having if the
-  caller already knows it. <em>Which country</em> and <em>which state</em> are known;
-  <em>which numbered box</em> is not, so none are invented.</p>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Said</th><th>Written</th><th>Ambiguity</th><th>Needs the listener to know</th></tr></thead>
+    <tbody>
+      <tr><td class="num">4</td><td class="num">.tunnel.slam.subway.gown</td><td class="num">542 &times; 460 km</td><td class="num">230 km &mdash; which country</td></tr>
+      <tr><td class="num">3</td><td class="num">.slam.subway.gown</td><td class="num">8.5 &times; 14.4 km</td><td class="num">4.2 km &mdash; which town</td></tr>
+      <tr><td class="num">2</td><td class="num">.subway.gown</td><td class="num">264 &times; 225 m</td><td class="num">112 m &mdash; which street</td></tr>
+    </tbody>
+  </table>
+  </div>
 
-  <p>541 regions cover the world. A median region puts four words at
-  <strong>1.25&nbsp;m</strong> and 95&nbsp;% are under 5&nbsp;m. Large countries lean on
-  subdivisions a caller can obviously name: <code>RU</code> alone is 17.1&nbsp;m, but
-  <code>RU-MOW</code> is 0.85&nbsp;m. Boxes overlap on purpose &mdash;
-  <code>US-CA</code> sits inside <code>US</code> &mdash; so a caller says as much as they
-  actually know, and border towns need no special case.</p>
+  <p>The checksum is what makes this safe rather than a leap of faith. Its seven bits
+  cover the <em>whole</em> position, so when the missing coarse words are filled in from
+  a reference point, guessing the wrong tile fails the check <strong>99.2&nbsp;%</strong>
+  of the time. A reference too far away says so, rather than answering confidently with
+  the wrong place.</p>
 
-  <p>A region's box is also the limit of its coverage: outside it there is no address,
-  and the codec refuses rather than inventing one. It has to. Decoding maps addresses
-  onto the box and nowhere else, so an invented address would resolve to a real place
-  inside it and pass its own checksum &mdash; the check covers the words and the region,
-  not where the caller was standing. Nowhere is unaddressable: <code>XZ</code> is the
-  whole earth, at 61&nbsp;m.</p>
+  <p>It falls conveniently over the UK. The whole country spans only six distinct first
+  words, and most of Great Britain is <code>leg</code> &mdash; so a British conversation
+  drops the first word almost for free. Not quite free near a seam: Edinburgh is
+  <code>legal</code> and Belfast is <code>left</code>, which is precisely the case the
+  checksum catches.</p>
 
-  <p>The alternative was a fifth word, and it is worth being clear that the prefix does
-  not win on resolution &mdash; five flat words would reach 1.35&nbsp;m everywhere. It
-  wins on three other things: four words stays the spoken length everywhere, a mistaken
-  word lands in the same country rather than another continent, and the region is
-  confirmed by a channel the words do not travel on, since a dispatcher already knows
-  roughly where the caller is.</p>
-
-  <p>Which is the useful shape for an emergency call. A caller who manages two words
-  before the line drops has still given a real answer; one who keeps going narrows it
-  without going back on anything.</p>
-
-  <a class="cta" href="demos/word-grid.html">Open the demo →</a>
   <p class="note">Click anywhere to watch the address grow a word at a time.</p>
 
   <h2>The part that is easy to get wrong</h2>
@@ -140,34 +133,31 @@
   evenly. Those are three unrelated sequences.</p>
   <p>When I built it that way the three-word address came out entirely different, while
   the two- and four-word ones agreed with each other — so a spot check on 2 and 4 would
-  have passed. The test suite now checks every length over 4,000 points.</p>
+  have passed. The test suite now checks every length over 1,500 points.</p>
 
-  <h2>The fourth word does two jobs</h2>
-  <p>Three words alone reach 9.4 m in <code>GB</code>, which is wide. A whole fourth
-  word of position would reach 21 cm, which is finer than anyone needs. So the fourth
-  word's eleven bits are <strong>split between refinement and checksum</strong>:</p>
+  <h2>The fifth word does two jobs</h2>
+  <p>Four words alone reach 5.4 m, which is wide. A whole fifth word of position would
+  reach 8 cm, which is finer than anyone needs. So the fifth word's eleven bits are
+  <strong>split between refinement and checksum</strong>:</p>
 
   <div class="scroll">
   <table>
     <thead><tr><th>Refine</th><th>Check</th><th>Cell</th><th>Wrong word caught</th></tr></thead>
     <tbody>
-      <tr><td class="num">3</td><td class="num">8</td><td class="num">3.33 m</td><td class="num">99.61 %</td></tr>
-      <tr><td class="num">4</td><td class="num">7</td><td class="num"><strong>2.36 m</strong></td><td class="num"><strong>99.22 %</strong></td></tr>
-      <tr><td class="num">5</td><td class="num">6</td><td class="num">1.67 m</td><td class="num">98.44 %</td></tr>
+      <tr><td class="num">3</td><td class="num">8</td><td class="num">1.90 m</td><td class="num">99.61 %</td></tr>
+      <tr><td class="num">4</td><td class="num">7</td><td class="num"><strong>1.35 m</strong></td><td class="num"><strong>99.22 %</strong></td></tr>
+      <tr><td class="num">5</td><td class="num">6</td><td class="num">0.95 m</td><td class="num">98.44 %</td></tr>
     </tbody>
   </table>
   </div>
 
   <p>Shipped at four refine plus seven check. For comparison, what3words is 3 m with no
   checksum at all — this is finer <em>and</em> verified.</p>
-  <p>The checksum covers the <em>region code</em> as well as the words, so naming the
-  wrong region fails the same check as saying the wrong word &mdash; measured at
-  99.5 %. That is what stops an address minted in Ireland quietly resolving in
-  Britain.</p>
   <p>A checksum genuinely cannot live at <em>every</em> length: its bits would sit where
   the next word's position bits must go, and reserving eight at every length would take
-  two words from 427 m to 6.83 km. Putting it in the last word costs nothing at lengths
-  one to three, which are simply unverified. Four words is therefore terminal.</p>
+  two words from 11&nbsp;km to 176&nbsp;km. Putting it in the last word costs nothing at
+  the shorter lengths, which are simply unverified. Five words is therefore terminal
+  &mdash; a sixth would have to reinterpret the check bits.</p>
 
   <h2>The word list</h2>
   <p>The <a href="https://github.com/bitcoin/bips/blob/master/bip-0039/bip-0039-wordlists.md">BIP-39
@@ -183,7 +173,6 @@
   <h2>Reading</h2>
   <ul>
     <li><a href="https://github.com/Crunchy000/WordMapper/blob/main/docs/grid-scheme.md">The scheme in full</a> — bit budget, the truncation pitfall, and what is verified.</li>
-    <li><a href="https://github.com/Crunchy000/WordMapper/blob/main/docs/regions.md">The region registry</a> — why a prefix rather than a fifth word, and why no code is invented.</li>
     <li><a href="https://github.com/Crunchy000/WordMapper/blob/main/docs/coverage.md">Coverage and resolution</a> — why coverage is cheap and vocabulary is not.</li>
     <li><a href="https://github.com/Crunchy000/WordMapper">Source on GitHub</a>.</li>
   </ul>

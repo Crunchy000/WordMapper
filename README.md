@@ -8,37 +8,44 @@ Experiments in encoding geographic coordinates as short, memorable word sequence
 
 ### `demos/word-grid.html`
 
-The scheme, live. Click anywhere and watch the address grow a word at a time,
-each row adding one word and shrinking the box. Click a row to pick a length,
-or resolve an address of any length back to a point.
+The scheme, live. Click anywhere on earth and watch the address grow a word at a
+time, each row adding one word and shrinking the box. Click a row to pick a
+length, or resolve an address back to a point.
 
-- An address is a **region code and up to four words**, and each length is a
-  **prefix of the next**: 2 words for a street, 3 for a building, 4 for a
-  doorstep. The words already said never change.
-- The region is carried **like a dialling code** — out of band, and dropped
-  whenever both ends already know it. Every code is ISO 3166: `GB`, `FR`,
-  `US-CA`. 541 regions, worldwide coverage.
-- The [BIP-39][bip39] English list: 2,048 words, exactly 11 bits each.
-- Outside a region's box there is no address, and the codec **refuses rather
-  than inventing one** — an invented address would resolve to a real place
-  inside the box and pass its checksum. Nowhere is unaddressable: `XZ` is the
-  whole earth, at 61 m.
+- **One global grid.** Five [BIP-39][bip39] words name any point on earth to
+  1.35 m. No prefix, no registry, no agreement about borders.
+- An address shortens **two ways**. Drop **trailing** words for a coarser
+  address that still needs no context. Drop **leading** words to keep full
+  precision with fewer words, when whoever is listening already knows roughly
+  where you are.
+- The **checksum verifies the reconstruction**, so filling in dropped leading
+  words from a reference point is safe: the wrong tile fails the check 99.2 % of
+  the time rather than resolving quietly to the wrong place.
 
-| Words | Big Ben | Area |
+| Words | Big Ben | Cell |
 |---|---|---|
-| 2 | `GB.pilot.eagle` | 427 m |
-| 3 | `GB.pilot.eagle.evolve` | 9.4 m |
-| 4 | `GB.pilot.eagle.evolve.network` | 2.36 m, and verified |
+| 3 | `leg.tunnel.slam` | 264 × 225 m |
+| 4 | `leg.tunnel.slam.subway` | 4.1 × 7.0 m |
+| 5 | `leg.tunnel.slam.subway.gown` | 1.03 × 1.75 m, and verified |
 
-A median region gives 1.25 m at four words and 95 % are under 5 m. Large
-countries lean on subdivisions a caller can name: `RU` alone is 17.1 m, but
-`RU-MOW` is 0.85 m.
+Shortened locally, with a leading `.` marking the missing coarse words:
 
-The fourth word does two jobs: four of its bits refine the position and seven
-carry a checksum, so in `GB` it lands at 2.36 m *and* rejects a wrong word 99.2 %
-of the time. The checksum covers the region code too, so naming the wrong region
-fails the same check. what3words is 3 m with no checksum. Four words is terminal — a fifth would
-have to reinterpret those bits. See [`docs/grid-scheme.md`](docs/grid-scheme.md).
+| Words said | Written | Usable if the listener knows your position within |
+|---|---|---|
+| 4 | `.tunnel.slam.subway.gown` | 230 km — which country |
+| 3 | `.slam.subway.gown` | 4.2 km — which town |
+| 2 | `.subway.gown` | 112 m — which street |
+
+It falls conveniently over the UK: the whole country spans only six distinct
+first words, and most of Great Britain is `leg`. So a UK conversation drops the
+first word almost for free. Near a seam it is not free — Edinburgh is `legal`,
+Belfast is `left` — which is exactly what the checksum is there to catch.
+
+The fifth word does two jobs: four of its bits refine the position and seven
+carry a checksum, so it lands at 1.35 m *and* rejects a wrong word 99.2 % of the
+time. what3words is 3 m with no checksum. Five words is terminal — a sixth would
+have to reinterpret those bits. See
+[`docs/grid-scheme.md`](docs/grid-scheme.md).
 
 Open the file directly in a browser: no build step, and no secure-context
 requirement, since SHA-256 is plain JavaScript rather than `crypto.subtle`. It
@@ -61,17 +68,15 @@ re-run the workflow and it will publish.
 
 ## Docs
 
+- [`docs/grid-scheme.md`](docs/grid-scheme.md) — the scheme: both directions of
+  shortening, why the checksum makes local shortening safe, the interleaving
+  pitfall that breaks the prefix property, and why a checksum cannot live at
+  every length.
+- [`docs/coverage.md`](docs/coverage.md) — the square-root law relating area to
+  resolution, and the word-list vs address-length trade. Written for an earlier,
+  UK-only version of the scheme; the arithmetic still holds.
 - [`docs/uk-word-grid-review.md`](docs/uk-word-grid-review.md) — a review of the
   original imported demo. Historical: that demo and its scheme are gone.
-- [`docs/coverage.md`](docs/coverage.md) — how far the scheme stretches: the
-  square-root law relating area to resolution, and the word-list vs
-  address-length trade. Predates the region registry.
-- [`docs/grid-scheme.md`](docs/grid-scheme.md) — the current scheme: truncatable
-  addresses over a region box, the interleaving pitfall that breaks the prefix
-  property, and why a checksum cannot live at every length.
-- [`docs/regions.md`](docs/regions.md) — the region registry: why a prefix
-  rather than a fifth word, why every code is ISO 3166 and none are invented,
-  why boxes overlap on purpose, and what the whole thing costs.
 
 ## Word list
 
