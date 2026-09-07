@@ -70,39 +70,60 @@
   <div class="wrap">
     <h1>WordMapper</h1>
     <p class="tagline">Five words name any point on earth to a metre; four do it inside the UK. Say fewer for a coarser place — or, if whoever is listening already knows roughly where you are, drop the leading words and keep every metre.</p>
-    <div class="addr">flower<span>.</span>era<span>.</span>slogan<span>.</span>quarter</div>
-    <p class="note">Big Ben in Local scope &mdash; four words over a box around the UK,
-    to 2.43 m and checksummed. The same point globally is five words,
-    <code>leaf.step.cruel.tomato.unable</code>, to 1.35 m.</p>
+    <div class="addr">flush<span>.</span>edge<span>.</span>solution<span>.</span>sun</div>
+    <p class="note">Big Ben in the Local scope &mdash; four words over a box around
+    Britain and Ireland, to 2.7&nbsp;m and checksummed. The scope follows where you
+    click; anywhere outside every regional box falls back to five words worldwide.</p>
   </div>
 </header>
 
 <main class="wrap">
 
-  <h2>Two scopes</h2>
-  <p>The same grid mechanism over a different box. The scope is bound into the checksum,
-  so the two can never be silently confused: a UK address read as a global one fails its
-  check 99.2&nbsp;% of the time, and a terminal-length address identifies itself.</p>
+  <h2>Scopes</h2>
+  <p>The same grid mechanism over a different box: <strong>seven regional boxes at four
+  words</strong>, plus Global at five for anywhere outside them all. The scope follows
+  the click &mdash; there is nothing to switch by hand.</p>
 
   <div class="scroll">
   <table>
-    <thead><tr><th>Scope</th><th>Words</th><th>Cell</th><th>Needs</th></tr></thead>
+    <thead><tr><th>Scope</th><th>Box</th><th>4-word cell</th></tr></thead>
     <tbody>
-      <tr><td class="num">Global</td><td class="num">5</td><td class="num">1.35 m</td><td class="num">nothing at all</td></tr>
-      <tr><td class="num">UK</td><td class="num">4</td><td class="num">2.43 m</td><td class="num">to be inside the UK box</td></tr>
+      <tr><td class="num">Local (Britain + Ireland)</td><td class="num">0.97 M km&sup2;</td><td class="num"><strong>2.66 m</strong></td></tr>
+      <tr><td class="num">Europe</td><td class="num">23.4 M km&sup2;</td><td class="num">13.1 m</td></tr>
+      <tr><td class="num">South America</td><td class="num">36.1 M km&sup2;</td><td class="num">16.2 m</td></tr>
+      <tr><td class="num">Oceania</td><td class="num">43.4 M km&sup2;</td><td class="num">17.8 m</td></tr>
+      <tr><td class="num">Africa</td><td class="num">58.6 M km&sup2;</td><td class="num">20.7 m</td></tr>
+      <tr><td class="num">North America</td><td class="num">74.5 M km&sup2;</td><td class="num">23.3 m</td></tr>
+      <tr><td class="num">Asia</td><td class="num">137 M km&sup2;</td><td class="num">31.6 m</td></tr>
+      <tr><td class="num">Global &mdash; 5 words</td><td class="num">whole earth</td><td class="num">1.35 m</td></tr>
     </tbody>
   </table>
   </div>
 
-  <p>UK mode wins on ergonomics rather than resolution. Global shortened by one leading
-  word is <em>also</em> four words and reaches 1.35&nbsp;m &mdash; one dropped word is
-  worth a full 11 bits of context where the UK box is worth only 9.3. What UK mode buys
-  is that there is nothing to reconstruct and no reference point: four words, done.</p>
+  <p>The rule is the <strong>smallest box containing the point</strong>, which is both
+  the finest cell and the region a person would name &mdash; the boxes nest where they
+  overlap. Britain picks Local over Europe, Moscow picks Europe over Asia, Cairo picks
+  Africa over Asia, open ocean picks Global.</p>
 
-  <p>Two sharp edges. A four-word UK address read as a <em>global prefix</em> would
-  decode silently, because a prefix carries no checksum at all &mdash; so the UK reading
-  is always tried first. And the UK box is a rectangle, not a border: Dublin is inside
-  it, and gets a UK address that resolves correctly.</p>
+  <p>Resolution follows box size and nothing else, so the continental scopes are coarse:
+  Asia at 31.6&nbsp;m is &ldquo;which building&rdquo;, not &ldquo;which doorstep&rdquo;.
+  They buy a word, not precision &mdash; Global reaches 1.35&nbsp;m anywhere for a fifth
+  word. Splitting the big ones roughly halves their cell, at the cost of a boundary
+  people have to know about.</p>
+
+  <p>Each scope&rsquo;s tag is bound into its checksum, so an address minted in one box
+  cannot verify in another. But with seven boxes a four-word address is accepted by more
+  than one about <strong>4.6&nbsp;%</strong> of the time &mdash; each wrong box passes
+  its own seven-bit check with probability 1/128, and there are six of them. So a
+  four-word address does <em>not</em> reliably identify itself, and the scope has to
+  travel with it. That is the real cost of many boxes rather than two, where the
+  ambiguity was 0.8&nbsp;%.</p>
+
+  <p>Boxes are rectangles, not borders. Dublin is in Local because the box reaches
+  Ireland &mdash; that one is deliberate &mdash; but Istanbul falls in Europe&rsquo;s box
+  while being mostly in Asia, and Honolulu in North America&rsquo;s. Addresses resolve
+  correctly regardless, since encoding and decoding use the same box. Asia and Oceania
+  run past 180&deg; rather than stopping at it, so Chukotka and Fiji stay in one piece.</p>
 
   <h2>Drop trailing words: coarser, needs no context</h2>
   <p>Each word narrows the area, and the words already said never change &mdash; every

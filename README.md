@@ -8,34 +8,44 @@ Experiments in encoding geographic coordinates as short, memorable word sequence
 
 ### `demos/word-grid.html`
 
-The scheme, live and deliberately bare: click anywhere in the UK and the address
+The scheme, live and deliberately bare: click anywhere on earth and the address
 sits on the map, nothing else. Three words plus a fourth set apart, because that
 one does a different job — it refines the position *and* carries the checksum.
 
 ```
-flower.era.slogan · quarter        Big Ben — 2.43 m, checked
+flush.edge.solution · sun          London — Local, 2.7 m
+dance.tumble.other · volume        Paris  — Europe, 13.1 m
+snake.gap.brisk · wood             Tokyo  — Asia, 31.6 m
 ```
 
-- **Local** — four words over a box around the United Kingdom. This is what the
-  demo shows.
-- **Global** — five [BIP-39][bip39] words, anywhere on earth, 1.35 m. Built and
-  tested, just not surfaced in the demo for now; one constant in the UI brings
-  it back.
-- The scope is **bound into the checksum**, so the two can never be silently
-  confused, and a terminal-length address identifies itself.
+**The scope follows the click.** Seven regional boxes at four words, plus Global
+at five for anywhere outside them all:
 
-Cells are square. The projection's standard parallel is chosen so the projected
-world is exactly square (`K = 1/√π`, 55.654°), which makes the 5-word global cell
-1.346 m square and Local's 4-word cell 2.51 × 2.36 m. Equal-area throughout, so
-this changes shape and not resolution — see
+| scope | 4-word cell | | scope | 4-word cell |
+|---|---|---|---|---|
+| Local (Britain + Ireland) | **2.66 m** | | Africa | 20.7 m |
+| Europe | 13.1 m | | North America | 23.3 m |
+| South America | 16.2 m | | Asia | 31.6 m |
+| Oceania | 17.8 m | | *Global (5 words)* | *1.35 m* |
+
+The rule is the smallest box containing the point — which is both the finest
+cell and the region a person would name, since the boxes nest where they
+overlap. Britain picks Local over Europe, Moscow picks Europe over Asia, open
+ocean picks Global.
+
+Resolution follows box size and nothing else, so the continental scopes are
+coarse. They buy a word, not precision: Global reaches 1.35 m anywhere for a
+fifth word.
+
+Each scope's tag is bound into its checksum, so an address minted in one box
+cannot verify in another — but with seven boxes a four-word address is accepted
+by more than one about **4.6 %** of the time, so the scope has to travel with
+the address. That is why the demo shows it. See
 [`docs/grid-scheme.md`](docs/grid-scheme.md).
 
-An address also shortens **two ways**. Drop **trailing** words for a coarser
-address that needs no context. Drop **leading** words to keep full precision
-with fewer words, when whoever is listening already knows roughly where you are
-— marked with a leading `.`, and the checksum verifies the reconstruction, so a
-reference too far away is caught 99.2 % of the time rather than resolving
-quietly to the wrong place.
+Cells are square: the projection's standard parallel is chosen so the projected
+world is exactly square (`K = 1/√π`, 55.654°), which makes the 5-word global
+cell 1.346 m square. Equal-area throughout, so this is shape, not resolution.
 
 Open the file directly in a browser: no build step, and no secure-context
 requirement, since SHA-256 is plain JavaScript rather than `crypto.subtle`. It

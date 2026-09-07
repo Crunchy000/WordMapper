@@ -15,7 +15,8 @@ const start = html.indexOf('const INDEX = new Map');
 const end = html.indexOf('// --- map ---');
 const src = `const WORDS = ${words};\n${html.slice(start, end)}\n`
   + 'export { encode, decode, decodeAuto, resolveTail, cellSize, tileSize, covers,'
-  + ' indices, parseAddress, formatAddress, GLOBAL, UK, SCOPES };';
+  + ' indices, parseAddress, formatAddress, bestScope, scopesAccepting,'
+  + ' GLOBAL, UK, REGIONS, SCOPES };';
 // Written to a real file rather than a data: URL: the extracted module is
 // ~30 KB and a data: URL of that size fails to import with the URL itself as
 // the message, which is not a debuggable error.
@@ -27,17 +28,20 @@ try { mod = await import(pathToFileURL(tmp).href); } finally { rmSync(tmp, { for
 let bad = 0;
 const fail = (msg) => { bad++; console.error(`  ${msg}`); };
 
-for (const [key, sc] of [['global', mod.GLOBAL], ['uk', mod.UK]   /* named Local in the UI */]) {
-  const f = fixture[key];
-  // The bit order decides the shape of every cell, so the ports must agree on
-  // it exactly, not merely on the totals.
+// Every scope: bit order, axis split, box, encodings, truncation, checksum.
+// The bit order decides the shape of every cell, so the ports must agree on it
+// exactly, not merely on the totals.
+function checkScope(key, sc, f) {
   const order = sc.order.map((a) => 'xy'[a]).join('');
   if (order !== f.order) fail(`${key} bit order: js ${order} vs py ${f.order}`);
   if (sc.xb !== f.axis_bits[0] || sc.yb !== f.axis_bits[1])
     fail(`${key} axis bits: js ${[sc.xb, sc.yb]} vs py ${f.axis_bits}`);
   if (f.box && sc.box.join(',') !== f.box.join(','))
     fail(`${key} box: js ${sc.box} vs py ${f.box}`);
-
+  if (f.tag !== undefined && sc.tag !== f.tag)
+    fail(`${key} tag: js ${sc.tag} vs py ${f.tag}`);
+  if (f.max_words !== undefined && sc.maxWords !== f.max_words)
+    fail(`${key} length: js ${sc.maxWords} vs py ${f.max_words}`);
   for (const c of f.points) {
     for (const [n, expected] of Object.entries(c.words)) {
       const got = mod.encode(c.lat, c.lng, Number(n), sc);
@@ -47,21 +51,41 @@ for (const [key, sc] of [['global', mod.GLOBAL], ['uk', mod.UK]   /* named Local
       if (!Number.isFinite(lat) || !Number.isFinite(lng))
         fail(`${key} BAD DECODE ${expected.join('.')}`);
     }
-    // truncation: every length must be a prefix of the longest
     const longest = c.words[String(Object.keys(c.words).length)];
     for (const [n, expected] of Object.entries(c.words))
       if (longest.slice(0, Number(n)).join('.') !== expected.join('.'))
         fail(`${key} NOT A PREFIX at ${n}: ${expected.join('.')}`);
-    // the full address must pass its own embedded checksum
     try { mod.decode(longest, sc); }
     catch (e) { fail(`${key} CHECKSUM ${c.lat},${c.lng}: ${e.message}`); }
   }
 }
 
-// Coverage must stop in the same place in both ports. A point outside the
-// Local box that slipped through would be given an address belonging to somewhere
-// inside it, and would pass its own checksum.
-for (const c of fixture.uk.outside) {
+checkScope('global', mod.GLOBAL, fixture.global);
+for (const [key, f] of Object.entries(fixture.regions)) {
+  const sc = mod.SCOPES[key];
+  if (!sc) { fail(`missing scope ${key} in the demo`); continue; }
+  checkScope(key, sc, f);
+}
+if (mod.REGIONS.length !== Object.keys(fixture.regions).length)
+  fail(`region count: js ${mod.REGIONS.length} vs py ${Object.keys(fixture.regions).length}`);
+
+// The auto-switch: the smallest box containing the point, Global if none. Both
+// ports must choose the same scope for the same click, or the same words would
+// mean two different places.
+for (const c of fixture.chosen) {
+  const sc = mod.bestScope(c.lat, c.lng);
+  if (sc.key !== c.scope) {
+    fail(`CHOSE ${sc.key} at ${c.lat},${c.lng}, python chose ${c.scope}`); continue;
+  }
+  const got = mod.encode(c.lat, c.lng, sc.maxWords, sc);
+  if (got.join('.') !== c.words.join('.'))
+    fail(`CHOSEN WORDS ${c.lat},${c.lng}: js ${got.join('.')} vs py ${c.words.join('.')}`);
+}
+
+// Coverage must stop in the same place in both ports. A point outside a box
+// that slipped through would be given an address belonging to somewhere inside
+// it, and would pass its own checksum.
+for (const c of fixture.local_outside) {
   if (mod.covers(c.lat, c.lng, mod.UK)) fail(`LOCAL COVERS ${c.lat},${c.lng}`);
   let refused = false;
   try { mod.encode(c.lat, c.lng, 4, mod.UK); } catch { refused = true; }
@@ -79,9 +103,6 @@ for (const t of fixture.global.tails) {
   if (a[0] !== b[0] || a[1] !== b[1])
     fail(`TAIL .${t.words.join('.')} from ${t.ref}: js ${got} vs py ${t.resolved}`);
 }
-
-// A reference too far away to pick the right tile must be refused, not
-// resolved quietly to the wrong place.
 for (const h of fixture.global.hopeless) {
   let refused = false;
   try {
@@ -89,15 +110,6 @@ for (const h of fixture.global.hopeless) {
     refused = !Number.isFinite(got[0]);
   } catch { refused = true; }
   if (!refused) fail(`RESOLVED a hopeless tail .${h.words.join('.')} from ${h.ref}`);
-}
-
-// The scope is bound into the checksum, so a terminal address identifies
-// itself. Both ports must resolve in the same order -- UK first, because a UK
-// address read as a global PREFIX would decode silently to somewhere else.
-for (const a of fixture.auto) {
-  const [, , sc, verified] = mod.decodeAuto(a.words);
-  if (sc.key !== a.scope || verified !== a.verified)
-    fail(`AUTO ${a.words.join('.')}: js ${sc.key}/${verified} vs py ${a.scope}/${a.verified}`);
 }
 
 // The leading separator is the whole notation for a tail, so parsing it back
@@ -110,9 +122,11 @@ for (const [text, n, tail] of [['leg.tunnel.slam', 3, false],
     fail(`PARSE ${JSON.stringify(text)} -> ${parts.length} words, tail=${isTail}`);
 }
 
-console.log(`demo codec vs python reference: global ${fixture.global.points.length} points x 5, `
-  + `uk ${fixture.uk.points.length} x 4, ${fixture.global.tails.length} tails, `
-  + `${fixture.global.hopeless.length} hopeless, ${fixture.uk.outside.length} outside, `
-  + `${fixture.auto.length} scope identifications`);
+const regionPoints = Object.values(fixture.regions).reduce((n, r) => n + r.points.length, 0);
+console.log(`demo codec vs python reference: global ${fixture.global.points.length} points, `
+  + `${Object.keys(fixture.regions).length} regions (${regionPoints} points), `
+  + `${fixture.chosen.length} scope choices, ${fixture.global.tails.length} tails, `
+  + `${fixture.global.hopeless.length} hopeless`);
 if (bad) { console.error(`FAIL: ${bad} problem(s)`); process.exit(1); }
-console.log('OK: both scopes agree, truncation holds, checksums verify, scopes stay distinct');
+console.log('OK: every scope agrees, truncation holds, checksums verify, '
+  + 'the auto-switch matches');

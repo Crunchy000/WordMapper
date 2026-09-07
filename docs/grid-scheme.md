@@ -4,37 +4,60 @@ Reference: [`tools/gridcode/bip39grid.py`](../tools/gridcode/bip39grid.py),
 tests in [`test_bip39grid.py`](../tools/gridcode/test_bip39grid.py).
 Setup: `npm install --prefix tools/gridcode`.
 
-## Two scopes
+## Scopes
 
-The same grid mechanism over a different box.
+The same grid mechanism over a different box. **Seven regional boxes at four
+words, plus Global at five.** The scope follows the click — the demo never asks
+you to pick one.
 
-```
-leg.tunnel.slam.subway.gown          Big Ben, Global — 5 words, 1.35 m
-play.cram.side.someone               Big Ben, UK     — 4 words, 2.43 m
-```
+| scope | box | 4-word cell |
+|---|---|---|
+| Local (Britain and Ireland) | 0.97 M km² | **2.66 m** |
+| Europe | 23.4 M km² | 13.1 m |
+| South America | 36.1 M km² | 16.2 m |
+| Oceania | 43.4 M km² | 17.8 m |
+| Africa | 58.6 M km² | 20.7 m |
+| North America | 74.5 M km² | 23.3 m |
+| Asia | 137 M km² | 31.6 m |
+| *Global, 5 words* | *whole earth* | *1.35 m* |
 
-**Global** is five [BIP-39][bip39] words over the whole world. No registry, no
-agreement about borders, nothing the caller has to know about where they are.
+Resolution follows box size and nothing else, so the continental scopes are
+coarse: Asia at 31.6 m is "which building", not "which doorstep". They buy a
+word, not precision — Global reaches 1.35 m anywhere for a fifth word. Splitting
+the big ones (Asia into west and east, say) roughly halves their cell, at the
+cost of a box boundary people have to know about.
 
-**UK** is four words over a box around the United Kingdom — Lizard Point to
-Shetland, St Kilda to Lowestoft. One word shorter, self-contained, and needs
-nothing said or known beyond "this is a UK address".
+### Choosing the scope
 
-The scope is bound into the checksum, so **the two can never be silently
-confused**: a UK address read as a global one fails its check 99.2 % of the
-time. That asymmetry has one gap worth knowing, covered under
-[Telling them apart](#telling-them-apart).
+**The smallest regional box containing the point, or Global where none does.**
+Two reasons that agree: the smallest box is the finest cell, and it is also the
+region a person would name, because the boxes are nested where they overlap.
+Britain picks Local over Europe; Moscow picks Europe over Asia; Cairo picks
+Africa over Asia. Open ocean picks Global.
 
-### Which to use
+### They stay distinct — mostly
 
-UK mode wins on ergonomics, not resolution. Global mode shortened by one
-leading word is also four words and reaches **1.35 m against UK's 2.43 m**,
-because one dropped word is worth a full 11 bits of context where the UK box is
-worth only 9.3. What UK mode buys is that there is nothing to reconstruct and
-no reference point: four words, and you are done.
+Each scope's tag is bound into its checksum, so an address minted in one box
+cannot verify in another. But with seven regional boxes a four-word address is
+accepted by **more than one scope about 4.6 % of the time** — each wrong box
+passes its own 7-bit check with probability 1/128, and there are six of them.
+Measured at 4.4 %.
 
-An address shortens in **two directions** in either scope, and they do
-different jobs.
+So a four-word address does **not** reliably identify itself, and the scope has
+to travel with it. That is a real cost of having many boxes rather than two: at
+two scopes the ambiguity was 0.8 %. The demo shows the scope name beside the
+address for exactly this reason.
+
+### Boxes are rectangles, not borders
+
+Dublin is in Local because the box reaches Ireland — that one is deliberate.
+Istanbul is in Europe's box while being mostly in Asia, and Honolulu falls in
+North America's. Addresses resolve correctly regardless, because encoding and
+decoding use the same box; a box is not a claim about anything.
+
+Asia and Oceania run **past 180** (to 190) rather than stopping at it, so
+Chukotka and Fiji stay inside one box instead of being cut in half by the
+antimeridian. Query longitudes are normalised into the box's frame.
 
 ## Drop trailing words: coarser, needs no context
 

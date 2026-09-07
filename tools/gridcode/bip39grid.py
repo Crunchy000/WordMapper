@@ -128,15 +128,35 @@ class Scope:
         return f'<Scope {self.key} {self.max_words} words>'
 
 
+# Five words over the whole earth. The floor: it always works, and it is what
+# anywhere outside every regional box falls back to.
 GLOBAL = Scope('global', 'Global', '', (-90.0, 90.0, -180.0, 180.0), 5)
-# Local is the United Kingdom with margin: Lizard Point to Shetland, St Kilda
-# to Lowestoft, and Northern Ireland inside it. Its tag stays 'GB' whatever the
-# box is called: the tag is bound into the checksum, so renaming it would
-# invalidate every Local address ever issued.
-LOCAL = Scope('uk', 'Local', 'GB', (49.85, 60.90, -8.70, 1.80), 4)
+
+# Four words over a regional box. Each tag is bound into the checksum, so an
+# address minted in one region cannot verify in another.
+#
+# Asia and Oceania run PAST 180 rather than stopping at it, so that Chukotka
+# and Fiji stay inside one box instead of being split in half by the
+# antimeridian; see normalise_lng.
+REGIONS = [
+    Scope('local',   'Local',         'GB', (49.85, 60.90, -10.70,   1.80), 4),
+    Scope('europe',  'Europe',        'EU', (34.00, 71.50, -25.00,  60.00), 4),
+    Scope('africa',  'Africa',        'AF', (-35.00, 37.50, -18.00,  52.00), 4),
+    Scope('namerica', 'North America', 'NA', (5.00, 83.50, -168.00, -52.00), 4),
+    Scope('samerica', 'South America', 'SA', (-56.00, 13.50, -82.00, -34.00), 4),
+    Scope('asia',    'Asia',          'AS', (-11.00, 81.50,  26.00, 190.00), 4),
+    Scope('oceania', 'Oceania',       'OC', (-50.00,  0.00, 110.00, 190.00), 4),
+]
+LOCAL = REGIONS[0]
 UK = LOCAL                                  # the old name, still accepted
-DEFAULT = LOCAL                             # what a caller gets without asking
-SCOPES = {s.key: s for s in (LOCAL, GLOBAL)}
+DEFAULT = LOCAL
+SCOPES = {sc.key: sc for sc in REGIONS + [GLOBAL]}
+
+
+def _wrap(latlng):
+    """A box past 180 unprojects past 180 too; bring it back to -180..180."""
+    lat, lng = latlng
+    return lat, (lng + 180.0) % 360.0 - 180.0
 
 
 def scope(s=GLOBAL):
@@ -144,12 +164,26 @@ def scope(s=GLOBAL):
     return s if isinstance(s, Scope) else SCOPES[s]
 
 
+def normalise_lng(lng, s=GLOBAL):
+    """Bring a longitude into the box's frame.
+
+    A box straddling the antimeridian runs past 180 -- Asia is 26 to 190 -- so
+    a point in Chukotka arrives as -175 and must be read as 185. The
+    short-circuit matters: a value a hair BELOW lngMin would otherwise wrap to
+    nearly lngMin + 360, throwing a point on the western edge out of its box.
+    """
+    s = scope(s)
+    lngMin, lngMax = s.box[2], s.box[3]
+    if lngMin - EPS <= lng <= lngMax + EPS:
+        return lng
+    return lngMin + (lng - lngMin) % 360.0
+
+
 def covers(lat, lng, s=GLOBAL):
     s = scope(s)
     latMin, latMax, lngMin, lngMax = s.box
-    lng = (lng + 180.0) % 360.0 - 180.0
     return (latMin - EPS <= lat <= latMax + EPS
-            and lngMin - EPS <= lng <= lngMax + EPS)
+            and lngMin - EPS <= normalise_lng(lng, s) <= lngMax + EPS)
 
 
 def _indices(lat, lng, s=GLOBAL):
@@ -158,8 +192,7 @@ def _indices(lat, lng, s=GLOBAL):
     if not covers(lat, lng, s):
         raise OutsideBox(f'{lat:.5f}, {lng:.5f} is outside {s.name} '
                          f'({s.box[0]}..{s.box[1]}, {s.box[2]}..{s.box[3]})')
-    lng = (lng + 180.0) % 360.0 - 180.0
-    x, y = project(lat, lng)
+    x, y = project(lat, normalise_lng(lng, s))
     # Both ends are clamped. The top saturates a point on the boundary -- the
     # poles, the antimeridian, a box edge -- into the last cell. The bottom is
     # only reachable by floating-point slop, but an unclamped negative index
@@ -261,8 +294,8 @@ def encode(lat, lng, words, n_words=None, s=GLOBAL):
 def _from_position(position, s=GLOBAL):
     s = scope(s)
     xi, yi = _deinterleave(position, s.position_bits, s)
-    return unproject(s.x0 + (xi + 0.5) / 2 ** s.xb * s.xr,
-                     s.y0 + (yi + 0.5) / 2 ** s.yb * s.yr)
+    return _wrap(unproject(s.x0 + (xi + 0.5) / 2 ** s.xb * s.xr,
+                           s.y0 + (yi + 0.5) / 2 ** s.yb * s.yr))
 
 
 def decode(spoken, words, s=GLOBAL):
@@ -291,8 +324,26 @@ def decode(spoken, words, s=GLOBAL):
     bits = _position_bits(len(spoken), s)
     xb, yb = _axis_bits(len(spoken), s)
     xi, yi = _deinterleave(prefix, bits, s)
-    return unproject(s.x0 + (xi + 0.5) / 2 ** xb * s.xr,
-                     s.y0 + (yi + 0.5) / 2 ** yb * s.yr)
+    return _wrap(unproject(s.x0 + (xi + 0.5) / 2 ** xb * s.xr,
+                           s.y0 + (yi + 0.5) / 2 ** yb * s.yr))
+
+
+def best_scope(lat, lng):
+    """The scope to use for a point: the SMALLEST regional box containing it,
+    or Global where none does.
+
+    Smallest wins for two reasons that agree. It is the finest cell, and it is
+    also the region a person would name: boxes are nested where they overlap,
+    so Local beats Europe over Britain and Europe beats Asia over Moscow.
+    """
+    hit = [sc for sc in REGIONS if covers(lat, lng, sc)]
+    return min(hit, key=lambda sc: (sc.xr * sc.yr, sc.key)) if hit else GLOBAL
+
+
+def scopes_covering(lat, lng):
+    """Every regional box containing the point, smallest first."""
+    return sorted((sc for sc in REGIONS if covers(lat, lng, sc)),
+                  key=lambda sc: (sc.xr * sc.yr, sc.key))
 
 
 def decode_auto(spoken, words):
@@ -309,15 +360,41 @@ def decode_auto(spoken, words):
     address read as a global prefix would decode silently to a different place
     entirely, since nothing checks a prefix -- so the Local reading is tried first.
     """
-    for s in (LOCAL, GLOBAL):
-        if len(spoken) == s.max_words:
-            try:
-                lat, lng = decode(spoken, words, s)
-                return lat, lng, s, True
-            except ValueError:
-                pass
+    matches = []
+    for sc in REGIONS + [GLOBAL]:
+        if len(spoken) != sc.max_words:
+            continue
+        try:
+            lat, lng = decode(spoken, words, sc)
+        except ValueError:
+            continue
+        matches.append((lat, lng, sc))
+    if matches:
+        # More than one scope can accept the same words by luck: each wrong one
+        # passes its own 7-bit check with probability 1/128, so with seven
+        # regional boxes an address is ambiguous about 5% of the time. The
+        # caller usually knows the region -- pass it to decode() instead of
+        # guessing here -- so this returns the first match and leaves the
+        # ambiguity to be measured rather than hidden. See scopes_accepting().
+        lat, lng, sc = matches[0]
+        return lat, lng, sc, True
     lat, lng = decode(spoken, words, GLOBAL)
     return lat, lng, GLOBAL, False
+
+
+def scopes_accepting(spoken, words):
+    """Every scope whose checksum accepts these words. More than one means the
+    address does not identify itself and the region has to be stated."""
+    out = []
+    for sc in REGIONS + [GLOBAL]:
+        if len(spoken) != sc.max_words:
+            continue
+        try:
+            decode(spoken, words, sc)
+        except ValueError:
+            continue
+        out.append(sc)
+    return out
 
 
 def _known_low(n_said, s=GLOBAL):
