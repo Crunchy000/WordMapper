@@ -835,6 +835,30 @@
      }
     },
     {
+     "lat": 60.155,
+     "lng": -1.145,
+     "words": {
+      "1": [
+       "wheel"
+      ],
+      "2": [
+       "wheel",
+       "demand"
+      ],
+      "3": [
+       "wheel",
+       "demand",
+       "crystal"
+      ],
+      "4": [
+       "wheel",
+       "demand",
+       "crystal",
+       "network"
+      ]
+     }
+    },
+    {
      "lat": 49.85,
      "lng": -10.699999999999989,
      "words": {
@@ -932,971 +956,17 @@
     }
    ]
   },
-  "europe": {
-   "name": "Europe",
-   "tag": "EU",
+  "australia": {
+   "name": "Australia",
+   "tag": "AU",
    "box": [
-    34.0,
-    71.5,
-    -25.0,
-    60.0
-   ],
-   "max_words": 4,
-   "order": "xyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyx",
-   "axis_bits": [
-    19,
-    18
-   ],
-   "points": [
-    {
-     "lat": 48.8584,
-     "lng": 2.2945,
-     "words": {
-      "1": [
-       "dance"
-      ],
-      "2": [
-       "dance",
-       "tumble"
-      ],
-      "3": [
-       "dance",
-       "tumble",
-       "other"
-      ],
-      "4": [
-       "dance",
-       "tumble",
-       "other",
-       "volume"
-      ]
-     }
-    },
-    {
-     "lat": 55.7539,
-     "lng": 37.6208,
-     "words": {
-      "1": [
-       "solve"
-      ],
-      "2": [
-       "solve",
-       "push"
-      ],
-      "3": [
-       "solve",
-       "push",
-       "they"
-      ],
-      "4": [
-       "solve",
-       "push",
-       "they",
-       "goddess"
-      ]
-     }
-    },
-    {
-     "lat": 64.1466,
-     "lng": -21.9426,
-     "words": {
-      "1": [
-       "fee"
-      ],
-      "2": [
-       "fee",
-       "away"
-      ],
-      "3": [
-       "fee",
-       "away",
-       "mirror"
-      ],
-      "4": [
-       "fee",
-       "away",
-       "mirror",
-       "tree"
-      ]
-     }
-    },
-    {
-     "lat": 34.0,
-     "lng": -25.0,
-     "words": {
-      "1": [
-       "abandon"
-      ],
-      "2": [
-       "abandon",
-       "abandon"
-      ],
-      "3": [
-       "abandon",
-       "abandon",
-       "abandon"
-      ],
-      "4": [
-       "abandon",
-       "abandon",
-       "abandon",
-       "antique"
-      ]
-     }
-    },
-    {
-     "lat": 34.0,
-     "lng": 60.0,
-     "words": {
-      "1": [
-       "primary"
-      ],
-      "2": [
-       "primary",
-       "fetch"
-      ],
-      "3": [
-       "primary",
-       "fetch",
-       "primary"
-      ],
-      "4": [
-       "primary",
-       "fetch",
-       "primary",
-       "fat"
-      ]
-     }
-    },
-    {
-     "lat": 71.5,
-     "lng": -25.0,
-     "words": {
-      "1": [
-       "fetch"
-      ],
-      "2": [
-       "fetch",
-       "primary"
-      ],
-      "3": [
-       "fetch",
-       "primary",
-       "fetch"
-      ],
-      "4": [
-       "fetch",
-       "primary",
-       "fetch",
-       "prefer"
-      ]
-     }
-    },
-    {
-     "lat": 71.5,
-     "lng": 60.0,
-     "words": {
-      "1": [
-       "zoo"
-      ],
-      "2": [
-       "zoo",
-       "zoo"
-      ],
-      "3": [
-       "zoo",
-       "zoo",
-       "zoo"
-      ],
-      "4": [
-       "zoo",
-       "zoo",
-       "zoo",
-       "wide"
-      ]
-     }
-    }
-   ]
-  },
-  "africa": {
-   "name": "Africa",
-   "tag": "AF",
-   "box": [
-    -35.0,
-    37.5,
-    -18.0,
-    52.0
+    -43.65,
+    -12.0,
+    112.9,
+    153.7
    ],
    "max_words": 4,
    "order": "yyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyx",
-   "axis_bits": [
-    18,
-    19
-   ],
-   "points": [
-    {
-     "lat": 30.0444,
-     "lng": 31.2357,
-     "words": {
-      "1": [
-       "vicious"
-      ],
-      "2": [
-       "vicious",
-       "else"
-      ],
-      "3": [
-       "vicious",
-       "else",
-       "enough"
-      ],
-      "4": [
-       "vicious",
-       "else",
-       "enough",
-       "kingdom"
-      ]
-     }
-    },
-    {
-     "lat": -33.9249,
-     "lng": 18.4241,
-     "words": {
-      "1": [
-       "cactus"
-      ],
-      "2": [
-       "cactus",
-       "tower"
-      ],
-      "3": [
-       "cactus",
-       "tower",
-       "toddler"
-      ],
-      "4": [
-       "cactus",
-       "tower",
-       "toddler",
-       "boy"
-      ]
-     }
-    },
-    {
-     "lat": 6.5244,
-     "lng": 3.3792,
-     "words": {
-      "1": [
-       "midnight"
-      ],
-      "2": [
-       "midnight",
-       "foam"
-      ],
-      "3": [
-       "midnight",
-       "foam",
-       "soul"
-      ],
-      "4": [
-       "midnight",
-       "foam",
-       "soul",
-       "father"
-      ]
-     }
-    },
-    {
-     "lat": -35.0,
-     "lng": -18.0,
-     "words": {
-      "1": [
-       "abandon"
-      ],
-      "2": [
-       "abandon",
-       "abandon"
-      ],
-      "3": [
-       "abandon",
-       "abandon",
-       "abandon"
-      ],
-      "4": [
-       "abandon",
-       "abandon",
-       "abandon",
-       "afford"
-      ]
-     }
-    },
-    {
-     "lat": -35.0,
-     "lng": 52.0,
-     "words": {
-      "1": [
-       "click"
-      ],
-      "2": [
-       "click",
-       "fetch"
-      ],
-      "3": [
-       "click",
-       "fetch",
-       "primary"
-      ],
-      "4": [
-       "click",
-       "fetch",
-       "primary",
-       "fish"
-      ]
-     }
-    },
-    {
-     "lat": 37.5,
-     "lng": -18.0,
-     "words": {
-      "1": [
-       "stem"
-      ],
-      "2": [
-       "stem",
-       "primary"
-      ],
-      "3": [
-       "stem",
-       "primary",
-       "fetch"
-      ],
-      "4": [
-       "stem",
-       "primary",
-       "fetch",
-       "predict"
-      ]
-     }
-    },
-    {
-     "lat": 37.5,
-     "lng": 52.0,
-     "words": {
-      "1": [
-       "zoo"
-      ],
-      "2": [
-       "zoo",
-       "zoo"
-      ],
-      "3": [
-       "zoo",
-       "zoo",
-       "zoo"
-      ],
-      "4": [
-       "zoo",
-       "zoo",
-       "zoo",
-       "weasel"
-      ]
-     }
-    }
-   ]
-  },
-  "namerica": {
-   "name": "North America",
-   "tag": "NA",
-   "box": [
-    5.0,
-    83.5,
-    -168.0,
-    -52.0
-   ],
-   "max_words": 4,
-   "order": "yxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxy",
-   "axis_bits": [
-    18,
-    19
-   ],
-   "points": [
-    {
-     "lat": 40.758,
-     "lng": -73.9855,
-     "words": {
-      "1": [
-       "spray"
-      ],
-      "2": [
-       "spray",
-       "world"
-      ],
-      "3": [
-       "spray",
-       "world",
-       "force"
-      ],
-      "4": [
-       "spray",
-       "world",
-       "force",
-       "relax"
-      ]
-     }
-    },
-    {
-     "lat": 19.4326,
-     "lng": -99.1332,
-     "words": {
-      "1": [
-       "gentle"
-      ],
-      "2": [
-       "gentle",
-       "roof"
-      ],
-      "3": [
-       "gentle",
-       "roof",
-       "vault"
-      ],
-      "4": [
-       "gentle",
-       "roof",
-       "vault",
-       "heart"
-      ]
-     }
-    },
-    {
-     "lat": 64.5011,
-     "lng": -165.4064,
-     "words": {
-      "1": [
-       "popular"
-      ],
-      "2": [
-       "popular",
-       "sleep"
-      ],
-      "3": [
-       "popular",
-       "sleep",
-       "kid"
-      ],
-      "4": [
-       "popular",
-       "sleep",
-       "kid",
-       "comic"
-      ]
-     }
-    },
-    {
-     "lat": 5.0,
-     "lng": -168.0,
-     "words": {
-      "1": [
-       "abandon"
-      ],
-      "2": [
-       "abandon",
-       "abandon"
-      ],
-      "3": [
-       "abandon",
-       "abandon",
-       "abandon"
-      ],
-      "4": [
-       "abandon",
-       "abandon",
-       "abandon",
-       "actual"
-      ]
-     }
-    },
-    {
-     "lat": 5.0,
-     "lng": -52.0,
-     "words": {
-      "1": [
-       "fetch"
-      ],
-      "2": [
-       "fetch",
-       "primary"
-      ],
-      "3": [
-       "fetch",
-       "primary",
-       "fetch"
-      ],
-      "4": [
-       "fetch",
-       "primary",
-       "fetch",
-       "put"
-      ]
-     }
-    },
-    {
-     "lat": 83.5,
-     "lng": -168.0,
-     "words": {
-      "1": [
-       "primary"
-      ],
-      "2": [
-       "primary",
-       "fetch"
-      ],
-      "3": [
-       "primary",
-       "fetch",
-       "primary"
-      ],
-      "4": [
-       "primary",
-       "fetch",
-       "primary",
-       "frozen"
-      ]
-     }
-    },
-    {
-     "lat": 83.5,
-     "lng": -52.0,
-     "words": {
-      "1": [
-       "zoo"
-      ],
-      "2": [
-       "zoo",
-       "zoo"
-      ],
-      "3": [
-       "zoo",
-       "zoo",
-       "zoo"
-      ],
-      "4": [
-       "zoo",
-       "zoo",
-       "zoo",
-       "wave"
-      ]
-     }
-    }
-   ]
-  },
-  "samerica": {
-   "name": "South America",
-   "tag": "SA",
-   "box": [
-    -56.0,
-    13.5,
-    -82.0,
-    -34.0
-   ],
-   "max_words": 4,
-   "order": "yyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyx",
-   "axis_bits": [
-    18,
-    19
-   ],
-   "points": [
-    {
-     "lat": -22.9519,
-     "lng": -43.2105,
-     "words": {
-      "1": [
-       "junior"
-      ],
-      "2": [
-       "junior",
-       "kitten"
-      ],
-      "3": [
-       "junior",
-       "kitten",
-       "shallow"
-      ],
-      "4": [
-       "junior",
-       "kitten",
-       "shallow",
-       "sign"
-      ]
-     }
-    },
-    {
-     "lat": -34.6037,
-     "lng": -58.3816,
-     "words": {
-      "1": [
-       "cable"
-      ],
-      "2": [
-       "cable",
-       "sound"
-      ],
-      "3": [
-       "cable",
-       "sound",
-       "treat"
-      ],
-      "4": [
-       "cable",
-       "sound",
-       "treat",
-       "idle"
-      ]
-     }
-    },
-    {
-     "lat": 4.711,
-     "lng": -74.0721,
-     "words": {
-      "1": [
-       "shrimp"
-      ],
-      "2": [
-       "shrimp",
-       "reunion"
-      ],
-      "3": [
-       "shrimp",
-       "reunion",
-       "era"
-      ],
-      "4": [
-       "shrimp",
-       "reunion",
-       "era",
-       "attend"
-      ]
-     }
-    },
-    {
-     "lat": -56.0,
-     "lng": -82.0,
-     "words": {
-      "1": [
-       "abandon"
-      ],
-      "2": [
-       "abandon",
-       "abandon"
-      ],
-      "3": [
-       "abandon",
-       "abandon",
-       "abandon"
-      ],
-      "4": [
-       "abandon",
-       "abandon",
-       "abandon",
-       "amused"
-      ]
-     }
-    },
-    {
-     "lat": -56.0,
-     "lng": -34.0,
-     "words": {
-      "1": [
-       "click"
-      ],
-      "2": [
-       "click",
-       "fetch"
-      ],
-      "3": [
-       "click",
-       "fetch",
-       "primary"
-      ],
-      "4": [
-       "click",
-       "fetch",
-       "primary",
-       "flight"
-      ]
-     }
-    },
-    {
-     "lat": 13.5,
-     "lng": -82.0,
-     "words": {
-      "1": [
-       "stem"
-      ],
-      "2": [
-       "stem",
-       "primary"
-      ],
-      "3": [
-       "stem",
-       "primary",
-       "fetch"
-      ],
-      "4": [
-       "stem",
-       "primary",
-       "fetch",
-       "pepper"
-      ]
-     }
-    },
-    {
-     "lat": 13.5,
-     "lng": -34.0,
-     "words": {
-      "1": [
-       "zoo"
-      ],
-      "2": [
-       "zoo",
-       "zoo"
-      ],
-      "3": [
-       "zoo",
-       "zoo",
-       "zoo"
-      ],
-      "4": [
-       "zoo",
-       "zoo",
-       "zoo",
-       "weather"
-      ]
-     }
-    }
-   ]
-  },
-  "asia": {
-   "name": "Asia",
-   "tag": "AS",
-   "box": [
-    -11.0,
-    81.5,
-    26.0,
-    190.0
-   ],
-   "max_words": 4,
-   "order": "yxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxy",
-   "axis_bits": [
-    18,
-    19
-   ],
-   "points": [
-    {
-     "lat": 35.6586,
-     "lng": 139.7454,
-     "words": {
-      "1": [
-       "snake"
-      ],
-      "2": [
-       "snake",
-       "gap"
-      ],
-      "3": [
-       "snake",
-       "gap",
-       "brisk"
-      ],
-      "4": [
-       "snake",
-       "gap",
-       "brisk",
-       "wood"
-      ]
-     }
-    },
-    {
-     "lat": 28.6139,
-     "lng": 77.209,
-     "words": {
-      "1": [
-       "myself"
-      ],
-      "2": [
-       "myself",
-       "roof"
-      ],
-      "3": [
-       "myself",
-       "roof",
-       "nice"
-      ],
-      "4": [
-       "myself",
-       "roof",
-       "nice",
-       "notable"
-      ]
-     }
-    },
-    {
-     "lat": 64.7314,
-     "lng": 177.5085,
-     "words": {
-      "1": [
-       "woman"
-      ],
-      "2": [
-       "woman",
-       "noodle"
-      ],
-      "3": [
-       "woman",
-       "noodle",
-       "pride"
-      ],
-      "4": [
-       "woman",
-       "noodle",
-       "pride",
-       "disease"
-      ]
-     }
-    },
-    {
-     "lat": 66.0,
-     "lng": -174.0,
-     "words": {
-      "1": [
-       "worth"
-      ],
-      "2": [
-       "worth",
-       "future"
-      ],
-      "3": [
-       "worth",
-       "future",
-       "priority"
-      ],
-      "4": [
-       "worth",
-       "future",
-       "priority",
-       "slam"
-      ]
-     }
-    },
-    {
-     "lat": -11.0,
-     "lng": 26.0,
-     "words": {
-      "1": [
-       "abandon"
-      ],
-      "2": [
-       "abandon",
-       "abandon"
-      ],
-      "3": [
-       "abandon",
-       "abandon",
-       "abandon"
-      ],
-      "4": [
-       "abandon",
-       "abandon",
-       "abandon",
-       "armor"
-      ]
-     }
-    },
-    {
-     "lat": -11.0,
-     "lng": -170.0,
-     "words": {
-      "1": [
-       "fetch"
-      ],
-      "2": [
-       "fetch",
-       "primary"
-      ],
-      "3": [
-       "fetch",
-       "primary",
-       "fetch"
-      ],
-      "4": [
-       "fetch",
-       "primary",
-       "fetch",
-       "price"
-      ]
-     }
-    },
-    {
-     "lat": 81.5,
-     "lng": 26.0,
-     "words": {
-      "1": [
-       "primary"
-      ],
-      "2": [
-       "primary",
-       "fetch"
-      ],
-      "3": [
-       "primary",
-       "fetch",
-       "primary"
-      ],
-      "4": [
-       "primary",
-       "fetch",
-       "primary",
-       "forget"
-      ]
-     }
-    },
-    {
-     "lat": 81.5,
-     "lng": -170.0,
-     "words": {
-      "1": [
-       "zoo"
-      ],
-      "2": [
-       "zoo",
-       "zoo"
-      ],
-      "3": [
-       "zoo",
-       "zoo",
-       "zoo"
-      ],
-      "4": [
-       "zoo",
-       "zoo",
-       "zoo",
-       "vital"
-      ]
-     }
-    }
-   ]
-  },
-  "oceania": {
-   "name": "Oceania",
-   "tag": "OC",
-   "box": [
-    -48.0,
-    -9.0,
-    112.0,
-    184.0
-   ],
-   "max_words": 4,
-   "order": "yxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxy",
    "axis_bits": [
     18,
     19
@@ -1907,100 +977,124 @@
      "lng": 151.2153,
      "words": {
       "1": [
-       "girl"
+       "hello"
       ],
       "2": [
-       "girl",
-       "decline"
+       "hello",
+       "match"
       ],
       "3": [
-       "girl",
-       "decline",
-       "daring"
+       "hello",
+       "match",
+       "sign"
       ],
       "4": [
-       "girl",
-       "decline",
-       "daring",
-       "muscle"
+       "hello",
+       "match",
+       "sign",
+       "sponsor"
       ]
      }
     },
     {
-     "lat": -36.8485,
-     "lng": 174.7633,
+     "lat": -37.8136,
+     "lng": 144.9631,
      "words": {
       "1": [
-       "fossil"
+       "decrease"
       ],
       "2": [
-       "fossil",
-       "umbrella"
+       "decrease",
+       "attitude"
       ],
       "3": [
-       "fossil",
-       "umbrella",
-       "olive"
+       "decrease",
+       "attitude",
+       "moon"
       ],
       "4": [
-       "fossil",
-       "umbrella",
-       "olive",
-       "shy"
+       "decrease",
+       "attitude",
+       "moon",
+       "life"
       ]
      }
     },
     {
-     "lat": -18.1416,
-     "lng": 178.4419,
+     "lat": -31.9523,
+     "lng": 115.8613,
      "words": {
       "1": [
-       "ten"
+       "dynamic"
       ],
       "2": [
-       "ten",
-       "lift"
+       "dynamic",
+       "crisp"
       ],
       "3": [
-       "ten",
-       "lift",
-       "frequent"
+       "dynamic",
+       "crisp",
+       "ginger"
       ],
       "4": [
-       "ten",
-       "lift",
-       "frequent",
-       "wheat"
+       "dynamic",
+       "crisp",
+       "ginger",
+       "throw"
       ]
      }
     },
     {
-     "lat": -16.5,
-     "lng": -179.9,
+     "lat": -42.8821,
+     "lng": 147.3272,
      "words": {
       "1": [
-       "void"
+       "cigar"
       ],
       "2": [
-       "void",
-       "cancel"
+       "cigar",
+       "calm"
       ],
       "3": [
-       "void",
-       "cancel",
-       "maze"
+       "cigar",
+       "calm",
+       "feed"
       ],
       "4": [
-       "void",
-       "cancel",
-       "maze",
-       "attend"
+       "cigar",
+       "calm",
+       "feed",
+       "dragon"
       ]
      }
     },
     {
-     "lat": -48.0,
-     "lng": 112.0,
+     "lat": -12.4634,
+     "lng": 130.8456,
+     "words": {
+      "1": [
+       "test"
+      ],
+      "2": [
+       "test",
+       "prison"
+      ],
+      "3": [
+       "test",
+       "prison",
+       "label"
+      ],
+      "4": [
+       "test",
+       "prison",
+       "label",
+       "dose"
+      ]
+     }
+    },
+    {
+     "lat": -43.65,
+     "lng": 112.89999999999998,
      "words": {
       "1": [
        "abandon"
@@ -2018,61 +1112,61 @@
        "abandon",
        "abandon",
        "abandon",
-       "alert"
+       "already"
       ]
      }
     },
     {
-     "lat": -48.0,
-     "lng": -176.0,
+     "lat": -43.65,
+     "lng": 153.7,
      "words": {
       "1": [
-       "fetch"
+       "click"
       ],
       "2": [
-       "fetch",
-       "primary"
-      ],
-      "3": [
-       "fetch",
-       "primary",
-       "fetch"
-      ],
-      "4": [
-       "fetch",
-       "primary",
-       "fetch",
-       "promote"
-      ]
-     }
-    },
-    {
-     "lat": -9.0,
-     "lng": 112.0,
-     "words": {
-      "1": [
-       "primary"
-      ],
-      "2": [
-       "primary",
+       "click",
        "fetch"
       ],
       "3": [
-       "primary",
+       "click",
        "fetch",
        "primary"
       ],
       "4": [
-       "primary",
+       "click",
        "fetch",
        "primary",
-       "family"
+       "front"
       ]
      }
     },
     {
-     "lat": -9.0,
-     "lng": -176.0,
+     "lat": -12.0,
+     "lng": 112.89999999999998,
+     "words": {
+      "1": [
+       "stem"
+      ],
+      "2": [
+       "stem",
+       "primary"
+      ],
+      "3": [
+       "stem",
+       "primary",
+       "fetch"
+      ],
+      "4": [
+       "stem",
+       "primary",
+       "fetch",
+       "poet"
+      ]
+     }
+    },
+    {
+     "lat": -12.0,
+     "lng": 153.7,
      "words": {
       "1": [
        "zoo"
@@ -2090,7 +1184,7 @@
        "zoo",
        "zoo",
        "zoo",
-       "worry"
+       "wink"
       ]
      }
     }
@@ -2132,223 +1226,69 @@
    ]
   },
   {
-   "lat": 48.8584,
-   "lng": 2.2945,
-   "scope": "europe",
+   "lat": 60.155,
+   "lng": -1.145,
+   "scope": "local",
    "words": [
-    "dance",
-    "tumble",
-    "other",
-    "volume"
-   ]
-  },
-  {
-   "lat": 55.7539,
-   "lng": 37.6208,
-   "scope": "europe",
-   "words": [
-    "solve",
-    "push",
-    "they",
-    "goddess"
-   ]
-  },
-  {
-   "lat": 64.1466,
-   "lng": -21.9426,
-   "scope": "europe",
-   "words": [
-    "fee",
-    "away",
-    "mirror",
-    "tree"
-   ]
-  },
-  {
-   "lat": 30.0444,
-   "lng": 31.2357,
-   "scope": "africa",
-   "words": [
-    "vicious",
-    "else",
-    "enough",
-    "kingdom"
-   ]
-  },
-  {
-   "lat": -33.9249,
-   "lng": 18.4241,
-   "scope": "africa",
-   "words": [
-    "cactus",
-    "tower",
-    "toddler",
-    "boy"
-   ]
-  },
-  {
-   "lat": 6.5244,
-   "lng": 3.3792,
-   "scope": "africa",
-   "words": [
-    "midnight",
-    "foam",
-    "soul",
-    "father"
-   ]
-  },
-  {
-   "lat": 40.758,
-   "lng": -73.9855,
-   "scope": "namerica",
-   "words": [
-    "spray",
-    "world",
-    "force",
-    "relax"
-   ]
-  },
-  {
-   "lat": 19.4326,
-   "lng": -99.1332,
-   "scope": "namerica",
-   "words": [
-    "gentle",
-    "roof",
-    "vault",
-    "heart"
-   ]
-  },
-  {
-   "lat": 64.5011,
-   "lng": -165.4064,
-   "scope": "namerica",
-   "words": [
-    "popular",
-    "sleep",
-    "kid",
-    "comic"
-   ]
-  },
-  {
-   "lat": -22.9519,
-   "lng": -43.2105,
-   "scope": "samerica",
-   "words": [
-    "junior",
-    "kitten",
-    "shallow",
-    "sign"
-   ]
-  },
-  {
-   "lat": -34.6037,
-   "lng": -58.3816,
-   "scope": "samerica",
-   "words": [
-    "cable",
-    "sound",
-    "treat",
-    "idle"
-   ]
-  },
-  {
-   "lat": 4.711,
-   "lng": -74.0721,
-   "scope": "samerica",
-   "words": [
-    "shrimp",
-    "reunion",
-    "era",
-    "attend"
-   ]
-  },
-  {
-   "lat": 35.6586,
-   "lng": 139.7454,
-   "scope": "asia",
-   "words": [
-    "snake",
-    "gap",
-    "brisk",
-    "wood"
-   ]
-  },
-  {
-   "lat": 28.6139,
-   "lng": 77.209,
-   "scope": "asia",
-   "words": [
-    "myself",
-    "roof",
-    "nice",
-    "notable"
-   ]
-  },
-  {
-   "lat": 64.7314,
-   "lng": 177.5085,
-   "scope": "asia",
-   "words": [
-    "woman",
-    "noodle",
-    "pride",
-    "disease"
-   ]
-  },
-  {
-   "lat": 66.0,
-   "lng": -174.0,
-   "scope": "asia",
-   "words": [
-    "worth",
-    "future",
-    "priority",
-    "slam"
+    "wheel",
+    "demand",
+    "crystal",
+    "network"
    ]
   },
   {
    "lat": -33.8568,
    "lng": 151.2153,
-   "scope": "oceania",
+   "scope": "australia",
    "words": [
-    "girl",
-    "decline",
-    "daring",
-    "muscle"
+    "hello",
+    "match",
+    "sign",
+    "sponsor"
    ]
   },
   {
-   "lat": -36.8485,
-   "lng": 174.7633,
-   "scope": "oceania",
+   "lat": -37.8136,
+   "lng": 144.9631,
+   "scope": "australia",
    "words": [
-    "fossil",
-    "umbrella",
-    "olive",
-    "shy"
+    "decrease",
+    "attitude",
+    "moon",
+    "life"
    ]
   },
   {
-   "lat": -18.1416,
-   "lng": 178.4419,
-   "scope": "oceania",
+   "lat": -31.9523,
+   "lng": 115.8613,
+   "scope": "australia",
    "words": [
-    "ten",
-    "lift",
-    "frequent",
-    "wheat"
+    "dynamic",
+    "crisp",
+    "ginger",
+    "throw"
    ]
   },
   {
-   "lat": -16.5,
-   "lng": -179.9,
-   "scope": "oceania",
+   "lat": -42.8821,
+   "lng": 147.3272,
+   "scope": "australia",
    "words": [
-    "void",
-    "cancel",
-    "maze",
-    "attend"
+    "cigar",
+    "calm",
+    "feed",
+    "dragon"
+   ]
+  },
+  {
+   "lat": -12.4634,
+   "lng": 130.8456,
+   "scope": "australia",
+   "words": [
+    "test",
+    "prison",
+    "label",
+    "dose"
    ]
   },
   {
@@ -2409,6 +1349,66 @@
     "access",
     "camera",
     "elevator"
+   ]
+  },
+  {
+   "lat": 48.8566,
+   "lng": 2.3522,
+   "scope": "global",
+   "words": [
+    "staff",
+    "belt",
+    "clown",
+    "dinner",
+    "below"
+   ]
+  },
+  {
+   "lat": 35.6586,
+   "lng": 139.7454,
+   "scope": "global",
+   "words": [
+    "weapon",
+    "indoor",
+    "zero",
+    "exit",
+    "turtle"
+   ]
+  },
+  {
+   "lat": -22.9519,
+   "lng": -43.2105,
+   "scope": "global",
+   "words": [
+    "debate",
+    "rain",
+    "erupt",
+    "tissue",
+    "bitter"
+   ]
+  },
+  {
+   "lat": -10.89,
+   "lng": 142.39,
+   "scope": "global",
+   "words": [
+    "rotate",
+    "romance",
+    "dolphin",
+    "gloom",
+    "slender"
+   ]
+  },
+  {
+   "lat": -11.76,
+   "lng": 130.63,
+   "scope": "global",
+   "words": [
+    "repeat",
+    "morning",
+    "blue",
+    "lazy",
+    "vessel"
    ]
   }
  ],

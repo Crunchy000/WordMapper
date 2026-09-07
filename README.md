@@ -13,35 +13,37 @@ sits on the map, nothing else. Three words plus a fourth set apart, because that
 one does a different job — it refines the position *and* carries the checksum.
 
 ```
-flush.edge.solution · sun          London — Local, 2.7 m
-dance.tumble.other · volume        Paris  — Europe, 13.1 m
-snake.gap.brisk · wood             Tokyo  — Asia, 31.6 m
+flush.edge.solution · sun            London — Local, 2.7 m
+hello.match.sign · sponsor          Sydney — Australia, 10.1 m
+staff.belt.agent.birth · tip        Paris  — Global, 1.35 m
 ```
 
-**The scope follows the click.** Seven regional boxes at four words, plus Global
-at five for anywhere outside them all:
+**The scope follows the click.** Two regional boxes at four words, plus Global
+at five for everywhere else:
 
-| scope | 4-word cell | | scope | 4-word cell |
-|---|---|---|---|---|
-| Local (Britain + Ireland) | **2.66 m** | | Africa | 20.7 m |
-| Europe | 13.1 m | | North America | 23.3 m |
-| Oceania | 14.8 m | | Asia | 31.6 m |
-| South America | 16.2 m | | *Global (5 words)* | *1.35 m* |
+| scope | box | 4-word cell |
+|---|---|---|
+| Local — UK and Ireland | 0.97 M km² | **2.66 m** |
+| Australia | 13.9 M km² | 10.07 m |
+| *Global — 5 words* | *whole earth* | *1.35 m* |
 
-The rule is the smallest box containing the point — which is both the finest
-cell and the region a person would name, since the boxes nest where they
-overlap. Britain picks Local over Europe, Moscow picks Europe over Asia, open
-ocean picks Global.
+**Only two, because a box is a rectangle and most continents cannot be boxed
+without swallowing a neighbour.** Africa and Europe interleave across the
+Mediterranean — Tunisia reaches further north than southern Spain — so no
+horizontal line separates them, and when both existed Tunis resolved as
+"Europe". The continental boxes were also coarse enough to be barely worth the
+word they saved (Asia came out at 31.6 m against Global's 1.35 m).
 
-Resolution follows box size and nothing else, so the continental scopes are
-coarse. They buy a word, not precision: Global reaches 1.35 m anywhere for a
-fifth word.
+**Australia's box is cut at 12° S, and that is what makes it clean.** Papua New
+Guinea reaches 11.63° S and Indonesia 10.91° S, both further south than
+Australia's northern tip at 10.05° S, so no cut keeps the whole continent and
+excludes the neighbours. Stopping at 12° S catches no other country's land at
+all, keeps 90 % of the coastline and every major city including Darwin, and
+gives up Cape York's tip, the Tiwi Islands and the Torres Strait to Global.
 
 Each scope's tag is bound into its checksum, so an address minted in one box
-cannot verify in another — but with seven boxes a four-word address is accepted
-by more than one about **4.6 %** of the time, so the scope has to travel with
-the address. That is why the demo shows it. See
-[`docs/grid-scheme.md`](docs/grid-scheme.md).
+cannot verify in another; with two regions a four-word address is ambiguous only
+0.8 % of the time. See [`docs/grid-scheme.md`](docs/grid-scheme.md).
 
 Cells are square: the projection's standard parallel is chosen so the projected
 world is exactly square (`K = 1/√π`, 55.654°), which makes the 5-word global

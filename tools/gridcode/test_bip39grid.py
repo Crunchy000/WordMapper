@@ -239,16 +239,19 @@ print('\nchoosing a scope from the point')
 # Smallest containing box wins, which is both the finest cell and the region a
 # person would name -- the boxes are nested where they overlap.
 for lat, lng, want in [(51.5007, -0.1246, 'Local'), (53.3498, -6.2603, 'Local'),
-                       (48.8584, 2.2945, 'Europe'), (55.7539, 37.6208, 'Europe'),
-                       (30.0444, 31.2357, 'Africa'), (35.6586, 139.7454, 'Asia'),
-                       (-33.8568, 151.2153, 'Oceania'), (40.7580, -73.9855, 'North America'),
-                       (-22.9519, -43.2105, 'South America'), (20.0, -40.0, 'Global')]:
+                       (54.5973, -5.9301, 'Local'), (60.1550, -1.1450, 'Local'),
+                       (-33.8568, 151.2153, 'Australia'), (-12.4634, 130.8456, 'Australia'),
+                       (-42.8821, 147.3272, 'Australia'), (-31.9523, 115.8613, 'Australia'),
+                       (48.8584, 2.2945, 'Global'), (35.6586, 139.7454, 'Global'),
+                       (-22.9519, -43.2105, 'Global'), (20.0, -40.0, 'Global')]:
     got = g.best_scope(lat, lng)
     check(f'{want} is chosen at {lat:.2f},{lng:.2f}', got.name, want)
 check('Ireland is inside Local now', g.covers(53.3498, -6.2603, g.LOCAL), True)
 check('an ocean point falls back to Global',
       all(g.best_scope(lat, lng) is g.GLOBAL
           for lat, lng in [(20.0, -40.0), (-40.0, -20.0), (0.0, -140.0), (-60.0, 100.0)]), True)
+check('there are exactly two regional scopes plus Global',
+      ([sc.name for sc in g.REGIONS], g.GLOBAL.max_words), (['Local', 'Australia'], 5))
 check('the chosen scope always covers the point',
       all(g.covers(lat, lng, g.best_scope(lat, lng)) for lat, lng in PTS[:1500]), True)
 check('every point on earth gets some scope',
@@ -256,17 +259,18 @@ check('every point on earth gets some scope',
           in (4, 5) for lat, lng in PTS[:800]), True)
 
 print('\nthe antimeridian')
-# Asia and Oceania run past 180 so Chukotka and Fiji stay in one box rather
-# than being split in half by the seam.
-asia, oceania = g.SCOPES['asia'], g.SCOPES['oceania']
-check('boxes past 180 exist', [sc.name for sc in g.REGIONS if sc.box[3] > 180],
-      ['Asia', 'Oceania'])
-for sc, lat, lng, label in [(asia, 66.0, -174.0, 'Chukotka, west of the seam'),
-                            (oceania, -16.5, -179.9, 'Fiji, west of the seam')]:
-    check(f'{sc.name} covers {label}', g.covers(lat, lng, sc), True)
-    check(f'and it round trips',
-          proj_err((lat, lng), g.decode(g.encode(lat, lng, WORDS, s=sc), WORDS, sc))
-          < math.hypot(*g.cell_size(sc.max_words, sc)), True)
+# No scope box crosses 180 now, but Global's tail resolution still has to wrap:
+# a reference just west of the seam is a whole world away in index terms.
+check('no scope box runs past 180',
+      [sc.name for sc in g.REGIONS + [g.GLOBAL] if sc.box[3] > 180], [])
+check('a point either side of the seam encodes globally',
+      all(len(g.encode(lat, lng, WORDS)) == 5
+          for lat, lng in [(-16.5, 179.99), (-16.5, -179.99), (0.0, 180.0), (0.0, -180.0)]), True)
+near = g.encode(-16.50, -179.99, WORDS)
+check('a global tail resolves from the far side of the seam',
+      proj_err((-16.50, -179.99),
+               g.resolve_tail(near[-3:], WORDS, -16.49, 179.99))
+      < math.hypot(*g.cell_size(5)), True)
 
 print('\ncoverage and refusal')
 # Galway is inside Local now that the box reaches Ireland, so the Atlantic
@@ -282,21 +286,31 @@ for lat, lng in outside:
 check('Local refuses a coordinate outside its box', refused, len(outside))
 check('those same points all have global addresses',
       all(len(g.encode(lat, lng, WORDS)) == 5 for lat, lng in outside), True)
-# The boxes are rectangles, not borders. Dublin is now genuinely in Local, but
-# Istanbul sits in Europe's box while being mostly in Asia -- worth asserting
-# so nobody reads a box as a claim.
-check('a box is a rectangle, not a border (Istanbul is in Europe\'s box)',
-      g.covers(41.0082, 28.9784, g.SCOPES['europe']), True)
-# Oceania stops at 9 S so the Indonesian archipelago stays in Asia. Australia's
-# northern tip is 10.7 S, so the whole continent is still under the line.
-for place, lat, lng, want in [('Cape York', -10.69, 142.53, 'Oceania'),
-                              ('Darwin', -12.46, 130.84, 'Oceania'),
-                              ('Port Moresby', -9.44, 147.18, 'Oceania'),
-                              ('Surabaya, Java', -7.25, 112.75, 'Asia'),
-                              ('Denpasar, Bali', -8.65, 115.22, 'Asia'),
-                              ('Dili, Timor-Leste', -8.56, 125.56, 'Asia'),
-                              ('Chatham Islands', -43.95, -176.55, 'Oceania')]:
+# A box is a rectangle, not a border. Dublin is in Local by design; Boulogne
+# comes along with it, because the box's east edge is out in the Channel.
+# Worth asserting so nobody reads a box as a claim.
+check('a box is a rectangle, not a border (Boulogne is in Local\'s box)',
+      g.covers(50.7264, 1.6139, g.LOCAL), True)
+# Australia's box stops at 12 S so that NO other country's land falls inside
+# it. PNG reaches 11.6 S and Indonesia 10.9 S, both further south than
+# Australia's own northern tip, so the cut is what buys the clean box -- at the
+# cost of Cape York's tip, the Tiwi Islands and the Torres Strait.
+au = g.SCOPES['australia']
+for place, lat, lng, want in [('Sydney', -33.86, 151.21, 'Australia'),
+                              ('Perth', -31.95, 115.86, 'Australia'),
+                              ('Hobart', -42.88, 147.33, 'Australia'),
+                              ('Darwin', -12.46, 130.84, 'Australia'),
+                              ('Broome', -17.96, 122.24, 'Australia'),
+                              ('Bamaga, Cape York', -10.89, 142.39, 'Global'),
+                              ('Tiwi Islands', -11.76, 130.63, 'Global'),
+                              ('Port Moresby, PNG', -9.44, 147.18, 'Global'),
+                              ('Denpasar, Bali', -8.65, 115.22, 'Global'),
+                              ('Dili, Timor-Leste', -8.56, 125.56, 'Global')]:
     check(f'{place} is in {want}', g.best_scope(lat, lng).name, want)
+check('no neighbour reaches into the Australia box',
+      [n for n, la, lo in [('PNG south', -11.63, 145.0), ('Indonesia south', -10.91, 123.0),
+                           ('Timor-Leste south', -9.51, 125.0), ('Solomons south', -11.83, 160.0)]
+       if g.covers(la, lo, au)], [])
 
 print('\ntelling the scopes apart')
 for sc in g.REGIONS:

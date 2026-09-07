@@ -6,67 +6,62 @@ Setup: `npm install --prefix tools/gridcode`.
 
 ## Scopes
 
-The same grid mechanism over a different box. **Seven regional boxes at four
+The same grid mechanism over a different box. **Two regional boxes at four
 words, plus Global at five.** The scope follows the click — the demo never asks
 you to pick one.
 
 | scope | box | 4-word cell |
 |---|---|---|
-| Local (Britain and Ireland) | 0.97 M km² | **2.66 m** |
-| Europe | 23.4 M km² | 13.1 m |
-| Oceania | 29.9 M km² | 14.8 m |
-| South America | 36.1 M km² | 16.2 m |
-| Africa | 58.6 M km² | 20.7 m |
-| North America | 74.5 M km² | 23.3 m |
-| Asia | 137 M km² | 31.6 m |
+| Local — UK and Ireland | 0.97 M km² | **2.66 m** |
+| Australia | 13.9 M km² | 10.07 m |
 | *Global, 5 words* | *whole earth* | *1.35 m* |
 
-Resolution follows box size and nothing else, so the continental scopes are
-coarse: Asia at 31.6 m is "which building", not "which doorstep". They buy a
-word, not precision — Global reaches 1.35 m anywhere for a fifth word. Splitting
-the big ones (Asia into west and east, say) roughly halves their cell, at the
-cost of a box boundary people have to know about.
+### Why only two
+
+**A box is a rectangle, and most continents cannot be boxed without swallowing
+a neighbour.** Africa and Europe interleave across the Mediterranean — Tunisia
+reaches further north than the southern tip of Spain — so no horizontal line
+separates them, and any pair of boxes there overlaps. When both existed, Tunis
+and Algiers resolved as "Europe", which is simply wrong.
+
+The continental boxes were also coarse enough to be barely worth the word they
+saved: Asia came out at 31.6 m, against Global's 1.35 m for one more word.
+Merging them fixes the overlap but makes it worse still — Afro-Eurasia as a
+single box is 41.6 m.
+
+So the regions are the two that box cleanly, and Global covers everything else.
+
+### Australia's box is cut at 12° S, and that is the point
+
+Papua New Guinea reaches 11.63° S and Indonesia 10.91° S — **both further south
+than Australia's own northern tip at 10.05° S.** So no cut keeps the whole
+continent and excludes the neighbours; checked against Natural Earth coastlines
+rather than guessed.
+
+Stopping at 12° S catches **no other country's land at all**. It keeps 90 % of
+Australia's coastline and every major city, Darwin (12.46° S) included. What it
+gives up — Cape York's tip, the Tiwi Islands, the Torres Strait — falls back to
+Global, which still works there.
 
 ### Choosing the scope
 
-**The smallest regional box containing the point, or Global where none does.**
-Two reasons that agree: the smallest box is the finest cell, and it is also the
-region a person would name, because the boxes are nested where they overlap.
-Britain picks Local over Europe; Moscow picks Europe over Asia; Cairo picks
-Africa over Asia. Open ocean picks Global.
+The smallest regional box containing the point, or Global where none does. The
+boxes do not overlap each other, so this is only ever a choice between one
+region and Global.
 
-### They stay distinct — mostly
+### Telling them apart
 
 Each scope's tag is bound into its checksum, so an address minted in one box
-cannot verify in another. But with seven regional boxes a four-word address is
-accepted by **more than one scope about 4.6 % of the time** — each wrong box
-passes its own 7-bit check with probability 1/128, and there are six of them.
-Measured at 4.4 %.
-
-So a four-word address does **not** reliably identify itself, and the scope has
-to travel with it. That is a real cost of having many boxes rather than two: at
-two scopes the ambiguity was 0.8 %. The demo shows the scope name beside the
-address for exactly this reason.
+cannot verify in another. With two regional boxes a four-word address is
+accepted by more than one scope **0.8 %** of the time — measured at 1.0 %. That
+is low enough that a four-word address nearly always identifies itself, which
+was not true at seven boxes, where it was 4.6 %.
 
 ### Boxes are rectangles, not borders
 
-Dublin is in Local because the box reaches Ireland — that one is deliberate.
-Istanbul is in Europe's box while being mostly in Asia, and Honolulu falls in
-North America's. Addresses resolve correctly regardless, because encoding and
-decoding use the same box; a box is not a claim about anything.
-
-Asia and Oceania run **past 180** — to 190 and 184 — rather than stopping at
-it, so Chukotka and Fiji stay inside one box instead of being cut in half by the
-antimeridian. Query longitudes are normalised into the box's frame, and anything
-drawing a box has to wrap the *west* edge and carry the width across: wrapping
-both ends separately puts east west of west, which Leaflet renders as the
-complement — a band across the whole world.
-
-**Oceania stops at 9° S.** That is what keeps Java, Bali and Timor in Asia,
-where they belong; Australia's northern tip is 10.7° S, so the whole continent
-still fits under the line. The cost is that the line cuts through Papua New
-Guinea and the Solomons, and the northern Pacific — Kiribati, the Marshalls —
-falls to Asia. No rectangle can follow the Indonesian archipelago.
+Dublin is in Local by design. Boulogne comes along with it, because the box's
+east edge is out in the Channel. Addresses resolve correctly regardless, since
+encoding and decoding use the same box; a box is not a claim about anything.
 
 ## Drop trailing words: coarser, needs no context
 

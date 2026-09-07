@@ -135,21 +135,22 @@ GLOBAL = Scope('global', 'Global', '', (-90.0, 90.0, -180.0, 180.0), 5)
 # Four words over a regional box. Each tag is bound into the checksum, so an
 # address minted in one region cannot verify in another.
 #
-# Asia and Oceania run PAST 180 rather than stopping at it, so that Chukotka
-# and Fiji stay inside one box instead of being split in half by the
-# antimeridian; see normalise_lng.
+# There are deliberately only two. A box has to be a rectangle, and most
+# continents cannot be boxed without swallowing a neighbour: Africa and Europe
+# interleave across the Mediterranean -- Tunisia reaches further north than
+# southern Spain -- so no horizontal line separates them, and any pair of boxes
+# there overlaps. The continental boxes that did exist were also coarse enough
+# (Asia 31.6 m) to be barely worth the word they saved. Global covers the rest.
 REGIONS = [
-    Scope('local',   'Local',         'GB', (49.85, 60.90, -10.70,   1.80), 4),
-    Scope('europe',  'Europe',        'EU', (34.00, 71.50, -25.00,  60.00), 4),
-    Scope('africa',  'Africa',        'AF', (-35.00, 37.50, -18.00,  52.00), 4),
-    Scope('namerica', 'North America', 'NA', (5.00, 83.50, -168.00, -52.00), 4),
-    Scope('samerica', 'South America', 'SA', (-56.00, 13.50, -82.00, -34.00), 4),
-    Scope('asia',    'Asia',          'AS', (-11.00, 81.50,  26.00, 190.00), 4),
-    # Oceania stops at 9 degrees south, which is what keeps Java, Bali and
-    # Timor in Asia where they belong: Australia's northern tip is 10.7 S, so
-    # the whole continent still fits under the line. PNG and the Solomons are
-    # cut by it -- a rectangle cannot follow the Indonesian archipelago.
-    Scope('oceania', 'Oceania',       'OC', (-48.00, -9.00, 112.00, 184.00), 4),
+    # The British Isles: Lizard Point to Shetland, Dunmore Head to Lowestoft.
+    Scope('local', 'Local', 'GB', (49.85, 60.90, -10.70, 1.80), 4),
+    # Australia, cut at 12 S -- which is what makes it CLEAN. Papua New Guinea
+    # reaches 11.6 S and Indonesia 10.9 S, both further south than Australia's
+    # northern tip at 10.05 S, so no cut keeps the whole continent and excludes
+    # the neighbours. Stopping at 12 S catches no other country's land at all,
+    # for the loss of Cape York's tip, the Tiwi Islands and the Torres Strait,
+    # which fall back to Global.
+    Scope('australia', 'Australia', 'AU', (-43.65, -12.00, 112.90, 153.70), 4),
 ]
 LOCAL = REGIONS[0]
 UK = LOCAL                                  # the old name, still accepted
