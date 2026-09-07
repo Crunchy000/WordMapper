@@ -25,8 +25,8 @@ at five for anywhere outside them all:
 |---|---|---|---|---|
 | Local (Britain + Ireland) | **2.66 m** | | Africa | 20.7 m |
 | Europe | 13.1 m | | North America | 23.3 m |
-| South America | 16.2 m | | Asia | 31.6 m |
-| Oceania | 17.8 m | | *Global (5 words)* | *1.35 m* |
+| Oceania | 14.8 m | | Asia | 31.6 m |
+| South America | 16.2 m | | *Global (5 words)* | *1.35 m* |
 
 The rule is the smallest box containing the point — which is both the finest
 cell and the region a person would name, since the boxes nest where they

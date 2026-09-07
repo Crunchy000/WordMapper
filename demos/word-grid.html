@@ -115,7 +115,10 @@ const REGIONS = [
   makeScope('namerica', 'North America', 'NA', [5.00, 83.50, -168.00, -52.00], 4),
   makeScope('samerica', 'South America', 'SA', [-56.00, 13.50, -82.00, -34.00], 4),
   makeScope('asia',     'Asia',          'AS', [-11.00, 81.50, 26.00, 190.00], 4),
-  makeScope('oceania',  'Oceania',       'OC', [-50.00, 0.00, 110.00, 190.00], 4),
+  // Oceania stops at 9 degrees south, which keeps Java, Bali and Timor in Asia
+  // where they belong: Australia's northern tip is 10.7 S, so the whole
+  // continent still fits under the line.
+  makeScope('oceania',  'Oceania',       'OC', [-48.00, -9.00, 112.00, 184.00], 4),
 ];
 const UK = REGIONS[0];
 const DEFAULT_SCOPE = UK;
@@ -443,7 +446,12 @@ function cellBounds(lat, lng, n, sc) {
   const cx = sc.x0 + Math.floor((x - sc.x0) / w) * w;
   const cy = sc.y0 + Math.floor((y - sc.y0) / h) * h;
   const sw = unproject(cx, cy), ne = unproject(cx + w, cy + h);
-  return [[sw[0], wrapLng(sw[1])], [ne[0], wrapLng(ne[1])]];
+  // Wrap the WEST edge and carry the width across, rather than wrapping both
+  // corners. A box straddling 180 has an east edge past it, and wrapping that
+  // separately puts east west of west -- which Leaflet draws as the complement,
+  // a band across the whole world.
+  const west = wrapLng(sw[1]);
+  return [[sw[0], west], [ne[0], west + (ne[1] - sw[1])]];
 }
 
 function show(lat, lng) {
@@ -467,7 +475,8 @@ function show(lat, lng) {
 
   if (scope !== GLOBAL) {
     const [a, b, c, d] = scope.box;
-    scopeBox = L.rectangle([[a, wrapLng(c)], [b, wrapLng(d)]],
+    const west = wrapLng(c);            // as above: carry the width, do not
+    scopeBox = L.rectangle([[a, west], [b, west + (d - c)]],   // wrap both ends
       { color: '#1a5c4a', weight: 1, fill: false, dashArray: '5 4', opacity: .3 }).addTo(map);
   }
   // The cell itself, and the one a word coarser, for a sense of scale.

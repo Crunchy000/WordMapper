@@ -14,8 +14,8 @@ you to pick one.
 |---|---|---|
 | Local (Britain and Ireland) | 0.97 M km² | **2.66 m** |
 | Europe | 23.4 M km² | 13.1 m |
+| Oceania | 29.9 M km² | 14.8 m |
 | South America | 36.1 M km² | 16.2 m |
-| Oceania | 43.4 M km² | 17.8 m |
 | Africa | 58.6 M km² | 20.7 m |
 | North America | 74.5 M km² | 23.3 m |
 | Asia | 137 M km² | 31.6 m |
@@ -55,9 +55,18 @@ Istanbul is in Europe's box while being mostly in Asia, and Honolulu falls in
 North America's. Addresses resolve correctly regardless, because encoding and
 decoding use the same box; a box is not a claim about anything.
 
-Asia and Oceania run **past 180** (to 190) rather than stopping at it, so
-Chukotka and Fiji stay inside one box instead of being cut in half by the
-antimeridian. Query longitudes are normalised into the box's frame.
+Asia and Oceania run **past 180** — to 190 and 184 — rather than stopping at
+it, so Chukotka and Fiji stay inside one box instead of being cut in half by the
+antimeridian. Query longitudes are normalised into the box's frame, and anything
+drawing a box has to wrap the *west* edge and carry the width across: wrapping
+both ends separately puts east west of west, which Leaflet renders as the
+complement — a band across the whole world.
+
+**Oceania stops at 9° S.** That is what keeps Java, Bali and Timor in Asia,
+where they belong; Australia's northern tip is 10.7° S, so the whole continent
+still fits under the line. The cost is that the line cuts through Papua New
+Guinea and the Solomons, and the northern Pacific — Kiribati, the Marshalls —
+falls to Asia. No rectangle can follow the Indonesian archipelago.
 
 ## Drop trailing words: coarser, needs no context
 

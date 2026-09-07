@@ -145,7 +145,11 @@ REGIONS = [
     Scope('namerica', 'North America', 'NA', (5.00, 83.50, -168.00, -52.00), 4),
     Scope('samerica', 'South America', 'SA', (-56.00, 13.50, -82.00, -34.00), 4),
     Scope('asia',    'Asia',          'AS', (-11.00, 81.50,  26.00, 190.00), 4),
-    Scope('oceania', 'Oceania',       'OC', (-50.00,  0.00, 110.00, 190.00), 4),
+    # Oceania stops at 9 degrees south, which is what keeps Java, Bali and
+    # Timor in Asia where they belong: Australia's northern tip is 10.7 S, so
+    # the whole continent still fits under the line. PNG and the Solomons are
+    # cut by it -- a rectangle cannot follow the Indonesian archipelago.
+    Scope('oceania', 'Oceania',       'OC', (-48.00, -9.00, 112.00, 184.00), 4),
 ]
 LOCAL = REGIONS[0]
 UK = LOCAL                                  # the old name, still accepted

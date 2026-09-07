@@ -1890,10 +1890,10 @@
    "name": "Oceania",
    "tag": "OC",
    "box": [
-    -50.0,
-    0.0,
-    110.0,
-    190.0
+    -48.0,
+    -9.0,
+    112.0,
+    184.0
    ],
    "max_words": 4,
    "order": "yxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxy",
@@ -1907,22 +1907,22 @@
      "lng": 151.2153,
      "words": {
       "1": [
-       "gasp"
+       "girl"
       ],
       "2": [
-       "gasp",
-       "distance"
+       "girl",
+       "decline"
       ],
       "3": [
-       "gasp",
-       "distance",
-       "limit"
+       "girl",
+       "decline",
+       "daring"
       ],
       "4": [
-       "gasp",
-       "distance",
-       "limit",
-       "slab"
+       "girl",
+       "decline",
+       "daring",
+       "muscle"
       ]
      }
     },
@@ -1931,22 +1931,22 @@
      "lng": 174.7633,
      "words": {
       "1": [
-       "foil"
+       "fossil"
       ],
       "2": [
-       "foil",
-       "wire"
+       "fossil",
+       "umbrella"
       ],
       "3": [
-       "foil",
-       "wire",
-       "tennis"
+       "fossil",
+       "umbrella",
+       "olive"
       ],
       "4": [
-       "foil",
-       "wire",
-       "tennis",
-       "erase"
+       "fossil",
+       "umbrella",
+       "olive",
+       "shy"
       ]
      }
     },
@@ -1955,22 +1955,22 @@
      "lng": 178.4419,
      "words": {
       "1": [
-       "square"
+       "ten"
       ],
       "2": [
-       "square",
-       "later"
+       "ten",
+       "lift"
       ],
       "3": [
-       "square",
-       "later",
-       "local"
+       "ten",
+       "lift",
+       "frequent"
       ],
       "4": [
-       "square",
-       "later",
-       "local",
-       "noble"
+       "ten",
+       "lift",
+       "frequent",
+       "wheat"
       ]
      }
     },
@@ -1979,28 +1979,28 @@
      "lng": -179.9,
      "words": {
       "1": [
-       "swing"
+       "void"
       ],
       "2": [
-       "swing",
-       "awesome"
+       "void",
+       "cancel"
       ],
       "3": [
-       "swing",
-       "awesome",
-       "ski"
+       "void",
+       "cancel",
+       "maze"
       ],
       "4": [
-       "swing",
-       "awesome",
-       "ski",
-       "renew"
+       "void",
+       "cancel",
+       "maze",
+       "attend"
       ]
      }
     },
     {
-     "lat": -50.0,
-     "lng": 110.0,
+     "lat": -48.0,
+     "lng": 112.0,
      "words": {
       "1": [
        "abandon"
@@ -2023,8 +2023,8 @@
      }
     },
     {
-     "lat": -50.0,
-     "lng": -170.0,
+     "lat": -48.0,
+     "lng": -176.0,
      "words": {
       "1": [
        "fetch"
@@ -2047,8 +2047,8 @@
      }
     },
     {
-     "lat": 0.0,
-     "lng": 110.0,
+     "lat": -9.0,
+     "lng": 112.0,
      "words": {
       "1": [
        "primary"
@@ -2071,8 +2071,8 @@
      }
     },
     {
-     "lat": 0.0,
-     "lng": -170.0,
+     "lat": -9.0,
+     "lng": -176.0,
      "words": {
       "1": [
        "zoo"
@@ -2312,10 +2312,10 @@
    "lng": 151.2153,
    "scope": "oceania",
    "words": [
-    "gasp",
-    "distance",
-    "limit",
-    "slab"
+    "girl",
+    "decline",
+    "daring",
+    "muscle"
    ]
   },
   {
@@ -2323,10 +2323,10 @@
    "lng": 174.7633,
    "scope": "oceania",
    "words": [
-    "foil",
-    "wire",
-    "tennis",
-    "erase"
+    "fossil",
+    "umbrella",
+    "olive",
+    "shy"
    ]
   },
   {
@@ -2334,10 +2334,10 @@
    "lng": 178.4419,
    "scope": "oceania",
    "words": [
-    "square",
-    "later",
-    "local",
-    "noble"
+    "ten",
+    "lift",
+    "frequent",
+    "wheat"
    ]
   },
   {
@@ -2345,10 +2345,10 @@
    "lng": -179.9,
    "scope": "oceania",
    "words": [
-    "swing",
-    "awesome",
-    "ski",
-    "renew"
+    "void",
+    "cancel",
+    "maze",
+    "attend"
    ]
   },
   {

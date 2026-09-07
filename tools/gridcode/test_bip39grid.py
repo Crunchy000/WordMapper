@@ -287,6 +287,16 @@ check('those same points all have global addresses',
 # so nobody reads a box as a claim.
 check('a box is a rectangle, not a border (Istanbul is in Europe\'s box)',
       g.covers(41.0082, 28.9784, g.SCOPES['europe']), True)
+# Oceania stops at 9 S so the Indonesian archipelago stays in Asia. Australia's
+# northern tip is 10.7 S, so the whole continent is still under the line.
+for place, lat, lng, want in [('Cape York', -10.69, 142.53, 'Oceania'),
+                              ('Darwin', -12.46, 130.84, 'Oceania'),
+                              ('Port Moresby', -9.44, 147.18, 'Oceania'),
+                              ('Surabaya, Java', -7.25, 112.75, 'Asia'),
+                              ('Denpasar, Bali', -8.65, 115.22, 'Asia'),
+                              ('Dili, Timor-Leste', -8.56, 125.56, 'Asia'),
+                              ('Chatham Islands', -43.95, -176.55, 'Oceania')]:
+    check(f'{place} is in {want}', g.best_scope(lat, lng).name, want)
 
 print('\ntelling the scopes apart')
 for sc in g.REGIONS:
