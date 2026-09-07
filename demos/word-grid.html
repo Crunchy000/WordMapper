@@ -55,7 +55,6 @@ const WORDS = ["abandon", "ability", "able", "about", "above", "absent", "absorb
 const INDEX = new Map(WORDS.map((w, i) => [w, i]));
 
 // --- the scheme ------------------------------------------------------------
-// Must match tools/gridcode/bip39grid.py exactly; CI cross-checks them.
 const R = 6371008.8;
 // Lambert equal-area, with the standard parallel chosen so the PROJECTED WORLD
 // IS SQUARE. Its aspect is pi*K^2, so K = 1/sqrt(pi) makes it exactly 1.
