@@ -1,8 +1,0 @@
-{
-  "name": "wordmapper-gridcode",
-  "private": true,
-  "description": "BIP-39 word list for the grid codec. Run: npm install",
-  "dependencies": {
-    "bip39": "^3.1.0"
-  }
-}

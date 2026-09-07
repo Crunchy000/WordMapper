@@ -1,283 +1,40 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>WordMapper — locations as memorable words</title>
-<meta name="description" content="Encoding geographic coordinates as five BIP-39 words, over one global nested grid.">
+<title>WordMapper</title>
 <style>
-  :root {
-    --bg: #fbfbf9; --fg: #1c1c1a; --muted: #5c5c56; --rule: #e2e2dc;
-    --card: #ffffff; --accent: #1a5c4a; --accent-fg: #ffffff; --code-bg: #f0f0ea;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --bg: #16171a; --fg: #e8e8e4; --muted: #a0a099; --rule: #2c2e33;
-      --card: #1d1f23; --accent: #5ec9a6; --accent-fg: #10231d; --code-bg: #24262b;
-    }
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; background: var(--bg); color: var(--fg);
-    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    -webkit-font-smoothing: antialiased;
-  }
-  .wrap { max-width: 720px; margin: 0 auto; padding: 0 24px; }
-  header { padding: 72px 0 40px; border-bottom: 1px solid var(--rule); }
-  h1 { margin: 0 0 12px; font-size: clamp(30px, 6vw, 42px); letter-spacing: -0.02em; line-height: 1.15; }
-  .tagline { margin: 0; font-size: 19px; color: var(--muted); max-width: 34em; }
-  .addr {
-    display: inline-block; margin: 28px 0 0; padding: 10px 16px;
-    background: var(--code-bg); border-radius: 8px;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    font-size: 18px; letter-spacing: 0.01em;
-  }
-  .addr span { color: var(--muted); }
-  /* The address is one long token on a narrow screen, so let it wrap at the
-     separators rather than push the whole page sideways. */
-  @media (max-width: 460px) {
-    .addr { font-size: 15px; padding: 9px 12px; max-width: 100%;
-            overflow-wrap: anywhere; }
-  }
-  h2 { margin: 48px 0 14px; font-size: 21px; letter-spacing: -0.01em; }
-  p { margin: 0 0 16px; }
+  :root { color-scheme: light dark; --bg: #fbfbf9; --fg: #1c1c1a; --muted: #5c5c56; --accent: #1a5c4a; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #16171a; --fg: #e8e8e4; --muted: #a0a099; --accent: #5ec9a6; } }
+  body { max-width: 720px; margin: 0 auto; padding: 64px 24px; background: var(--bg); color: var(--fg);
+         font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+  h1 { font-size: clamp(32px, 7vw, 48px); line-height: 1.1; }
+  h2 { margin-top: 48px; }
   a { color: var(--accent); }
-  .cta {
-    display: inline-block; margin: 24px 0 8px; padding: 12px 22px;
-    background: var(--accent); color: var(--accent-fg); text-decoration: none;
-    border-radius: 8px; font-weight: 600;
-  }
-  .cta:hover { opacity: 0.9; }
-  .note { font-size: 14px; color: var(--muted); margin-top: 10px; }
-  .scroll { overflow-x: auto; margin: 0 0 8px; }
-  table { border-collapse: collapse; width: 100%; font-size: 15px; min-width: 380px; }
-  th, td { text-align: left; padding: 9px 14px 9px 0; border-bottom: 1px solid var(--rule); }
-  th { font-weight: 600; color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; }
-  td.num { font-variant-numeric: tabular-nums; }
-  .eq {
-    background: var(--card); border: 1px solid var(--rule); border-radius: 8px;
-    padding: 18px 20px; margin: 20px 0;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 15px;
-  }
-  ul { padding-left: 20px; margin: 0 0 16px; }
-  li { margin-bottom: 8px; }
-  footer { margin: 64px 0 48px; padding-top: 24px; border-top: 1px solid var(--rule); font-size: 14px; color: var(--muted); }
-  footer a { color: var(--muted); }
+  .note { color: var(--muted); }
 </style>
 </head>
 <body>
-<header>
-  <div class="wrap">
-    <h1>WordMapper</h1>
-    <p class="tagline">Five words name any point on earth to a metre; four do it inside the UK. Say fewer for a coarser place — or, if whoever is listening already knows roughly where you are, drop the leading words and keep every metre.</p>
-    <div class="addr">flush<span>.</span>edge<span>.</span>solution<span>.</span>sun</div>
-    <p class="note">Big Ben in the Local scope &mdash; four words over a box around
-    Britain and Ireland, to 2.7&nbsp;m and checksummed. The scope follows where you
-    click; anywhere outside every regional box falls back to five words worldwide.</p>
-  </div>
-</header>
+<h1>WordMapper</h1>
+<p class="note">Five words name any point on earth to about a metre.</p>
 
-<main class="wrap">
+<h2>Try it</h2>
+<ul>
+  <li><a href="demos/word-grid.html">The global grid</a> — click anywhere and
+    get a stable five-word address.</li>
+  <li><a href="demos/country-shorten.html">Shortening by country</a> — a country
+    bounding box may supply the leading word, making four words possible.</li>
+</ul>
 
-  <h2>Try it</h2>
-  <ul>
-    <li><a href="demos/word-grid.html">The grid</a> &mdash; click anywhere on earth and the
-    address sits on the map, nothing else. The scope follows the click.</li>
-    <li><a href="demos/country-shorten.html">Shortening by country</a> &mdash; the same
-    address, with OpenStreetMap asked which country the click landed in so the leading
-    word can go unsaid. The greyed word is the one the country stands in for.</li>
-  </ul>
+<h2>How it works</h2>
+<p>The grid is global and runs entirely in JavaScript. A coordinate is encoded
+immediately, without a network request or external boundary data. The fifth
+word also carries a checksum.</p>
+<p>The shortening demo uses OpenStreetMap only as a search window. If that
+window is too large, ambiguous, unavailable, or changes over time, the safe
+five-word address is retained.</p>
 
-  <h2>Scopes</h2>
-  <p>The same grid mechanism over a different box: <strong>two regional boxes at four
-  words</strong>, plus Global at five for everywhere else. The scope follows the click
-  &mdash; there is nothing to switch by hand.</p>
-
-  <div class="scroll">
-  <table>
-    <thead><tr><th>Scope</th><th>Box</th><th>4-word cell</th></tr></thead>
-    <tbody>
-      <tr><td class="num">Local &mdash; UK and Ireland</td><td class="num">0.97 M km&sup2;</td><td class="num"><strong>2.66 m</strong></td></tr>
-      <tr><td class="num">Australia</td><td class="num">13.9 M km&sup2;</td><td class="num">10.07 m</td></tr>
-      <tr><td class="num">Global &mdash; 5 words</td><td class="num">whole earth</td><td class="num">1.35 m</td></tr>
-    </tbody>
-  </table>
-  </div>
-
-  <p><strong>Only two, because a box is a rectangle</strong> and most continents cannot
-  be boxed without swallowing a neighbour. Africa and Europe interleave across the
-  Mediterranean &mdash; Tunisia reaches further north than the southern tip of Spain
-  &mdash; so no horizontal line separates them, and when both boxes existed Tunis and
-  Algiers resolved as &ldquo;Europe&rdquo;. They were also coarse enough to be barely
-  worth the word they saved: Asia came out at 31.6&nbsp;m, against Global&rsquo;s
-  1.35&nbsp;m for one more word.</p>
-
-  <p><strong>Australia&rsquo;s box is cut at 12&deg;&nbsp;S, and that is the point.</strong>
-  Papua New Guinea reaches 11.63&deg;&nbsp;S and Indonesia 10.91&deg;&nbsp;S, both further
-  south than Australia&rsquo;s own northern tip at 10.05&deg;&nbsp;S, so no cut keeps the
-  whole continent and excludes the neighbours. Stopping at 12&deg;&nbsp;S catches no other
-  country&rsquo;s land at all. It keeps 90&nbsp;% of the coastline and every major city,
-  Darwin included; Cape York&rsquo;s tip, the Tiwi Islands and the Torres Strait fall back
-  to Global, which still works there.</p>
-
-  <p>Each scope&rsquo;s tag is bound into its checksum, so an address minted in one box
-  cannot verify in another. With two regional boxes a four-word address is accepted by
-  more than one scope only 0.8&nbsp;% of the time, so it nearly always identifies itself
-  &mdash; which was not true at seven boxes, where it was 4.6&nbsp;%.</p>
-
-  <p>Boxes are rectangles, not borders. Dublin is in Local by design; Boulogne comes
-  along with it, because the box&rsquo;s east edge is out in the Channel. Addresses
-  resolve correctly regardless, since encoding and decoding use the same box.</p>
-
-  <h2>Drop trailing words: coarser, needs no context</h2>
-  <p>Each word narrows the area, and the words already said never change &mdash; every
-  address is a prefix of a longer one.</p>
-
-  <div class="scroll">
-  <table>
-    <thead><tr><th>Words</th><th>Big Ben</th><th>Cell</th></tr></thead>
-    <tbody>
-      <tr><td class="num">1</td><td class="num">leg</td><td class="num">542 &times; 460 km</td></tr>
-      <tr><td class="num">2</td><td class="num">leg.tunnel</td><td class="num">8.5 &times; 14.4 km</td></tr>
-      <tr><td class="num">3</td><td class="num">leg.tunnel.slam</td><td class="num">264 &times; 225 m</td></tr>
-      <tr><td class="num">4</td><td class="num">leg.tunnel.slam.subway</td><td class="num">4.1 &times; 7.0 m</td></tr>
-      <tr><td class="num">5</td><td class="num">leg.tunnel.slam.subway.gown</td><td class="num">1.03 &times; 1.75 m &mdash; and verified</td></tr>
-    </tbody>
-  </table>
-  </div>
-
-  <h2>Drop leading words: same precision, fewer words</h2>
-  <p>The leading words are the coarse ones, so whoever is listening can supply them if
-  they already know roughly where you are &mdash; the way nobody dials +44 or an area
-  code to a neighbour. Dropping words leaves an ambiguity of exactly one tile, and any
-  accuracy better than half a tile pins it down. A leading dot marks the missing
-  words.</p>
-
-  <div class="scroll">
-  <table>
-    <thead><tr><th>Said</th><th>Written</th><th>Ambiguity</th><th>Needs the listener to know</th></tr></thead>
-    <tbody>
-      <tr><td class="num">4</td><td class="num">.tunnel.slam.subway.gown</td><td class="num">542 &times; 460 km</td><td class="num">230 km &mdash; which country</td></tr>
-      <tr><td class="num">3</td><td class="num">.slam.subway.gown</td><td class="num">8.5 &times; 14.4 km</td><td class="num">4.2 km &mdash; which town</td></tr>
-      <tr><td class="num">2</td><td class="num">.subway.gown</td><td class="num">264 &times; 225 m</td><td class="num">112 m &mdash; which street</td></tr>
-    </tbody>
-  </table>
-  </div>
-
-  <p>The checksum is what makes this safe rather than a leap of faith. Its seven bits
-  cover the <em>whole</em> position, so when the missing coarse words are filled in from
-  a reference point, guessing the wrong tile fails the check <strong>99.2&nbsp;%</strong>
-  of the time. A reference too far away says so, rather than answering confidently with
-  the wrong place.</p>
-
-  <p>It falls conveniently over the UK. The whole country spans only six distinct first
-  words, and most of Great Britain is <code>leg</code> &mdash; so a British conversation
-  drops the first word almost for free. Not quite free near a seam: Edinburgh is
-  <code>legal</code> and Belfast is <code>left</code>, which is precisely the case the
-  checksum catches.</p>
-
-  <p class="note">Click anywhere to watch the address grow a word at a time.</p>
-
-  <h2>A country can supply them instead</h2>
-  <p>Filling a dropped word back in needs either a nearby <em>point</em> or a
-  <em>region</em>. A point takes the nearest tile that fits. A region hands the choice to
-  the checksum: every tile inside it is tried, and a wrong one survives only one time in
-  128. A country is such a region, and OpenStreetMap&rsquo;s reverse geocoder will hand you
-  its bounding box along with its name.</p>
-
-  <p>That buys exactly one word, and only one. Five become four almost anywhere; three is
-  out of reach everywhere, because a box the size of Britain holds ten thousand candidate
-  tiles at three words and seven checksum bits leave eighty of them standing.</p>
-
-  <div class="scroll">
-  <table>
-    <thead><tr><th>Country</th><th>Box</th><th>Five words become four</th></tr></thead>
-    <tbody>
-      <tr><td>Switzerland</td><td class="num">0.08 M km&sup2;</td><td class="num">always</td></tr>
-      <tr><td>Ireland</td><td class="num">0.19 M km&sup2;</td><td class="num">always</td></tr>
-      <tr><td>United Kingdom</td><td class="num">1.29 M km&sup2;</td><td class="num">98 %</td></tr>
-      <tr><td>France</td><td class="num">1.28 M km&sup2;</td><td class="num">92 %</td></tr>
-      <tr><td>Australia</td><td class="num">17.3 M km&sup2;</td><td class="num">70 %</td></tr>
-    </tbody>
-  </table>
-  </div>
-
-  <p><strong>The grid never moves.</strong> The country is consulted when the address is
-  read, as a search window; it is not part of the address and nothing is bound to it. A
-  border can be redrawn, a territory can change hands, and the words for a place are
-  unchanged. The worst a wrong window can do is cost a word &mdash; the full five are
-  always correct, and are shown straight away, before any network call.</p>
-
-  <h2>Cells are square</h2>
-  <p>Cell aspect is the projected frame&rsquo;s aspect times a power of two, and the
-  address length fixes the exponent&rsquo;s parity &mdash; so an even bit count can only
-  land on <em>frame</em>&nbsp;&times;&nbsp;4<sup>k</sup>. The standard parallel is
-  therefore chosen to make the projected world <strong>exactly square</strong>: its
-  aspect is &pi;K&sup2;, so K&nbsp;=&nbsp;1/&radic;&pi; gives 1, at
-  55.654&deg;.</p>
-  <p>Both terminal lengths are even bit counts, so both land exactly square: the
-  five-word global cell is 1.346&nbsp;m square, and Local&rsquo;s four-word cell is
-  2.51&nbsp;&times;&nbsp;2.36&nbsp;m. The projection is equal-area, so this changes
-  the shape and not the resolution. The odd lengths pay for it at 2:1 &mdash; no frame
-  can square both, because one exponent is odd whenever the other is even.</p>
-
-  <h2>The part that is easy to get wrong</h2>
-  <p>Coordinates are interleaved <em>once</em> at full precision and the bit string is
-  truncated. Deriving the interleave order per length looks equivalent and is not:
-  11 bits per word is odd, so 33 bits splits the axes 17/16 while 22 and 44 split
-  evenly. Those are three unrelated sequences.</p>
-  <p>When I built it that way the three-word address came out entirely different, while
-  the two- and four-word ones agreed with each other — so a spot check on 2 and 4 would
-  have passed. The test suite now checks every length over 1,500 points.</p>
-
-  <h2>The fifth word does two jobs</h2>
-  <p>Four words alone reach 5.4 m, which is wide. A whole fifth word of position would
-  reach 8 cm, which is finer than anyone needs. So the fifth word's eleven bits are
-  <strong>split between refinement and checksum</strong>:</p>
-
-  <div class="scroll">
-  <table>
-    <thead><tr><th>Refine</th><th>Check</th><th>Cell</th><th>Wrong word caught</th></tr></thead>
-    <tbody>
-      <tr><td class="num">3</td><td class="num">8</td><td class="num">1.90 m</td><td class="num">99.61 %</td></tr>
-      <tr><td class="num">4</td><td class="num">7</td><td class="num"><strong>1.35 m</strong></td><td class="num"><strong>99.22 %</strong></td></tr>
-      <tr><td class="num">5</td><td class="num">6</td><td class="num">0.95 m</td><td class="num">98.44 %</td></tr>
-    </tbody>
-  </table>
-  </div>
-
-  <p>Shipped at four refine plus seven check. For comparison, what3words is 3 m with no
-  checksum at all — this is finer <em>and</em> verified.</p>
-  <p>A checksum genuinely cannot live at <em>every</em> length: its bits would sit where
-  the next word's position bits must go, and reserving eight at every length would take
-  two words from 11&nbsp;km to 176&nbsp;km. Putting it in the last word costs nothing at
-  the shorter lengths, which are simply unverified. Five words is therefore terminal
-  &mdash; a sixth would have to reinterpret the check bits.</p>
-
-  <h2>The word list</h2>
-  <p>The <a href="https://github.com/bitcoin/bips/blob/master/bip-0039/bip-0039-wordlists.md">BIP-39
-  English list</a> as published — 2,048 words, exactly 11 bits each, nothing wasted
-  rounding to a word boundary.</p>
-  <p>It is designed to be <em>typed and checksummed</em>, not spoken. It contains
-  <code>pair</code>/<code>pear</code>, <code>peace</code>/<code>piece</code>,
-  <code>right</code>/<code>write</code> and <code>wear</code>/<code>where</code>, and
-  53 % of its words have a same-or-one-phoneme twin — so 89.6 % of three-word addresses
-  contain a word that one mishearing turns into a different <em>valid</em> word. The
-  check word is what stands against that, not the list.</p>
-
-  <h2>Reading</h2>
-  <ul>
-    <li><a href="https://github.com/Crunchy000/WordMapper/blob/main/docs/grid-scheme.md">The scheme in full</a> — bit budget, the truncation pitfall, and what is verified.</li>
-    <li><a href="https://github.com/Crunchy000/WordMapper/blob/main/docs/coverage.md">Coverage and resolution</a> — why coverage is cheap and vocabulary is not.</li>
-    <li><a href="https://github.com/Crunchy000/WordMapper">Source on GitHub</a>.</li>
-  </ul>
-
-</main>
-
-<footer class="wrap">
-  MIT licensed. Word list is the
-  <a href="https://github.com/bitcoin/bips/blob/master/bip-0039/bip-0039-wordlists.md">BIP-39 English list</a>.
-</footer>
-
+<p><a href="https://github.com/Crunchy000/WordMapper">Source on GitHub</a></p>
 </body>
 </html>

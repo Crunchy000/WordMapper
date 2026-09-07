@@ -94,31 +94,9 @@ function makeScope(key, name, tag, box, maxWords) {
   return { key, name, tag, box, maxWords, x0, y0, xr, yr,
            positionBitsTotal, order, xb, yb: positionBitsTotal - xb };
 }
-// Five words over the whole earth. The floor: it always works, and it is what
-// anywhere outside every regional box falls back to.
+// Five words over the whole earth.
 const GLOBAL = makeScope('global', 'Global', '', [-90, 90, -180, 180], 5);
-
-// Four words over a regional box. Each tag is bound into the checksum, so an
-// address minted in one region cannot verify in another.
-//
-// There are deliberately only two. A box has to be a rectangle, and most
-// continents cannot be boxed without swallowing a neighbour: Africa and Europe
-// interleave across the Mediterranean -- Tunisia reaches further north than
-// southern Spain -- so no horizontal line separates them. Global covers the rest.
-const REGIONS = [
-  // The British Isles: Lizard Point to Shetland, Dunmore Head to Lowestoft.
-  makeScope('local', 'Local', 'GB', [49.85, 60.90, -10.70, 1.80], 4),
-  // Australia, cut at 12 S -- which is what makes it CLEAN. Papua New Guinea
-  // reaches 11.6 S and Indonesia 10.9 S, both further south than Australia's
-  // northern tip at 10.05 S, so no cut keeps the whole continent and excludes
-  // the neighbours. Stopping at 12 S catches no other country's land at all,
-  // for the loss of Cape York's tip, the Tiwi Islands and the Torres Strait.
-  makeScope('australia', 'Australia', 'AU', [-43.65, -12.00, 112.90, 153.70], 4),
-];
-const UK = REGIONS[0];
-const DEFAULT_SCOPE = UK;
-const ALL_SCOPES = REGIONS.concat([GLOBAL]);
-const SCOPES = Object.fromEntries(ALL_SCOPES.map((s) => [s.key, s]));
+const ALL_SCOPES = [GLOBAL];
 
 const wrapLng = (lng) => ((lng + 180) % 360 + 360) % 360 - 180;
 
@@ -144,14 +122,6 @@ function covers(lat, lng, sc) {
 // cell, and it is the region a person would name, since the boxes are nested
 // where they overlap.
 const boxArea = (sc) => sc.xr * sc.yr;
-function bestScope(lat, lng) {
-  const hit = REGIONS.filter((sc) => covers(lat, lng, sc));
-  if (!hit.length) return GLOBAL;
-  return hit.reduce((a, b) => (boxArea(b) < boxArea(a) ? b : a));
-}
-const scopesCovering = (lat, lng) =>
-  REGIONS.filter((sc) => covers(lat, lng, sc)).sort((a, b) => boxArea(a) - boxArea(b));
-
 // Both ends are clamped. The top saturates a point on the boundary -- the
 // poles, the antimeridian -- into the last cell. The bottom is only reachable
 // by floating-point slop, but an unclamped negative index would sign-extend
@@ -321,14 +291,6 @@ function decode(spoken, sc) {
 // checksum over its own scope, so it identifies itself. Anything shorter is an
 // unverified coarse prefix and global is assumed.
 //
-// The UK reading is tried first because the two directions are not
-// symmetrical: a global prefix read as UK fails its checksum 99.2% of the time
-// and is caught, but a UK address read as a global prefix would decode
-// silently to a different place, since nothing checks a prefix.
-// More than one scope can accept the same words by luck: each wrong one passes
-// its own 7-bit check with probability 1/128, so with seven regional boxes an
-// address is ambiguous about 5% of the time. The caller usually knows the
-// region -- pass it to decode() rather than guessing here.
 function scopesAccepting(spoken) {
   return ALL_SCOPES.filter((sc) => {
     if (spoken.length !== sc.maxWords) return false;
@@ -379,8 +341,6 @@ function resolveTail(spoken, nearLat, nearLng, sc) {
     const k = Math.round((((xiRef - knownX) % totalX + totalX) % totalX) / periodX)
       % (totalX / periodX);
     xi = (knownX + k * periodX) % totalX;
-  } else {
-    xi = clampLattice(knownX, periodX, xiRef, sc.xb);   // a partial box does not wrap
   }
   // y never wraps -- latitude ends at the poles -- so clamp, but to the last
   // point ON the lattice: clamping to the last index would leave a value the
