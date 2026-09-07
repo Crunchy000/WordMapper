@@ -7,26 +7,34 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const html = readFileSync(join(here, '..', '..', 'demos', 'word-grid.html'), 'utf8');
+const demo = (name) => readFileSync(join(here, '..', '..', 'demos', name), 'utf8');
+const html = demo('word-grid.html');
+const shorten = demo('country-shorten.html');
 const fixture = JSON.parse(readFileSync(join(here, 'fixture.json'), 'utf8'));
-
-const words = html.match(/const WORDS = (\[[^\n]*\]);/)[1];
-const start = html.indexOf('const INDEX = new Map');
-const end = html.indexOf('// --- map ---');
-const src = `const WORDS = ${words};\n${html.slice(start, end)}\n`
-  + 'export { encode, decode, decodeAuto, resolveTail, cellSize, tileSize, covers,'
-  + ' indices, parseAddress, formatAddress, bestScope, scopesAccepting,'
-  + ' GLOBAL, UK, REGIONS, SCOPES };';
-// Written to a real file rather than a data: URL: the extracted module is
-// ~30 KB and a data: URL of that size fails to import with the URL itself as
-// the message, which is not a debuggable error.
-const tmp = join(tmpdir(), `word-grid-check-${process.pid}.mjs`);
-writeFileSync(tmp, src);
-let mod;
-try { mod = await import(pathToFileURL(tmp).href); } finally { rmSync(tmp, { force: true }); }
 
 let bad = 0;
 const fail = (msg) => { bad++; console.error(`  ${msg}`); };
+
+// Pull a slice of a demo's inline script out as an importable module.
+// Written to a real file rather than a data: URL: the extracted module is
+// ~30 KB and a data: URL of that size fails to import with the URL itself as
+// the message, which is not a debuggable error.
+async function load(page, slices, exports) {
+  const words = page.match(/const WORDS = (\[[^\n]*\]);/)[1];
+  const src = `const WORDS = ${words};\n`
+    + slices.map(([a, b]) => page.slice(page.indexOf(a), page.indexOf(b))).join('\n')
+    + `\nexport { ${exports.join(', ')} };`;
+  const tmp = join(tmpdir(), `demo-check-${process.pid}-${slices.length}.mjs`);
+  writeFileSync(tmp, src);
+  try { return await import(pathToFileURL(tmp).href); }
+  finally { rmSync(tmp, { force: true }); }
+}
+
+const CODEC_START = 'const INDEX = new Map';
+const mod = await load(html, [[CODEC_START, '// --- map ---']],
+  ['encode', 'decode', 'decodeAuto', 'resolveTail', 'cellSize', 'tileSize', 'covers',
+   'indices', 'parseAddress', 'formatAddress', 'bestScope', 'scopesAccepting',
+   'GLOBAL', 'UK', 'REGIONS', 'SCOPES']);
 
 // Every scope: bit order, axis split, box, encodings, truncation, checksum.
 // The bit order decides the shape of every cell, so the ports must agree on it
@@ -122,11 +130,46 @@ for (const [text, n, tail] of [['leg.tunnel.slam', 3, false],
     fail(`PARSE ${JSON.stringify(text)} -> ${parts.length} words, tail=${isTail}`);
 }
 
+// --- the second demo -------------------------------------------------------
+// country-shorten.html carries the same codec verbatim and adds a box search on
+// top. Copies drift; this refuses to let them. The codec block must be the same
+// text, and the search must agree with the reference on which cells it looks
+// at, how many survive the checksum, and how short the address ends up.
+const codecOf = (page, end) =>
+  page.slice(page.indexOf(CODEC_START), page.indexOf(end)).trim();
+if (codecOf(html, '// --- map ---') !== codecOf(shorten, '// --- the country, from'))
+  fail('country-shorten.html has drifted from word-grid.html\'s codec');
+if (html.match(/const WORDS = (\[[^\n]*\]);/)[1]
+    !== shorten.match(/const WORDS = (\[[^\n]*\]);/)[1])
+  fail('country-shorten.html has a different word list');
+
+const cs = await load(shorten, [[CODEC_START, '// --- the country, from'],
+                                ['// --- shortening', '// --- map ---']],
+  ['candidatesInBox', 'shortestInBox', 'encode', 'GLOBAL']);
+for (const b of fixture.boxes) {
+  for (const p of b.points) {
+    const full = cs.encode(p.lat, p.lng, cs.GLOBAL.maxWords, cs.GLOBAL);
+    for (const [n, want] of Object.entries(p.search)) {
+      const { hits, searched } = cs.candidatesInBox(full.slice(-n), b.box, cs.GLOBAL);
+      if (searched !== want.searched)
+        fail(`${b.name} @${n}: js searched ${searched} vs py ${want.searched}`);
+      const got = hits === null ? null : hits.length;
+      if (got !== want.hits)
+        fail(`${b.name} @${n}: js ${got} hits vs py ${want.hits}`);
+    }
+    const said = cs.shortestInBox(p.lat, p.lng, b.box, cs.GLOBAL);
+    if (said !== p.said)
+      fail(`${b.name} ${p.lat},${p.lng}: js says ${said} words, py says ${p.said}`);
+  }
+}
+
 const regionPoints = Object.values(fixture.regions).reduce((n, r) => n + r.points.length, 0);
 console.log(`demo codec vs python reference: global ${fixture.global.points.length} points, `
   + `${Object.keys(fixture.regions).length} regions (${regionPoints} points), `
   + `${fixture.chosen.length} scope choices, ${fixture.global.tails.length} tails, `
-  + `${fixture.global.hopeless.length} hopeless`);
+  + `${fixture.global.hopeless.length} hopeless; `
+  + `country-shorten ${fixture.boxes.length} boxes `
+  + `(${fixture.boxes.reduce((n, b) => n + b.points.length, 0)} points)`);
 if (bad) { console.error(`FAIL: ${bad} problem(s)`); process.exit(1); }
 console.log('OK: every scope agrees, truncation holds, checksums verify, '
-  + 'the auto-switch matches');
+  + 'the auto-switch matches, both demos share one codec');

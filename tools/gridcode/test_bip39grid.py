@@ -351,6 +351,78 @@ check('decode_auto identifies every 5-word global address',
       all(g.decode_auto(g.encode(lat, lng, WORDS), WORDS)[2] is g.GLOBAL
           for lat, lng in PTS[:400]), True)
 
+print('\nshortening against a country box')
+# The other way to fill in dropped leading words. resolve_tail() needs a nearby
+# POINT; this needs only a REGION, and lets the checksum pick. A country name is
+# such a region, and OpenStreetMap will hand you its bounding box. The box is
+# never part of the address -- it is a search window -- so the properties worth
+# pinning down are about what a WRONG window costs.
+BOXES = {                       # as Nominatim returns them: south, north, west, east
+    'United Kingdom': (49.674, 61.061, -14.015, 2.096),
+    'Ireland':        (51.222, 55.636, -11.017, -5.066),
+    'Switzerland':    (45.818, 47.808, 5.956, 10.492),
+    'Australia':      (-43.644, -9.221, 112.921, 159.109),
+    'France':         (41.303, 51.124, -5.559, 9.662),
+}
+IN_UK = [(51.50072, -0.12456), (55.94859, -3.19951), (54.59730, -5.93010),
+         (50.06569, -5.71531), (57.47780, -4.22470)]
+
+check('the true point is never lost from the search',
+      all(g.candidates_in_box(g.encode(la, lo, WORDS)[-4:], WORDS,
+                              BOXES['United Kingdom'])[0] is not None
+          and g._indices(la, lo) in
+          [g._indices(a, b) for a, b in
+           g.candidates_in_box(g.encode(la, lo, WORDS)[-4:], WORDS,
+                               BOXES['United Kingdom'])[0]]
+          for la, lo in IN_UK), True)
+
+# What the box actually buys, on real country boxes. One word, always: the
+# checksum only has 7 bits to spend, so 3 words cannot be pinned down anywhere.
+said = {name: [g.shortest_in_box(la, lo, WORDS, box)[0]
+               for la, lo in in_scope(g.Scope('t', 't', '', box, 5), 40)]
+        for name, box in BOXES.items()}
+for name in BOXES:
+    got = said[name]
+    print(f'  ----  {name}: {sum(1 for n in got if n < 5) / len(got) * 100:.0f}% '
+          f'shorten to {min(got)} words')
+check('no country box ever gets below 4 words',
+      min(min(v) for v in said.values()), 4)
+check('a small country shortens every time',
+      all(n == 4 for n in said['Switzerland'] + said['Ireland']), True)
+
+# A wrong window costs uniqueness, never correctness. The address itself is
+# arithmetic on the coordinates; the country is only consulted to decide how
+# much of it can go unsaid.
+check('the address does not depend on the box',
+      len({tuple(g.encode(51.50072, -0.12456, WORDS)) for _ in BOXES}), 1)
+check('a box that excludes the point falls back to the full address',
+      all(g.shortest_in_box(la, lo, WORDS, BOXES['France'])[0] == 5
+          for la, lo in IN_UK), True)
+# Nominatim reports an antimeridian country inside out (west > east). That box
+# reads as most of the planet, which is a useless window but a safe one.
+check('an inside-out box costs words, not correctness',
+      g.shortest_in_box(-18.14160, 178.44190, WORDS, (-20.68, -12.48, 176.9, -178.1))[0], 5)
+
+# Whatever tail comes back, saying it inside that box has to land back here.
+def lands_back(la, lo, box):
+    n, tail = g.shortest_in_box(la, lo, WORDS, box)
+    got, _ = g.candidates_in_box(tail, WORDS, box)
+    return got is not None and len(got) == 1 and g._indices(*got[0]) == g._indices(la, lo)
+check('the shortened form resolves back to the same cell',
+      all(lands_back(la, lo, BOXES['United Kingdom']) for la, lo in IN_UK), True)
+
+# 7 checksum bits, so roughly one candidate in 128 survives a search. Well
+# short of unique at 3 words, which is why 4 is the floor.
+tail3 = g.encode(51.50072, -0.12456, WORDS)[-3:]
+hits, searched = g.candidates_in_box(tail3, WORDS, BOXES['United Kingdom'])
+print(f'  ----  3 words over the UK: {searched} cells searched, {len(hits)} pass the check '
+      f'(1 in {searched / len(hits):.0f}, theory 1 in {2 ** g.CHECK_BITS})')
+check('survivors are within a factor of two of the checksum rate',
+      0.5 < len(hits) / (searched / 2 ** g.CHECK_BITS) < 2.0, True)
+check('a search too big to be worth running is refused, not run',
+      g.candidates_in_box(g.encode(51.50072, -0.12456, WORDS)[-2:], WORDS,
+                          BOXES['United Kingdom'])[0], None)
+
 print()
 w, h = g.cell_size(g.GLOBAL.max_words)
 print(f'  ----  global: 5 words is {w:.2f} x {h:.2f} m; 4 words alone is '

@@ -79,6 +79,15 @@
 
 <main class="wrap">
 
+  <h2>Try it</h2>
+  <ul>
+    <li><a href="demos/word-grid.html">The grid</a> &mdash; click anywhere on earth and the
+    address sits on the map, nothing else. The scope follows the click.</li>
+    <li><a href="demos/country-shorten.html">Shortening by country</a> &mdash; the same
+    address, with OpenStreetMap asked which country the click landed in so the leading
+    word can go unsaid. The greyed word is the one the country stands in for.</li>
+  </ul>
+
   <h2>Scopes</h2>
   <p>The same grid mechanism over a different box: <strong>two regional boxes at four
   words</strong>, plus Global at five for everywhere else. The scope follows the click
@@ -168,6 +177,36 @@
   checksum catches.</p>
 
   <p class="note">Click anywhere to watch the address grow a word at a time.</p>
+
+  <h2>A country can supply them instead</h2>
+  <p>Filling a dropped word back in needs either a nearby <em>point</em> or a
+  <em>region</em>. A point takes the nearest tile that fits. A region hands the choice to
+  the checksum: every tile inside it is tried, and a wrong one survives only one time in
+  128. A country is such a region, and OpenStreetMap&rsquo;s reverse geocoder will hand you
+  its bounding box along with its name.</p>
+
+  <p>That buys exactly one word, and only one. Five become four almost anywhere; three is
+  out of reach everywhere, because a box the size of Britain holds ten thousand candidate
+  tiles at three words and seven checksum bits leave eighty of them standing.</p>
+
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Country</th><th>Box</th><th>Five words become four</th></tr></thead>
+    <tbody>
+      <tr><td>Switzerland</td><td class="num">0.08 M km&sup2;</td><td class="num">always</td></tr>
+      <tr><td>Ireland</td><td class="num">0.19 M km&sup2;</td><td class="num">always</td></tr>
+      <tr><td>United Kingdom</td><td class="num">1.29 M km&sup2;</td><td class="num">98 %</td></tr>
+      <tr><td>France</td><td class="num">1.28 M km&sup2;</td><td class="num">92 %</td></tr>
+      <tr><td>Australia</td><td class="num">17.3 M km&sup2;</td><td class="num">70 %</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p><strong>The grid never moves.</strong> The country is consulted when the address is
+  read, as a search window; it is not part of the address and nothing is bound to it. A
+  border can be redrawn, a territory can change hands, and the words for a place are
+  unchanged. The worst a wrong window can do is cost a word &mdash; the full five are
+  always correct, and are shown straight away, before any network call.</p>
 
   <h2>Cells are square</h2>
   <p>Cell aspect is the projected frame&rsquo;s aspect times a power of two, and the

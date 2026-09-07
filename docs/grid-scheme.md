@@ -110,6 +110,43 @@ So a tail that resolves is almost certainly the place meant, and a reference
 too far away to fill in the gap says so rather than answering confidently with
 the wrong place.
 
+### A region will do instead of a point
+
+`resolve_tail()` needs a nearby *point*, and takes the nearest tile that fits.
+`candidates_in_box()` needs only a *region*, and lets the checksum choose: it
+tries every tile in the region and keeps the ones that pass. A country is such a
+region, and a reverse geocoder will hand you its bounding box along with its
+name — so "in the UK" can stand in for a word the way "near here" does.
+
+The two are the same information in different shapes. Both are a search window;
+one is centred on a point, the other is a rectangle someone else drew.
+
+**It buys exactly one word.** Seven check bits kill 127 candidates in 128, so
+the window has to be down to a few hundred tiles before one survivor is likely.
+Over Britain:
+
+| Said | Tiles in the box | Survive the check |
+|---|---|---|
+| 3 | ~10,600 | ~80 |
+| 4 | 6 | 1 |
+| 5 | 1 | 1 |
+
+Measured over real Nominatim boxes, five words become four always in
+Switzerland and Ireland, 98 % of the time in the UK, 92 % in France and 70 % in
+Australia. Three words is out of reach everywhere.
+
+**The grid does not depend on the country.** The window is used when an address
+is *read*; it is not part of the address and nothing is bound to it. So a border
+can move, a territory can change hands, and the words for a place are unchanged
+— which is the property that makes this usable at all, since the alternative
+(binding a country code into the address) would make every disputed border a
+correctness problem for its neighbours too.
+
+A wrong window therefore costs uniqueness, never correctness: the point simply
+is not the only survivor, and the full address is said instead. Nominatim
+reports an antimeridian country inside out (west > east), which reads as most of
+the planet — a useless window, and a safe one.
+
 ## Telling them apart
 
 A terminal-length address carries a checksum over its own scope, so it
@@ -205,7 +242,7 @@ worth more.
 Within a box the bits are still handed to whichever axis is currently wider, so
 a box with its own aspect — Local's is 1 : 1.9 — still comes out near square.
 
-## The last word does two jobs## The last word does two jobs
+## The last word does two jobs
 
 A whole fifth word of position would reach 8 cm, finer than anyone needs. So its
 11 bits are split between refinement and checksum:
@@ -269,11 +306,22 @@ because it is the reason resolution order matters); `decode_auto` identifies
 every UK address as UK and every five-word global address as global, and reports
 a short address as unverified.
 
+**Shortening against a country box** — the true point is never lost from the
+search; the shortened form resolves back to the same cell; a box that excludes
+the point falls back to the full address; an inside-out box costs words, not
+correctness; the address itself does not depend on the box; survivors match the
+1-in-128 checksum rate; a search too big to be worth running is refused rather
+than run.
+
 `node tools/gridcode/check-demo.mjs` runs the demo's own JavaScript port against
 a fixture generated from the Python reference, so the two cannot drift: both
 scopes' encodings, truncation, checksums, the UK box and its refusals, tail
 resolution across the antimeridian, hopeless references, both bit orders, the
-scope-identification order, and address parsing.
+scope-identification order, and address parsing. It also checks the second demo:
+that `country-shorten.html` carries the *same* codec text and word list rather
+than a drifted copy, and that its box search agrees with the reference on which
+cells it looks at, how many survive the check, and how short the address ends
+up.
 
 Both run in CI on every push.
 

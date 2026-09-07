@@ -479,6 +479,82 @@ def _clamp_lattice(known, period, ref, bits):
     return min(max(v, known), known + (2 ** bits - 1 - known) // period * period)
 
 
+def candidates_in_box(spoken, words, box, s=GLOBAL, limit=20000):
+    """Every point inside `box` whose address ends with these words and whose
+    checksum passes.
+
+    This is the other way to fill in dropped leading words. resolve_tail() needs
+    a reference POINT and takes the nearest candidate; this needs only a REGION
+    and lets the checksum choose, which is what a country name gives you. The
+    region is never part of the address -- it is a search window -- so getting it
+    slightly wrong costs uniqueness, never correctness.
+
+    Returns (candidates, searched). More than one candidate means the region is
+    too big to pin these words down; none means the words do not belong in it.
+    """
+    s = scope(s)
+    index = {w: i for i, w in enumerate(words)}
+    unknown = [w for w in spoken if w not in index]
+    if unknown:
+        raise ValueError(f'not BIP-39 words: {unknown}')
+    n = len(spoken)
+    if not 1 <= n <= s.max_words:
+        raise ValueError(f'1..{s.max_words} words in {s.name}')
+    value = 0
+    for w in spoken:
+        value = (value << BITS_PER_WORD) | index[w]
+    check = value & (2 ** CHECK_BITS - 1)
+    known_bits = BITS_PER_WORD * n - CHECK_BITS
+    pos_low = value >> CHECK_BITS
+    cx, cy = _known_low(n, s)
+    known_x = known_y = 0
+    for i in range(known_bits):
+        seq = s.position_bits - known_bits + i
+        bit = (pos_low >> (known_bits - 1 - i)) & 1
+        if s.order[seq] == 0:
+            known_x = (known_x << 1) | bit
+        else:
+            known_y = (known_y << 1) | bit
+    # The window, clipped to the scope's own box.
+    latMin, latMax, lngMin, lngMax = box
+    x0, y0 = project(latMin, normalise_lng(lngMin, s))
+    x1, y1 = project(latMax, normalise_lng(lngMax, s))
+    to_i = lambda v, lo, span, bits: int((v - lo) / span * 2 ** bits)
+    lo_x = max(0, to_i(min(x0, x1), s.x0, s.xr, s.xb))
+    hi_x = min(2 ** s.xb - 1, to_i(max(x0, x1), s.x0, s.xr, s.xb))
+    lo_y = max(0, to_i(min(y0, y1), s.y0, s.yr, s.yb))
+    hi_y = min(2 ** s.yb - 1, to_i(max(y0, y1), s.y0, s.yr, s.yb))
+    px, py = 2 ** cx, 2 ** cy
+    xs = range(known_x + -(-(lo_x - known_x) // px) * px, hi_x + 1, px)
+    ys = range(known_y + -(-(lo_y - known_y) // py) * py, hi_y + 1, py)
+    count = len(xs) * len(ys)
+    if count > limit:
+        return None, count                  # too many to be worth enumerating
+    out = []
+    for xi in xs:
+        for yi in ys:
+            position = _interleave(xi, yi, s)
+            if _checksum(position, s) == check:
+                out.append(_from_position(position, s))
+    return out, count
+
+
+def shortest_in_box(lat, lng, words, box, s=GLOBAL, limit=20000):
+    """The fewest trailing words that identify this point uniquely inside `box`.
+
+    Falls back to the full address when the region is too big to pin anything
+    shorter down, which is the common case for a large country.
+    """
+    s = scope(s)
+    full = encode(lat, lng, words, s.max_words, s)
+    want = _indices(lat, lng, s)
+    for n in range(1, s.max_words):
+        got, _ = candidates_in_box(full[-n:], words, box, s, limit)
+        if got and len(got) == 1 and _indices(got[0][0], got[0][1], s) == want:
+            return n, full[-n:]
+    return s.max_words, full
+
+
 def words_needed(lat, lng, near_lat, near_lng, words, s=GLOBAL):
     """The fewest trailing words that resolve back to this point from that
     reference, or the scope's full length if even that is needed."""

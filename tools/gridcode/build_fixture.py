@@ -46,6 +46,23 @@ TAILS = [
 HOPELESS = [(51.50072, -0.12456, 3, 40.71280, -74.00600),
             (51.50072, -0.12456, 2, 48.85660, 2.35220)]
 
+# Country boxes, as Nominatim returns them (south, north, west, east), with the
+# points the country-shorten demo is checked against. The box is only a search
+# window -- never part of an address -- but both ports have to search the SAME
+# window, or the same words would be shortened by different amounts.
+BOXES = [
+    ('United Kingdom', [49.674, 61.061, -14.015, 2.096],
+     [(51.50072, -0.12456), (55.94859, -3.19951), (54.59730, -5.93010)]),
+    ('Ireland', [51.222, 55.636, -11.017, -5.066], [(53.34980, -6.26030)]),
+    ('Switzerland', [45.818, 47.808, 5.956, 10.492], [(46.94800, 7.44740)]),
+    ('Australia', [-43.644, -9.221, 112.921, 159.109], [(-33.86880, 151.20930)]),
+    # Wrong window on purpose: France's box holds none of the above.
+    ('France', [41.303, 51.124, -5.559, 9.662], [(51.50072, -0.12456)]),
+    # Nominatim reports an antimeridian country inside out (west > east), which
+    # reads as most of the planet: a useless window, and a safe one.
+    ('Fiji', [-20.677, -12.480, 176.909, -178.144], [(-18.14160, 178.44190)]),
+]
+
 
 def refused(la, lo, n, rla, rlo, words):
     """True if resolving this tail from this reference fails, as it should."""
@@ -64,6 +81,18 @@ if __name__ == '__main__':
                  'words': {str(n): g.encode(la, lo, words, n, sc)
                            for n in range(1, sc.max_words + 1)}}
                 for la, lo in pts]
+
+    def search(la, lo, box, words):
+        """What a search of this box turns up at each length, and how short the
+        address gets. `hits` is null where the search was too big to run."""
+        out = {}
+        for n in (3, 4, 5):
+            got, searched = g.candidates_in_box(
+                g.encode(la, lo, words)[-n:], words, box)
+            out[str(n)] = {'hits': None if got is None else len(got),
+                           'searched': searched}
+        return {'lat': la, 'lng': lo,
+                'said': g.shortest_in_box(la, lo, words, box)[0], 'search': out}
 
     regions = {}
     for sc in g.REGIONS:
@@ -103,6 +132,12 @@ if __name__ == '__main__':
                    for la, lo in
                    [p for pts in REGION_POINTS.values() for p in pts] + OCEAN],
         'local_outside': [{'lat': la, 'lng': lo} for la, lo in LOCAL_OUTSIDE],
+        # Filling dropped leading words back in from a country box rather than
+        # from a nearby point: how many cells the search covers, how many pass
+        # the checksum, and how short the address gets.
+        'boxes': [{'name': name, 'box': box,
+                   'points': [search(la, lo, box, words) for la, lo in pts]}
+                  for name, box, pts in BOXES],
     }
     path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fixture.json')
     with open(path, 'w') as fh:
@@ -110,4 +145,5 @@ if __name__ == '__main__':
     print(f"global {len(out['global']['points'])} points, "
           f"{len(regions)} regions "
           f"({sum(len(r['points']) for r in regions.values())} points), "
-          f"{len(out['chosen'])} scope choices -> {path}")
+          f"{len(out['chosen'])} scope choices, "
+          f"{len(out['boxes'])} country boxes -> {path}")

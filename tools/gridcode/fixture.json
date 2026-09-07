@@ -1437,5 +1437,225 @@
    "lat": 0.0,
    "lng": 0.0
   }
+ ],
+ "boxes": [
+  {
+   "name": "United Kingdom",
+   "box": [
+    49.674,
+    61.061,
+    -14.015,
+    2.096
+   ],
+   "points": [
+    {
+     "lat": 51.50072,
+     "lng": -0.12456,
+     "said": 4,
+     "search": {
+      "3": {
+       "hits": 73,
+       "searched": 10580
+      },
+      "4": {
+       "hits": 1,
+       "searched": 6
+      },
+      "5": {
+       "hits": 1,
+       "searched": 1
+      }
+     }
+    },
+    {
+     "lat": 55.94859,
+     "lng": -3.19951,
+     "said": 4,
+     "search": {
+      "3": {
+       "hits": 90,
+       "searched": 10580
+      },
+      "4": {
+       "hits": 1,
+       "searched": 4
+      },
+      "5": {
+       "hits": 1,
+       "searched": 1
+      }
+     }
+    },
+    {
+     "lat": 54.5973,
+     "lng": -5.9301,
+     "said": 4,
+     "search": {
+      "3": {
+       "hits": 91,
+       "searched": 10465
+      },
+      "4": {
+       "hits": 1,
+       "searched": 3
+      },
+      "5": {
+       "hits": 1,
+       "searched": 1
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ireland",
+   "box": [
+    51.222,
+    55.636,
+    -11.017,
+    -5.066
+   ],
+   "points": [
+    {
+     "lat": 53.3498,
+     "lng": -6.2603,
+     "said": 4,
+     "search": {
+      "3": {
+       "hits": 12,
+       "searched": 1598
+      },
+      "4": {
+       "hits": 1,
+       "searched": 1
+      },
+      "5": {
+       "hits": 1,
+       "searched": 1
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Switzerland",
+   "box": [
+    45.818,
+    47.808,
+    5.956,
+    10.492
+   ],
+   "points": [
+    {
+     "lat": 46.948,
+     "lng": 7.4474,
+     "said": 4,
+     "search": {
+      "3": {
+       "hits": 3,
+       "searched": 624
+      },
+      "4": {
+       "hits": 1,
+       "searched": 1
+      },
+      "5": {
+       "hits": 1,
+       "searched": 1
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Australia",
+   "box": [
+    -43.644,
+    -9.221,
+    112.921,
+    159.109
+   ],
+   "points": [
+    {
+     "lat": -33.8688,
+     "lng": 151.2093,
+     "said": 4,
+     "search": {
+      "3": {
+       "hits": null,
+       "searched": 142266
+      },
+      "4": {
+       "hits": 1,
+       "searched": 72
+      },
+      "5": {
+       "hits": 1,
+       "searched": 1
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "France",
+   "box": [
+    41.303,
+    51.124,
+    -5.559,
+    9.662
+   ],
+   "points": [
+    {
+     "lat": 51.50072,
+     "lng": -0.12456,
+     "said": 5,
+     "search": {
+      "3": {
+       "hits": 65,
+       "searched": 10406
+      },
+      "4": {
+       "hits": 0,
+       "searched": 2
+      },
+      "5": {
+       "hits": 0,
+       "searched": 0
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Fiji",
+   "box": [
+    -20.677,
+    -12.48,
+    176.909,
+    -178.144
+   ],
+   "points": [
+    {
+     "lat": -18.1416,
+     "lng": 178.4419,
+     "said": 5,
+     "search": {
+      "3": {
+       "hits": null,
+       "searched": 282800
+      },
+      "4": {
+       "hits": 2,
+       "searched": 126
+      },
+      "5": {
+       "hits": 0,
+       "searched": 0
+      }
+     }
+    }
+   ]
+  }
  ]
 }

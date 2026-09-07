@@ -53,6 +53,49 @@ Open the file directly in a browser: no build step, and no secure-context
 requirement, since SHA-256 is plain JavaScript rather than `crypto.subtle`. It
 loads Leaflet and OpenStreetMap tiles from a CDN, so it needs network access.
 
+### `demos/country-shorten.html`
+
+The same address, with the leading word supplied by the country instead of by a
+nearby reference point. Click anywhere; the five words appear immediately, with
+no network involved, and are then *shortened* once OpenStreetMap's reverse
+geocoder says which country the click landed in. The word the country stands in
+for is shown greyed rather than hidden.
+
+```
+leaf. step.cruel.tomato · easy      Big Ben — United Kingdom, 4 words said
+leader. wage.hair.shy · ask         Dublin  — Ireland, 4 words said
+jungle.innocent.congress.response · brother   mid-Atlantic — no country, all five
+```
+
+**A region is the other way to fill in a dropped word.** `resolve_tail()` needs a
+nearby *point* and takes the nearest tile; this needs only a *region* and lets
+the checksum choose, trying every tile inside it. A wrong tile survives one time
+in 128, so a country-sized window pins the answer down at four words.
+
+**One word, and only one.** Three words is out of reach everywhere: a box the
+size of Britain holds ~10,600 candidate tiles at three words, and seven checksum
+bits leave ~80 of them standing.
+
+| country | box | five words become four |
+|---|---|---|
+| Switzerland | 0.08 M km² | always |
+| Ireland | 0.19 M km² | always |
+| United Kingdom | 1.29 M km² | 98 % |
+| France | 1.28 M km² | 92 % |
+| Australia | 17.3 M km² | 70 % |
+
+**The grid never moves.** The country is consulted when the address is read, as
+a search window; it is not part of the address, and nothing is bound to it. A
+border can be redrawn or a territory change hands and the words for a place are
+unchanged — a wrong window costs a word, never correctness. Nominatim reports an
+antimeridian country inside out (west > east), which reads as most of the
+planet: a useless window, and a safe one — you get all five words.
+
+It calls `nominatim.openstreetmap.org` at most once a second and caches by
+two-decimal-place coordinates, per that service's usage policy. The demo works
+without it: if the lookup fails, the five-word address is already on screen and
+stays there.
+
 [bip39]: https://github.com/bitcoin/bips/blob/master/bip-0039/bip-0039-wordlists.md
 
 ## Publishing
