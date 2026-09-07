@@ -23,12 +23,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 'lts/*'
-
-      - name: Install codec dependencies
-        run: npm install --prefix tools/gridcode --no-audit --no-fund
+      # No setup-node: the runner ships one, and the check is plain ESM with no
+      # dependencies. No npm install either -- the word list is a file in the
+      # repo, checked against the SHA-256 published in BIP-39.
 
       # The demo carries its own JavaScript port of the codec. Fail the build if
       # it stops agreeing with the Python reference, or stops round-tripping.

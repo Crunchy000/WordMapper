@@ -3,34 +3,31 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Word grid — regional word addresses</title>
+<meta name="description" content="Five BIP-39 words name any point on earth to 1.35 m. Say four where the country you are in supplies the fifth.">
+<title>Word grid — five words anywhere, four where a country supplies the fifth</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
   html, body { margin: 0; height: 100%; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
   #map { position: absolute; inset: 0; background: #dfe3e6; }
-  /* No card: the address sits directly on the map. A halo rather than a panel
-     keeps it readable over both pale streets and dark satellite tiles. */
+  /* No card: the address sits directly on the map, with a halo rather than a
+     panel so it reads over pale streets and dark satellite tiles alike. */
   #hud { position: absolute; z-index: 1000; top: 16px; left: 16px;
          pointer-events: none; max-width: calc(100vw - 32px); }
   #addr { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-                 font-size: 20px; letter-spacing: -0.01em;
-                 text-shadow: 0 1px 3px #fff, 0 0 8px #fff, 0 0 16px #fff,
-                              1px 0 3px #fff, -1px 0 3px #fff, 0 -1px 3px #fff; }
+          font-size: 20px; letter-spacing: -0.01em;
+          text-shadow: 0 1px 3px #fff, 0 0 8px #fff, 0 0 16px #fff,
+                       1px 0 3px #fff, -1px 0 3px #fff, 0 -1px 3px #fff; }
+  #dropped { color: #b9b9b2; }
   #words { color: #16171a; font-weight: 700; }
   #sep { color: #9a9a92; margin: 0 8px; }
   /* The last word is set apart because it does a different job: it refines the
      position and carries the checksum. */
   #check { color: #1a5c4a; font-weight: 700; font-style: italic;
            border-bottom: 2px dotted #4f9481; padding-bottom: 1px; }
-  /* The scope has to be shown: the same words mean different places in
-     different boxes. */
-  #scope { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-           Helvetica, Arial, sans-serif;
-           font-size: 12px; color: #4a4a44; margin-top: 4px; font-weight: 600;
-           text-shadow: 0 1px 3px #fff, 0 0 8px #fff, 1px 0 3px #fff, -1px 0 3px #fff; }
-  /* On a phone the five-word row is wider than the screen; let it wrap and
-     shrink rather than pushing the page sideways. */
+  #note { font-size: 12px; color: #4a4a44; margin-top: 5px; font-weight: 600;
+          text-shadow: 0 1px 3px #fff, 0 0 8px #fff, 1px 0 3px #fff, -1px 0 3px #fff; }
+  #note .dim { color: #8a8a82; font-weight: 400; }
   @media (max-width: 480px) {
     #hud { top: 12px; left: 12px; }
     #addr { font-size: 15px; overflow-wrap: anywhere; }
@@ -41,10 +38,8 @@
 
 <div id="map"></div>
 <div id="hud">
-  <div id="addr" hidden>
-    <span id="words"></span><span id="sep">&middot;</span><span id="check"></span>
-    <div id="scope"></div>
-  </div>
+  <div id="addr"><span id="dropped"></span><span id="words"></span><span id="sep">&middot;</span><span id="check"></span></div>
+  <div id="note">Click anywhere</div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -79,9 +74,10 @@ const project = (lat, lng) => [R * lng * Math.PI / 180 * K,
 const unproject = (x, y) => [Math.asin(Math.max(-1, Math.min(1, y * K / R))) * 180 / Math.PI,
                              x / (R * K) * 180 / Math.PI];
 
-// A scope is a box, an address length, and the bit layout they imply. The tag
-// is bound into the checksum so the two can never be silently confused.
-function makeScope(key, name, tag, box, maxWords) {
+// A scope is a box, an address length, and the bit layout they imply. There is
+// one of these -- GLOBAL. It stays a function because the bit layout is DERIVED
+// from the box rather than written down.
+function makeScope(key, name, box, maxWords) {
   const [latMin, latMax, lngMin, lngMax] = box;
   const [x0, y0] = project(latMin, lngMin);
   const [x1, y1] = project(latMax, lngMax);
@@ -97,41 +93,20 @@ function makeScope(key, name, tag, box, maxWords) {
     if (w >= h) { order.push(0); w /= 2; } else { order.push(1); h /= 2; }
   }
   const xb = order.filter((a) => a === 0).length;
-  return { key, name, tag, box, maxWords, x0, y0, xr, yr,
+  return { key, name, box, maxWords, x0, y0, xr, yr,
            positionBitsTotal, order, xb, yb: positionBitsTotal - xb };
 }
-// Five words over the whole earth. The floor: it always works, and it is what
-// anywhere outside every regional box falls back to.
-const GLOBAL = makeScope('global', 'Global', '', [-90, 90, -180, 180], 5);
-
-// Four words over a regional box. Each tag is bound into the checksum, so an
-// address minted in one region cannot verify in another.
-//
-// There are deliberately only two. A box has to be a rectangle, and most
-// continents cannot be boxed without swallowing a neighbour: Africa and Europe
-// interleave across the Mediterranean -- Tunisia reaches further north than
-// southern Spain -- so no horizontal line separates them. Global covers the rest.
-const REGIONS = [
-  // The British Isles: Lizard Point to Shetland, Dunmore Head to Lowestoft.
-  makeScope('local', 'Local', 'GB', [49.85, 60.90, -10.70, 1.80], 4),
-  // Australia, cut at 12 S -- which is what makes it CLEAN. Papua New Guinea
-  // reaches 11.6 S and Indonesia 10.9 S, both further south than Australia's
-  // northern tip at 10.05 S, so no cut keeps the whole continent and excludes
-  // the neighbours. Stopping at 12 S catches no other country's land at all,
-  // for the loss of Cape York's tip, the Tiwi Islands and the Torres Strait.
-  makeScope('australia', 'Australia', 'AU', [-43.65, -12.00, 112.90, 153.70], 4),
-];
-const UK = REGIONS[0];
-const DEFAULT_SCOPE = UK;
-const ALL_SCOPES = REGIONS.concat([GLOBAL]);
-const SCOPES = Object.fromEntries(ALL_SCOPES.map((s) => [s.key, s]));
+// Five words over the whole earth, and the only scope there is. A box has to
+// be a rectangle and most of the world cannot be boxed without swallowing a
+// neighbour, so the regional boxes that used to be here are gone; a country
+// supplies the leading word instead, further down.
+const GLOBAL = makeScope('global', 'Global', [-90, 90, -180, 180], 5);
 
 const wrapLng = (lng) => ((lng + 180) % 360 + 360) % 360 - 180;
 
-// A box straddling the antimeridian runs past 180 -- Asia is 26 to 190 -- so a
-// point in Chukotka arrives as -175 and must be read as 185. The short circuit
-// matters: a value a hair BELOW lngMin would otherwise wrap to nearly
-// lngMin + 360, throwing a point on the western edge out of its box.
+// Bring a longitude into the box's frame. The short circuit matters: a value a
+// hair BELOW lngMin would otherwise wrap to nearly lngMin + 360, throwing a
+// point on the western edge out of its box.
 function normaliseLng(lng, sc) {
   const lngMin = sc.box[2], lngMax = sc.box[3];
   if (lng >= lngMin - EPS && lng <= lngMax + EPS) return lng;
@@ -144,19 +119,6 @@ function covers(lat, lng, sc) {
   return lat >= latMin - EPS && lat <= latMax + EPS
       && l >= lngMin - EPS && l <= lngMax + EPS;
 }
-
-// The scope for a point: the SMALLEST regional box containing it, or Global
-// where none does. Smallest wins for two reasons that agree -- it is the finest
-// cell, and it is the region a person would name, since the boxes are nested
-// where they overlap.
-const boxArea = (sc) => sc.xr * sc.yr;
-function bestScope(lat, lng) {
-  const hit = REGIONS.filter((sc) => covers(lat, lng, sc));
-  if (!hit.length) return GLOBAL;
-  return hit.reduce((a, b) => (boxArea(b) < boxArea(a) ? b : a));
-}
-const scopesCovering = (lat, lng) =>
-  REGIONS.filter((sc) => covers(lat, lng, sc)).sort((a, b) => boxArea(a) - boxArea(b));
 
 // Both ends are clamped. The top saturates a point on the boundary -- the
 // poles, the antimeridian -- into the last cell. The bottom is only reachable
@@ -262,19 +224,13 @@ function sha256(bytes) {
 }
 
 
-// Global mode binds the empty string, which no region code can be.
-
-// Global's payload is the bare position, which is what it has always been, so
-// every global address ever published stays valid. A tagged scope prepends its
-// tag, which no untagged payload can begin with.
+// Seven bits over the whole position -- which is what makes both kinds of
+// shortening safe, since a reconstruction that guesses wrong fails it.
 function checksum(position, sc) {
-  const bytes = [];
-  for (let i = 0; i < sc.tag.length; i++) bytes.push(sc.tag.charCodeAt(i) & 0xff);
-  if (sc.tag) bytes.push(0);
   const p = new Array(8);
   let v = position;
   for (let i = 7; i >= 0; i--) { p[i] = Number(v & 0xffn); v >>= 8n; }
-  return BigInt(sha256(bytes.concat(p))[0] >>> (32 - CHECK_BITS));
+  return BigInt(sha256(p)[0] >>> (32 - CHECK_BITS));
 }
 
 function value(lat, lng, sc) {
@@ -312,8 +268,7 @@ function decode(spoken, sc) {
   else {
     prefix = v >> BigInt(CHECK_BITS);
     if ((v & ((1n << BigInt(CHECK_BITS)) - 1n)) !== checksum(prefix, sc))
-      throw new Error('checksum failed - a word is wrong, or this address '
-        + 'belongs to the other scope');
+      throw new Error('checksum failed - a word is wrong');
   }
   const bits = positionBits(spoken.length, sc);
   const [xb, yb] = axisBits(spoken.length, sc);
@@ -321,31 +276,6 @@ function decode(spoken, sc) {
   const ll = unproject(sc.x0 + (xi + 0.5) / 2 ** xb * sc.xr,
                        sc.y0 + (yi + 0.5) / 2 ** yb * sc.yr);
   return [ll[0], wrapLng(ll[1])];
-}
-
-// Resolve without being told the scope. A terminal-length address carries a
-// checksum over its own scope, so it identifies itself. Anything shorter is an
-// unverified coarse prefix and global is assumed.
-//
-// The UK reading is tried first because the two directions are not
-// symmetrical: a global prefix read as UK fails its checksum 99.2% of the time
-// and is caught, but a UK address read as a global prefix would decode
-// silently to a different place, since nothing checks a prefix.
-// More than one scope can accept the same words by luck: each wrong one passes
-// its own 7-bit check with probability 1/128, so with seven regional boxes an
-// address is ambiguous about 5% of the time. The caller usually knows the
-// region -- pass it to decode() rather than guessing here.
-function scopesAccepting(spoken) {
-  return ALL_SCOPES.filter((sc) => {
-    if (spoken.length !== sc.maxWords) return false;
-    try { decode(spoken, sc); return true; } catch { return false; }
-  });
-}
-
-function decodeAuto(spoken) {
-  const hit = scopesAccepting(spoken);
-  if (hit.length) return [...decode(spoken, hit[0]), hit[0], true];
-  return [...decode(spoken, GLOBAL), GLOBAL, false];
 }
 
 // An address given as its last words, plus a reference point. The dropped
@@ -424,72 +354,209 @@ function parseAddress(text) {
   return [parts, tail];
 }
 
-// --- map -------------------------------------------------------------------
-const map = L.map('map', { worldCopyJump: true }).setView([51.50072, -0.12456], 17);
+
+// --- the country, from OpenStreetMap ---------------------------------------
+// Nominatim's reverse geocoder returns the country AND its bounding box, which
+// is all this needs: the box is only a search window, never part of an address.
+//
+// The grid does not depend on any of this. The five-word address is computed
+// and shown offline, immediately; the lookup only ever SHORTENS it. If the
+// network is down, or the country moves, or a border is redrawn, the five-word
+// address is unchanged and still correct.
+const GEOCODER = 'https://nominatim.openstreetmap.org/reverse';
+const cache = new Map();
+let lastCall = 0;
+
+async function countryAt(lat, lng) {
+  const key = `${lat.toFixed(2)},${lng.toFixed(2)}`;
+  if (cache.has(key)) return cache.get(key);
+  // Nominatim asks for at most one request a second, and for callers to
+  // identify themselves. A browser cannot set User-Agent, so the Referer this
+  // page sends is the identification -- which is what their policy expects of a
+  // web app. Results are cached by two decimal places, about a kilometre, so
+  // clicking around one place asks once.
+  const wait = Math.max(0, 1100 - (Date.now() - lastCall));
+  if (wait) await new Promise((r) => setTimeout(r, wait));
+  lastCall = Date.now();
+  const url = `${GEOCODER}?lat=${lat}&lon=${lng}&format=jsonv2&zoom=3`;
+  const res = await fetch(url, { headers: { Accept: 'application/json' } });
+  if (!res.ok) throw new Error(`geocoder returned ${res.status}`);
+  const d = await res.json();
+  const bb = (d.boundingbox || []).map(Number);      // [south, north, west, east]
+  const name = (d.address && d.address.country) || null;
+  const out = (name && bb.length === 4 && bb.every(Number.isFinite))
+    ? { name, box: bb } : null;
+  cache.set(key, out);
+  return out;
+}
+
+// --- shortening -------------------------------------------------------------
+// Every point inside the box whose address ends with these words and whose
+// checksum passes. The country picks the window; the checksum picks the answer.
+function candidatesInBox(tail, box, sc, limit = 20000) {
+  const n = tail.length;
+  let value = 0n;
+  for (const w of tail) value = (value << BigInt(BITS)) | BigInt(INDEX.get(w));
+  const check = value & ((1n << BigInt(CHECK_BITS)) - 1n);
+  const knownBits = BITS * n - CHECK_BITS;
+  const posLow = value >> BigInt(CHECK_BITS);
+  const [cx, cy] = knownLow(n, sc);
+  let knownX = 0, knownY = 0;
+  for (let i = 0; i < knownBits; i++) {
+    const seq = sc.positionBitsTotal - knownBits + i;
+    const bit = Number((posLow >> BigInt(knownBits - 1 - i)) & 1n);
+    if (sc.order[seq] === 0) knownX = knownX * 2 + bit; else knownY = knownY * 2 + bit;
+  }
+  const [south, north, west, east] = box;
+  const [xa, ya] = project(south, normaliseLng(west, sc));
+  const [xb2, yb2] = project(north, normaliseLng(east, sc));
+  const toI = (v, lo, span, bits) => Math.floor((v - lo) / span * 2 ** bits);
+  const loX = Math.max(0, toI(Math.min(xa, xb2), sc.x0, sc.xr, sc.xb));
+  const hiX = Math.min(2 ** sc.xb - 1, toI(Math.max(xa, xb2), sc.x0, sc.xr, sc.xb));
+  const loY = Math.max(0, toI(Math.min(ya, yb2), sc.y0, sc.yr, sc.yb));
+  const hiY = Math.min(2 ** sc.yb - 1, toI(Math.max(ya, yb2), sc.y0, sc.yr, sc.yb));
+  const px = 2 ** cx, py = 2 ** cy;
+  const firstX = knownX + Math.ceil((loX - knownX) / px) * px;
+  const firstY = knownY + Math.ceil((loY - knownY) / py) * py;
+  const nx = Math.max(0, Math.floor((hiX - firstX) / px) + 1);
+  const ny = Math.max(0, Math.floor((hiY - firstY) / py) + 1);
+  if (nx * ny > limit) return { hits: null, searched: nx * ny };
+  const hits = [];
+  for (let xi = firstX; xi <= hiX; xi += px) {
+    for (let yi = firstY; yi <= hiY; yi += py) {
+      const position = interleave(xi, yi, sc);
+      if (checksum(position, sc) === check) hits.push(fromPosition(position, sc));
+    }
+  }
+  return { hits, searched: nx * ny };
+}
+
+// Searching a region trades DETECTION for a word, and MAX_CANDIDATES is the cap
+// on that trade. When a word is wrong the true tile is gone, so every candidate
+// in the window is a fresh lottery against the same 7 check bits and a wrong
+// word is caught only (127/128)**k of the time. Six holds that at 95.4%,
+// against 99.2% for the full address; an uncapped window the size of Australia
+// holds ~70 and falls to 58%, where a third of mishearings resolve silently to
+// somewhere else in the country. resolveTail() has no such loss -- it tests the
+// single nearest tile, one chance to be fooled rather than k.
+const MAX_CANDIDATES = 6;
+
+// The fewest trailing words that identify this point uniquely inside the box
+// WITHOUT weakening the check past that cap. The cap doubles as the enumeration
+// limit, so a window it would reject is counted and dropped rather than
+// searched.
+function shortestInBox(lat, lng, box, sc) {
+  const full = encode(lat, lng, sc.maxWords, sc);
+  const want = indices(lat, lng, sc);
+  for (let n = 1; n < sc.maxWords; n++) {
+    const { hits, searched } = candidatesInBox(full.slice(-n), box, sc, MAX_CANDIDATES);
+    if (searched > MAX_CANDIDATES) continue;
+    if (hits && hits.length === 1) {
+      const got = indices(hits[0][0], hits[0][1], sc);
+      if (got[0] === want[0] && got[1] === want[1]) return n;
+    }
+  }
+  return sc.maxWords;
+}
+
+// The reader's half, and where the cap actually protects anyone: a window too
+// big to screen is refused rather than answered from.
+function decodeInBox(spoken, box, sc) {
+  const { hits, searched } = candidatesInBox(spoken, box, sc, MAX_CANDIDATES);
+  if (searched > MAX_CANDIDATES)
+    throw new Error(`${searched} candidates in this region, more than the `
+      + `${MAX_CANDIDATES} a 7-bit check can screen - say the whole address`);
+  if (!hits || !hits.length)
+    throw new Error('checksum failed - a word is wrong, or this address does '
+      + 'not belong in this region');
+  if (hits.length > 1)
+    throw new Error(`${hits.length} places here match - say one more word`);
+  return hits[0];
+}
+
+// --- map --------------------------------------------------------------------
+// The zoom control sits top right: the address lives top left, where it reads
+// best, and the two were overlapping.
+const map = L.map('map', { worldCopyJump: true, zoomControl: false })
+  .setView([53.3498, -6.2603], 16);
+L.control.zoom({ position: 'topright' }).addTo(map);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
   maxZoom: 19,
 }).addTo(map);
 
-const addrEl = document.getElementById('addr');
+const droppedEl = document.getElementById('dropped');
 const wordsEl = document.getElementById('words');
 const checkEl = document.getElementById('check');
-const scopeEl = document.getElementById('scope');
-let marker = null, boxes = [], scopeBox = null;
+const noteEl = document.getElementById('note');
+const scope = GLOBAL;
+let marker = null, cellBox = null, seq = 0;
 
 const fmt = (m) => m >= 1000 ? `${(m / 1000).toFixed(1)} km`
-  : m >= 1 ? `${m.toFixed(1)} m` : `${(m * 100).toFixed(0)} cm`;
+  : m >= 1 ? `${m.toFixed(2)} m` : `${(m * 100).toFixed(0)} cm`;
 
-function cellBounds(lat, lng, n, sc) {
-  const [xb, yb] = axisBits(n, sc);
-  const [x, y] = project(lat, normaliseLng(lng, sc));
-  const w = sc.xr / 2 ** xb, h = sc.yr / 2 ** yb;
-  const cx = sc.x0 + Math.floor((x - sc.x0) / w) * w;
-  const cy = sc.y0 + Math.floor((y - sc.y0) / h) * h;
-  const sw = unproject(cx, cy), ne = unproject(cx + w, cy + h);
-  // Wrap the WEST edge and carry the width across, rather than wrapping both
-  // corners. A box straddling 180 has an east edge past it, and wrapping that
-  // separately puts east west of west -- which Leaflet draws as the complement,
-  // a band across the whole world.
-  const west = wrapLng(sw[1]);
-  return [[sw[0], west], [ne[0], west + (ne[1] - sw[1])]];
+// One grid, so this never changes -- which is the thing worth saying.
+function gridHint() {
+  const [w, h] = cellSize(scope.maxWords, scope);
+  return fmt(Math.sqrt(w * h));
 }
 
-function show(lat, lng) {
+function draw(lat, lng, said) {
+  const full = encode(lat, lng, scope.maxWords, scope);
+  const kept = full.slice(full.length - said);
+  // The dropped words are shown greyed rather than hidden, so it is obvious
+  // what the country is standing in for.
+  droppedEl.textContent = said < full.length
+    ? full.slice(0, full.length - said).join(SEP) + SEP : '';
+  wordsEl.textContent = kept.slice(0, -1).join(SEP);
+  checkEl.textContent = kept[kept.length - 1];
+}
+
+async function show(lat, lng) {
+  const mine = ++seq;
   if (marker) map.removeLayer(marker);
   marker = L.circleMarker([lat, lng],
     { radius: 5, color: '#a8322a', weight: 2, fillOpacity: .9 }).addTo(map);
-  boxes.forEach((b) => map.removeLayer(b)); boxes = [];
-  if (scopeBox) { map.removeLayer(scopeBox); scopeBox = null; }
+  if (cellBox) { map.removeLayer(cellBox); cellBox = null; }
+  const [xb, yb] = axisBits(scope.maxWords, scope);
+  const [x, y] = project(lat, normaliseLng(lng, scope));
+  const w = scope.xr / 2 ** xb, h = scope.yr / 2 ** yb;
+  const cx = scope.x0 + Math.floor((x - scope.x0) / w) * w;
+  const cy = scope.y0 + Math.floor((y - scope.y0) / h) * h;
+  const sw = unproject(cx, cy), ne = unproject(cx + w, cy + h);
+  cellBox = L.rectangle([[sw[0], wrapLng(sw[1])], [ne[0], wrapLng(sw[1]) + (ne[1] - sw[1])]],
+    { color: '#1a5c4a', weight: 2, fill: false }).addTo(map);
 
-  // The scope follows the click: the smallest regional box containing the
-  // point, or Global where none does. Nothing to switch by hand.
-  const scope = bestScope(lat, lng);
-  const full = encode(lat, lng, scope.maxWords, scope);
-  wordsEl.textContent = full.slice(0, -1).join(SEP);
-  checkEl.textContent = full[full.length - 1];
-  const [w, h] = cellSize(scope.maxWords, scope);
-  // The scope has to be shown: the same words mean different places in
-  // different boxes, so the address is only half an address without it.
-  scopeEl.textContent = `${scope.name} · ${fmt(Math.sqrt(w * h))}`;
-  addrEl.hidden = false;
-
-  if (scope !== GLOBAL) {
-    const [a, b, c, d] = scope.box;
-    const west = wrapLng(c);            // as above: carry the width, do not
-    scopeBox = L.rectangle([[a, west], [b, west + (d - c)]],   // wrap both ends
-      { color: '#1a5c4a', weight: 1, fill: false, dashArray: '5 4', opacity: .3 }).addTo(map);
+  // The full address first, with no network involved at all.
+  draw(lat, lng, scope.maxWords);
+  noteEl.innerHTML = `${gridHint()}<span class="dim"> &mdash; asking OpenStreetMap `
+    + 'which country&hellip;</span>';
+  let country;
+  try {
+    country = await countryAt(lat, lng);
+  } catch (e) {
+    if (mine !== seq) return;
+    noteEl.innerHTML = `${gridHint()}<span class="dim"> &mdash; no country lookup `
+      + `(${e.message}), so all five words</span>`;
+    return;
   }
-  // The cell itself, and the one a word coarser, for a sense of scale.
-  for (const n of [scope.maxWords - 1, scope.maxWords]) {
-    boxes.push(L.rectangle(cellBounds(lat, lng, n, scope),
-      { color: n === scope.maxWords ? '#1a5c4a' : '#8a8a82',
-        weight: n === scope.maxWords ? 2 : 1, fill: false }).addTo(map));
+  if (mine !== seq) return;                 // a later click has overtaken this one
+  if (!country) {
+    noteEl.innerHTML = `${gridHint()}<span class="dim"> &mdash; open water, no country `
+      + 'to drop a word, so all five</span>';
+    return;
   }
+  const said = shortestInBox(lat, lng, country.box, scope);
+  draw(lat, lng, said);
+  // The cell size is the hint worth showing: it is the same 1.35 m whether the
+  // country bought a word or not, which is the point of one grid.
+  noteEl.innerHTML = `${country.name} &middot; ${gridHint()}`
+    + (said < scope.maxWords ? ''
+       : '<span class="dim"> &mdash; too wide a box to drop a word safely</span>');
 }
 
 map.on('click', (e) => show(e.latlng.lat, wrapLng(e.latlng.lng)));
-show(51.50072, -0.12456);
+show(53.3498, -6.2603);
 </script>
 </body>
 </html>

@@ -9,92 +9,89 @@ Experiments in encoding geographic coordinates as short, memorable word sequence
 ### `demos/word-grid.html`
 
 The scheme, live and deliberately bare: click anywhere on earth and the address
-sits on the map, nothing else. Three words plus a fourth set apart, because that
-one does a different job — it refines the position *and* carries the checksum.
+sits on the map, nothing else. **Five words name any point to 1.35 m.** Three
+plus a fourth set apart, because that one does a different job — it refines the
+position *and* carries the checksum.
+
+Then the address *shortens*. The five words are drawn immediately, with no
+network involved; OpenStreetMap's reverse geocoder is asked which country the
+click landed in, and the leading words the country can stand in for are shown
+greyed rather than said:
 
 ```
-flush.edge.solution · sun            London — Local, 2.7 m
-hello.match.sign · sponsor          Sydney — Australia, 10.1 m
-staff.belt.agent.birth · tip        Paris  — Global, 1.35 m
+leaf. step.cruel.tomato · easy          Big Ben — United Kingdom, 4 said
+leader. wage.hair.shy · ask             Dublin — Ireland, 4 said
+stage. answer.wonder.hair · traffic     Luxembourg City — 4 said
+jungle.innocent.congress.response · brother     mid-Atlantic — no country, all 5
 ```
 
-**The scope follows the click.** Two regional boxes at four words, plus Global
-at five for everywhere else:
+**One grid, one address for a place.** There are no regional boxes and no scope
+to switch. There used to be — a box around Britain and Ireland, another around
+Australia — and they are gone. A box has to be a rectangle, and most of the
+world cannot be boxed without swallowing a neighbour: Africa and Europe
+interleave across the Mediterranean, since Tunisia reaches further north than
+southern Spain, so no horizontal line separates them. Each box also gave a place
+a *second* address, and was coarser than the global grid it replaced (2.66 m
+over the UK against 1.35 m). A country supplies the leading word instead, and
+does it without any rectangle being drawn by hand.
 
-| scope | box | 4-word cell |
-|---|---|---|
-| Local — UK and Ireland | 0.97 M km² | **2.66 m** |
-| Australia | 13.9 M km² | 10.07 m |
-| *Global — 5 words* | *whole earth* | *1.35 m* |
+**A region is the other way to fill in a dropped leading word.** `resolve_tail()`
+needs a nearby *point* and takes the nearest tile; `candidates_in_box()` needs
+only a *region* and lets the checksum choose, trying every tile inside it.
 
-**Only two, because a box is a rectangle and most continents cannot be boxed
-without swallowing a neighbour.** Africa and Europe interleave across the
-Mediterranean — Tunisia reaches further north than southern Spain — so no
-horizontal line separates them, and when both existed Tunis resolved as
-"Europe". The continental boxes were also coarse enough to be barely worth the
-word they saved (Asia came out at 31.6 m against Global's 1.35 m).
+**How many words a window buys is one number: how many candidate tiles it
+holds.** Each word is 11 bits, so one fewer word is 2048 times as many tiles,
+and the 7 check bits leave one in 128 standing — a length works exactly when no
+*other* candidate survives, a Poisson zero at rate `(tiles − 1)/128`. Nothing
+about countries enters into it; a country is just a box someone else drew.
 
-**Australia's box is cut at 12° S, and that is what makes it clean.** Papua New
-Guinea reaches 11.63° S and Indonesia 10.91° S, both further south than
-Australia's northern tip at 10.05° S, so no cut keeps the whole continent and
-excludes the neighbours. Stopping at 12° S catches no other country's land at
-all, keeps 90 % of the coastline and every major city including Darwin, and
-gives up Cape York's tip, the Tiwi Islands and the Torres Strait to Global.
+| country | box | tiles in the window | said | wrong word caught |
+|---|---|---|---|---|
+| Luxembourg | 4,700 km² | 1.0 | **four**, always | 100 % |
+| Switzerland | 76,000 km² | 1.0 | **four**, always | 99 % |
+| Ireland | 193,000 km² | 1.1 | **four**, always | 100 % |
+| United Kingdom | 1.3 M km² | 5.5 | **four**, 97 % of the time | 96 % |
+| France | 1.28 M km² | 5.5 | **four**, 97 % of the time | 94 % |
+| Australia | 17.3 M km² | 71 | five — over the cap | — |
+| United States | 159 M km² | 638 | five — over the cap | — |
 
-Each scope's tag is bound into its checksum, so an address minted in one box
-cannot verify in another; with two regions a four-word address is ambiguous only
-0.8 % of the time. See [`docs/grid-scheme.md`](docs/grid-scheme.md).
+**Shortening this way costs detection, and the cap is what bounds the cost.**
+When a word is misheard the true tile no longer matches, so every candidate in
+the window becomes a fresh lottery against the same 7 check bits: a wrong word
+is caught only `(127/128)^k` of the time. At k = 6 that is 95.4 %, against
+99.2 % for the full address. Uncapped it was far worse — a window the size of
+Australia holds ~70 candidates and falls to 58 %, where a third of mishearings
+resolve *silently* to somewhere else in the country, which is the worst failure
+there is because it looks like an answer.
+
+So `shortest_in_box()` refuses to buy a word above `MAX_CANDIDATES = 6`, and
+`decode_in_box()` refuses to read one. Australia and the United States say all
+five words every time, rather than flapping between four and five depending on
+where in the country you happened to be.
+
+`resolve_tail()` has no such loss: it takes the single nearest tile to the
+reference and tests that one candidate — one chance to be fooled rather than k —
+so it stays at 99.2 %. That asymmetry is the real difference between the two
+ways of filling a dropped word back in.
+
+**The grid never moves.** The country is consulted when the address is *read*,
+as a search window; it is not part of the address, and nothing is bound to it. A
+border can be redrawn or a territory change hands and the words for a place are
+unchanged — a wrong window costs uniqueness, never correctness. Nominatim
+reports an antimeridian country inside out (west > east), which reads as most of
+the planet: a useless window, and a safe one — you get all five words.
 
 Cells are square: the projection's standard parallel is chosen so the projected
-world is exactly square (`K = 1/√π`, 55.654°), which makes the 5-word global
-cell 1.346 m square. Equal-area throughout, so this is shape, not resolution.
+world is exactly square (`K = 1/√π`, 55.654°), which makes the 5-word cell
+1.346 m square. Equal-area throughout, so this is shape, not resolution.
+
+The geocoder is called at most once a second and cached by two-decimal-place
+coordinates, per that service's usage policy. The demo works without it: if the
+lookup fails, the five-word address is already on screen and stays there.
 
 Open the file directly in a browser: no build step, and no secure-context
 requirement, since SHA-256 is plain JavaScript rather than `crypto.subtle`. It
 loads Leaflet and OpenStreetMap tiles from a CDN, so it needs network access.
-
-### `demos/country-shorten.html`
-
-The same address, with the leading word supplied by the country instead of by a
-nearby reference point. Click anywhere; the five words appear immediately, with
-no network involved, and are then *shortened* once OpenStreetMap's reverse
-geocoder says which country the click landed in. The word the country stands in
-for is shown greyed rather than hidden.
-
-```
-leaf. step.cruel.tomato · easy      Big Ben — United Kingdom, 4 words said
-leader. wage.hair.shy · ask         Dublin  — Ireland, 4 words said
-jungle.innocent.congress.response · brother   mid-Atlantic — no country, all five
-```
-
-**A region is the other way to fill in a dropped word.** `resolve_tail()` needs a
-nearby *point* and takes the nearest tile; this needs only a *region* and lets
-the checksum choose, trying every tile inside it. A wrong tile survives one time
-in 128, so a country-sized window pins the answer down at four words.
-
-**One word, and only one.** Three words is out of reach everywhere: a box the
-size of Britain holds ~10,600 candidate tiles at three words, and seven checksum
-bits leave ~80 of them standing.
-
-| country | box | five words become four |
-|---|---|---|
-| Switzerland | 0.08 M km² | always |
-| Ireland | 0.19 M km² | always |
-| United Kingdom | 1.29 M km² | 98 % |
-| France | 1.28 M km² | 92 % |
-| Australia | 17.3 M km² | 70 % |
-
-**The grid never moves.** The country is consulted when the address is read, as
-a search window; it is not part of the address, and nothing is bound to it. A
-border can be redrawn or a territory change hands and the words for a place are
-unchanged — a wrong window costs a word, never correctness. Nominatim reports an
-antimeridian country inside out (west > east), which reads as most of the
-planet: a useless window, and a safe one — you get all five words.
-
-It calls `nominatim.openstreetmap.org` at most once a second and caches by
-two-decimal-place coordinates, per that service's usage policy. The demo works
-without it: if the lookup fails, the five-word address is already on screen and
-stays there.
 
 [bip39]: https://github.com/bitcoin/bips/blob/master/bip-0039/bip-0039-wordlists.md
 
@@ -114,9 +111,9 @@ re-run the workflow and it will publish.
 ## Docs
 
 - [`docs/grid-scheme.md`](docs/grid-scheme.md) — the scheme: both directions of
-  shortening, why the checksum makes local shortening safe, the interleaving
-  pitfall that breaks the prefix property, and why a checksum cannot live at
-  every length.
+  shortening, why the checksum makes shortening safe, how many words a search
+  window buys, the interleaving pitfall that breaks the prefix property, and
+  why a checksum cannot live at every length.
 - [`docs/coverage.md`](docs/coverage.md) — the square-root law relating area to
   resolution, and the word-list vs address-length trade. Written for an earlier,
   UK-only version of the scheme; the arithmetic still holds.

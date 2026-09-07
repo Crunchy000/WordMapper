@@ -7,117 +7,114 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const demo = (name) => readFileSync(join(here, '..', '..', 'demos', name), 'utf8');
-const html = demo('word-grid.html');
-const shorten = demo('country-shorten.html');
+const html = readFileSync(join(here, '..', '..', 'demos', 'word-grid.html'), 'utf8');
 const fixture = JSON.parse(readFileSync(join(here, 'fixture.json'), 'utf8'));
 
 let bad = 0;
 const fail = (msg) => { bad++; console.error(`  ${msg}`); };
 
-// Pull a slice of a demo's inline script out as an importable module.
-// Written to a real file rather than a data: URL: the extracted module is
-// ~30 KB and a data: URL of that size fails to import with the URL itself as
-// the message, which is not a debuggable error.
-async function load(page, slices, exports) {
-  const words = page.match(/const WORDS = (\[[^\n]*\]);/)[1];
-  const src = `const WORDS = ${words};\n`
-    + slices.map(([a, b]) => page.slice(page.indexOf(a), page.indexOf(b))).join('\n')
-    + `\nexport { ${exports.join(', ')} };`;
-  const tmp = join(tmpdir(), `demo-check-${process.pid}-${slices.length}.mjs`);
-  writeFileSync(tmp, src);
-  try { return await import(pathToFileURL(tmp).href); }
-  finally { rmSync(tmp, { force: true }); }
-}
+// Pull the demo's inline codec out as an importable module. Written to a real
+// file rather than a data: URL: the extracted module is ~35 KB and a data: URL
+// of that size fails to import with the URL itself as the message, which is not
+// a debuggable error.
+const words = html.match(/const WORDS = (\[[^\n]*\]);/)[1];
+// The demo embeds the word list; the reference reads it from a file. One of the
+// two would drift silently, so they are compared directly rather than only
+// through the encodings.
+const listed = readFileSync(join(here, 'bip39-english.txt'), 'utf8').trim().split('\n');
+if (JSON.parse(words).join('\n') !== listed.join('\n'))
+  fail('the demo\'s word list is not bip39-english.txt');
+const src = `const WORDS = ${words};\n`
+  + html.slice(html.indexOf('const INDEX = new Map'), html.indexOf('// --- map ---'))
+  + '\nexport { encode, decode, resolveTail, cellSize, tileSize, covers, indices,'
+  + ' parseAddress, formatAddress, candidatesInBox, shortestInBox, decodeInBox,'
+  + ' MAX_CANDIDATES, GLOBAL };';
+const tmp = join(tmpdir(), `word-grid-check-${process.pid}.mjs`);
+writeFileSync(tmp, src);
+let mod;
+try { mod = await import(pathToFileURL(tmp).href); } finally { rmSync(tmp, { force: true }); }
+const G = mod.GLOBAL;
 
-const CODEC_START = 'const INDEX = new Map';
-const mod = await load(html, [[CODEC_START, '// --- map ---']],
-  ['encode', 'decode', 'decodeAuto', 'resolveTail', 'cellSize', 'tileSize', 'covers',
-   'indices', 'parseAddress', 'formatAddress', 'bestScope', 'scopesAccepting',
-   'GLOBAL', 'UK', 'REGIONS', 'SCOPES']);
-
-// Every scope: bit order, axis split, box, encodings, truncation, checksum.
 // The bit order decides the shape of every cell, so the ports must agree on it
 // exactly, not merely on the totals.
-function checkScope(key, sc, f) {
-  const order = sc.order.map((a) => 'xy'[a]).join('');
-  if (order !== f.order) fail(`${key} bit order: js ${order} vs py ${f.order}`);
-  if (sc.xb !== f.axis_bits[0] || sc.yb !== f.axis_bits[1])
-    fail(`${key} axis bits: js ${[sc.xb, sc.yb]} vs py ${f.axis_bits}`);
-  if (f.box && sc.box.join(',') !== f.box.join(','))
-    fail(`${key} box: js ${sc.box} vs py ${f.box}`);
-  if (f.tag !== undefined && sc.tag !== f.tag)
-    fail(`${key} tag: js ${sc.tag} vs py ${f.tag}`);
-  if (f.max_words !== undefined && sc.maxWords !== f.max_words)
-    fail(`${key} length: js ${sc.maxWords} vs py ${f.max_words}`);
-  for (const c of f.points) {
-    for (const [n, expected] of Object.entries(c.words)) {
-      const got = mod.encode(c.lat, c.lng, Number(n), sc);
-      if (got.join('.') !== expected.join('.'))
-        fail(`${key} MISMATCH ${c.lat},${c.lng} @${n}: js ${got.join('.')} vs py ${expected.join('.')}`);
-      const [lat, lng] = mod.decode(expected, sc);
-      if (!Number.isFinite(lat) || !Number.isFinite(lng))
-        fail(`${key} BAD DECODE ${expected.join('.')}`);
-    }
-    const longest = c.words[String(Object.keys(c.words).length)];
-    for (const [n, expected] of Object.entries(c.words))
-      if (longest.slice(0, Number(n)).join('.') !== expected.join('.'))
-        fail(`${key} NOT A PREFIX at ${n}: ${expected.join('.')}`);
-    try { mod.decode(longest, sc); }
-    catch (e) { fail(`${key} CHECKSUM ${c.lat},${c.lng}: ${e.message}`); }
+const order = G.order.map((a) => 'xy'[a]).join('');
+if (order !== fixture.order) fail(`bit order: js ${order} vs py ${fixture.order}`);
+if (G.xb !== fixture.axis_bits[0] || G.yb !== fixture.axis_bits[1])
+  fail(`axis bits: js ${[G.xb, G.yb]} vs py ${fixture.axis_bits}`);
+if (G.box.join(',') !== fixture.box.join(',')) fail(`box: js ${G.box} vs py ${fixture.box}`);
+if (mod.MAX_CANDIDATES !== fixture.max_candidates)
+  fail(`cap: js ${mod.MAX_CANDIDATES} vs py ${fixture.max_candidates}`);
+if (G.maxWords !== fixture.max_words)
+  fail(`length: js ${G.maxWords} vs py ${fixture.max_words}`);
+
+// Encodings, the prefix property, and the checksum, over a spread that includes
+// the seams: both poles, both sides of the antimeridian, the equator.
+for (const c of fixture.points) {
+  for (const [n, expected] of Object.entries(c.words)) {
+    const got = mod.encode(c.lat, c.lng, Number(n), G);
+    if (got.join('.') !== expected.join('.'))
+      fail(`MISMATCH ${c.lat},${c.lng} @${n}: js ${got.join('.')} vs py ${expected.join('.')}`);
+    const [lat, lng] = mod.decode(expected, G);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng))
+      fail(`BAD DECODE ${expected.join('.')}`);
   }
+  const longest = c.words[String(fixture.max_words)];
+  for (const [n, expected] of Object.entries(c.words))
+    if (longest.slice(0, Number(n)).join('.') !== expected.join('.'))
+      fail(`NOT A PREFIX at ${n}: ${expected.join('.')}`);
+  try { mod.decode(longest, G); }
+  catch (e) { fail(`CHECKSUM ${c.lat},${c.lng}: ${e.message}`); }
 }
 
-checkScope('global', mod.GLOBAL, fixture.global);
-for (const [key, f] of Object.entries(fixture.regions)) {
-  const sc = mod.SCOPES[key];
-  if (!sc) { fail(`missing scope ${key} in the demo`); continue; }
-  checkScope(key, sc, f);
-}
-if (mod.REGIONS.length !== Object.keys(fixture.regions).length)
-  fail(`region count: js ${mod.REGIONS.length} vs py ${Object.keys(fixture.regions).length}`);
-
-// The auto-switch: the smallest box containing the point, Global if none. Both
-// ports must choose the same scope for the same click, or the same words would
-// mean two different places.
-for (const c of fixture.chosen) {
-  const sc = mod.bestScope(c.lat, c.lng);
-  if (sc.key !== c.scope) {
-    fail(`CHOSE ${sc.key} at ${c.lat},${c.lng}, python chose ${c.scope}`); continue;
-  }
-  const got = mod.encode(c.lat, c.lng, sc.maxWords, sc);
-  if (got.join('.') !== c.words.join('.'))
-    fail(`CHOSEN WORDS ${c.lat},${c.lng}: js ${got.join('.')} vs py ${c.words.join('.')}`);
-}
-
-// Coverage must stop in the same place in both ports. A point outside a box
-// that slipped through would be given an address belonging to somewhere inside
-// it, and would pass its own checksum.
-for (const c of fixture.local_outside) {
-  if (mod.covers(c.lat, c.lng, mod.UK)) fail(`LOCAL COVERS ${c.lat},${c.lng}`);
-  let refused = false;
-  try { mod.encode(c.lat, c.lng, 4, mod.UK); } catch { refused = true; }
-  if (!refused) fail(`LOCAL ENCODED an outside point ${c.lat},${c.lng}`);
-}
-
-// Dropping leading words and filling them back in from a reference point,
-// including across the antimeridian where global x has to wrap.
-for (const t of fixture.global.tails) {
+// Dropping leading words and filling them back in from a reference POINT,
+// including across the antimeridian where x has to wrap.
+for (const t of fixture.tails) {
   let got;
-  try { got = mod.resolveTail(t.words, t.ref[0], t.ref[1], mod.GLOBAL); }
+  try { got = mod.resolveTail(t.words, t.ref[0], t.ref[1], G); }
   catch (e) { fail(`TAIL .${t.words.join('.')} from ${t.ref}: ${e.message}`); continue; }
-  const a = mod.indices(got[0], got[1], mod.GLOBAL);
-  const b = mod.indices(t.resolved[0], t.resolved[1], mod.GLOBAL);
+  const a = mod.indices(got[0], got[1], G);
+  const b = mod.indices(t.resolved[0], t.resolved[1], G);
   if (a[0] !== b[0] || a[1] !== b[1])
     fail(`TAIL .${t.words.join('.')} from ${t.ref}: js ${got} vs py ${t.resolved}`);
 }
-for (const h of fixture.global.hopeless) {
+for (const h of fixture.hopeless) {
   let refused = false;
   try {
-    const got = mod.resolveTail(h.words, h.ref[0], h.ref[1], mod.GLOBAL);
+    const got = mod.resolveTail(h.words, h.ref[0], h.ref[1], G);
     refused = !Number.isFinite(got[0]);
   } catch { refused = true; }
   if (!refused) fail(`RESOLVED a hopeless tail .${h.words.join('.')} from ${h.ref}`);
+}
+
+// Filling them back in from a REGION instead: the country box. The window is
+// never part of an address, but both ports must search the SAME window, or the
+// same place would shorten by different amounts in each.
+for (const b of fixture.boxes) {
+  for (const p of b.points) {
+    const full = mod.encode(p.lat, p.lng, G.maxWords, G);
+    for (const [n, want] of Object.entries(p.search)) {
+      const { hits, searched } = mod.candidatesInBox(full.slice(-n), b.box, G);
+      if (searched !== want.searched)
+        fail(`${b.name} @${n}: js searched ${searched} vs py ${want.searched}`);
+      const got = hits === null ? null : hits.length;
+      if (got !== want.hits) fail(`${b.name} @${n}: js ${got} hits vs py ${want.hits}`);
+    }
+    const said = mod.shortestInBox(p.lat, p.lng, b.box, G);
+    if (said !== p.said)
+      fail(`${b.name} ${p.lat},${p.lng}: js says ${said} words, py says ${p.said}`);
+    // The cap is the safety property: never shorten against a window too wide
+    // for 7 check bits to screen. Both ports must draw that line in one place.
+    if (said < G.maxWords) {
+      const { searched } = mod.candidatesInBox(full.slice(-said), b.box, G);
+      if (searched > mod.MAX_CANDIDATES)
+        fail(`${b.name} ${p.lat},${p.lng}: shortened against ${searched} candidates, `
+          + `over the cap of ${mod.MAX_CANDIDATES}`);
+      const got = mod.decodeInBox(full.slice(-said), b.box, G);
+      const a = mod.indices(got[0], got[1], G), w = mod.indices(p.lat, p.lng, G);
+      if (a[0] !== w[0] || a[1] !== w[1])
+        fail(`${b.name} ${p.lat},${p.lng}: shortened form reads back elsewhere`);
+    }
+  }
 }
 
 // The leading separator is the whole notation for a tail, so parsing it back
@@ -130,46 +127,10 @@ for (const [text, n, tail] of [['leg.tunnel.slam', 3, false],
     fail(`PARSE ${JSON.stringify(text)} -> ${parts.length} words, tail=${isTail}`);
 }
 
-// --- the second demo -------------------------------------------------------
-// country-shorten.html carries the same codec verbatim and adds a box search on
-// top. Copies drift; this refuses to let them. The codec block must be the same
-// text, and the search must agree with the reference on which cells it looks
-// at, how many survive the checksum, and how short the address ends up.
-const codecOf = (page, end) =>
-  page.slice(page.indexOf(CODEC_START), page.indexOf(end)).trim();
-if (codecOf(html, '// --- map ---') !== codecOf(shorten, '// --- the country, from'))
-  fail('country-shorten.html has drifted from word-grid.html\'s codec');
-if (html.match(/const WORDS = (\[[^\n]*\]);/)[1]
-    !== shorten.match(/const WORDS = (\[[^\n]*\]);/)[1])
-  fail('country-shorten.html has a different word list');
-
-const cs = await load(shorten, [[CODEC_START, '// --- the country, from'],
-                                ['// --- shortening', '// --- map ---']],
-  ['candidatesInBox', 'shortestInBox', 'encode', 'GLOBAL']);
-for (const b of fixture.boxes) {
-  for (const p of b.points) {
-    const full = cs.encode(p.lat, p.lng, cs.GLOBAL.maxWords, cs.GLOBAL);
-    for (const [n, want] of Object.entries(p.search)) {
-      const { hits, searched } = cs.candidatesInBox(full.slice(-n), b.box, cs.GLOBAL);
-      if (searched !== want.searched)
-        fail(`${b.name} @${n}: js searched ${searched} vs py ${want.searched}`);
-      const got = hits === null ? null : hits.length;
-      if (got !== want.hits)
-        fail(`${b.name} @${n}: js ${got} hits vs py ${want.hits}`);
-    }
-    const said = cs.shortestInBox(p.lat, p.lng, b.box, cs.GLOBAL);
-    if (said !== p.said)
-      fail(`${b.name} ${p.lat},${p.lng}: js says ${said} words, py says ${p.said}`);
-  }
-}
-
-const regionPoints = Object.values(fixture.regions).reduce((n, r) => n + r.points.length, 0);
-console.log(`demo codec vs python reference: global ${fixture.global.points.length} points, `
-  + `${Object.keys(fixture.regions).length} regions (${regionPoints} points), `
-  + `${fixture.chosen.length} scope choices, ${fixture.global.tails.length} tails, `
-  + `${fixture.global.hopeless.length} hopeless; `
-  + `country-shorten ${fixture.boxes.length} boxes `
+console.log(`demo codec vs python reference: ${fixture.points.length} points, `
+  + `${fixture.tails.length} tails, ${fixture.hopeless.length} hopeless, `
+  + `${fixture.boxes.length} country boxes `
   + `(${fixture.boxes.reduce((n, b) => n + b.points.length, 0)} points)`);
 if (bad) { console.error(`FAIL: ${bad} problem(s)`); process.exit(1); }
-console.log('OK: every scope agrees, truncation holds, checksums verify, '
-  + 'the auto-switch matches, both demos share one codec');
+console.log('OK: encodings match, truncation holds, checksums verify, '
+  + 'both kinds of shortening agree');

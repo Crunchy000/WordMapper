@@ -4,77 +4,51 @@ Reference: [`tools/gridcode/bip39grid.py`](../tools/gridcode/bip39grid.py),
 tests in [`test_bip39grid.py`](../tools/gridcode/test_bip39grid.py).
 Setup: `npm install --prefix tools/gridcode`.
 
-## Scopes
+## One grid
 
-The same grid mechanism over a different box. **Two regional boxes at four
-words, plus Global at five.** The scope follows the click — the demo never asks
-you to pick one.
+**Five words name any point on earth to 1.35 m**, and that is the whole scheme.
+There is one grid, one address for a place, no scope to choose and nothing to
+switch.
 
-| scope | box | 4-word cell |
-|---|---|---|
-| Local — UK and Ireland | 0.97 M km² | **2.66 m** |
-| Australia | 13.9 M km² | 10.07 m |
-| *Global, 5 words* | *whole earth* | *1.35 m* |
+There used to be regional boxes — the same grid mechanism over a smaller
+rectangle, reaching four words over Britain and Ireland, and four over
+Australia. They are gone, for three reasons that stack up.
 
-### Why only two
+**A box has to be a rectangle, and most of the world cannot be boxed without
+swallowing a neighbour.** Africa and Europe interleave across the Mediterranean:
+Tunisia reaches further north than the southern tip of Spain, so no horizontal
+line separates them and any pair of boxes there overlaps. Europe was the smaller
+box, so it won the overlap, and Tunis and Algiers resolved as "Europe". Australia
+*could* be boxed cleanly, but only by cutting at 12° S and giving up Cape York,
+the Tiwi Islands and the Torres Strait — because Papua New Guinea reaches
+11.63° S and Indonesia 10.91° S, both further south than Australia's own northern
+tip at 10.05° S.
 
-**A box is a rectangle, and most continents cannot be boxed without swallowing
-a neighbour.** Africa and Europe interleave across the Mediterranean — Tunisia
-reaches further north than the southern tip of Spain — so no horizontal line
-separates them, and any pair of boxes there overlaps. When both existed, Tunis
-and Algiers resolved as "Europe", which is simply wrong.
+**A box was coarser than the grid it stood in for.** Four words over Britain was
+2.66 m; five words anywhere is 1.35 m. The continental boxes were worse still —
+Asia came out at 31.6 m.
 
-The continental boxes were also coarse enough to be barely worth the word they
-saved: Asia came out at 31.6 m, against Global's 1.35 m for one more word.
-Merging them fixes the overlap but makes it worse still — Afro-Eurasia as a
-single box is 41.6 m.
+**And a box gave a place a second address.** Two addresses for one spot is a
+liability whatever the resolution, and it needed a scope tag bound into every
+checksum to keep them from cross-verifying, which was still ambiguous 0.8 % of
+the time at two boxes and 4.6 % at seven.
 
-So the regions are the two that box cleanly, and Global covers everything else.
-
-### Australia's box is cut at 12° S, and that is the point
-
-Papua New Guinea reaches 11.63° S and Indonesia 10.91° S — **both further south
-than Australia's own northern tip at 10.05° S.** So no cut keeps the whole
-continent and excludes the neighbours; checked against Natural Earth coastlines
-rather than guessed.
-
-Stopping at 12° S catches **no other country's land at all**. It keeps 90 % of
-Australia's coastline and every major city, Darwin (12.46° S) included. What it
-gives up — Cape York's tip, the Tiwi Islands, the Torres Strait — falls back to
-Global, which still works there.
-
-### Choosing the scope
-
-The smallest regional box containing the point, or Global where none does. The
-boxes do not overlap each other, so this is only ever a choice between one
-region and Global.
-
-### Telling them apart
-
-Each scope's tag is bound into its checksum, so an address minted in one box
-cannot verify in another. With two regional boxes a four-word address is
-accepted by more than one scope **0.8 %** of the time — measured at 1.0 %. That
-is low enough that a four-word address nearly always identifies itself, which
-was not true at seven boxes, where it was 4.6 %.
-
-### Boxes are rectangles, not borders
-
-Dublin is in Local by design. Boulogne comes along with it, because the box's
-east edge is out in the Channel. Addresses resolve correctly regardless, since
-encoding and decoding use the same box; a box is not a claim about anything.
+What a box was really selling was the **leading word** — and something else
+supplies that without a rectangle being drawn by hand. See *A region will do
+instead of a point*, below.
 
 ## Drop trailing words: coarser, needs no context
 
 Each word narrows the area, and the words already said never change — every
 address is a prefix of a longer one.
 
-| Words | Big Ben, Global | Cell | | Big Ben, UK | Cell |
-|---|---|---|---|---|---|
-| 1 | `leg` | 542 × 460 km | | `play` | 19.9 km |
-| 2 | `leg.tunnel` | 8.5 × 14.4 km | | `play.cram` | 441 m |
-| 3 | `leg.tunnel.slam` | 264 × 225 m | | `play.cram.side` | 9.7 m |
-| 4 | `leg.tunnel.slam.subway` | 4.1 × 7.0 m | | `play.cram.side.someone` | **2.43 m, verified** |
-| 5 | `leg.tunnel.slam.subway.gown` | **1.35 m, verified** | | — | — |
+| Words | Big Ben | Cell |
+|---|---|---|
+| 1 | `leaf` | 353 × 706 km |
+| 2 | `leaf.step` | 11.0 km square |
+| 3 | `leaf.step.cruel` | 172 × 345 m |
+| 4 | `leaf.step.cruel.tomato` | 5.38 m square |
+| 5 | `leaf.step.cruel.tomato.unable` | **1.346 m square, verified** |
 
 ## Drop leading words: same precision, fewer words, needs context
 
@@ -85,11 +59,11 @@ of exactly one tile, and any accuracy better than half a tile pins it down.
 
 | Words said | Written | Ambiguity | Usable if the listener knows your position within |
 |---|---|---|---|
-| 5 | `leg.tunnel.slam.subway.gown` | none | nothing at all |
-| 4 | `.tunnel.slam.subway.gown` | 542 × 460 km | 230 km — which country |
-| 3 | `.slam.subway.gown` | 8.5 × 14.4 km | 4.2 km — which town |
-| 2 | `.subway.gown` | 264 × 225 m | 112 m — which street |
-| 1 | `.gown` | 4.1 × 7.0 m | 2 m — you can already see them |
+| 5 | `leaf.step.cruel.tomato.unable` | none | nothing at all |
+| 4 | `.step.cruel.tomato.unable` | 353 × 706 km | 176 km — which country |
+| 3 | `.cruel.tomato.unable` | 11.0 km square | 5.5 km — which town |
+| 2 | `.tomato.unable` | 172 × 345 m | 86 m — which street |
+| 1 | `.unable` | 5.38 m square | 2.7 m — you can already see them |
 
 The leading separator is the whole notation: it says the coarse words are
 missing and context must supply them. That is the difference between an address
@@ -121,9 +95,11 @@ name — so "in the UK" can stand in for a word the way "near here" does.
 The two are the same information in different shapes. Both are a search window;
 one is centred on a point, the other is a rectangle someone else drew.
 
-**It buys exactly one word.** Seven check bits kill 127 candidates in 128, so
-the window has to be down to a few hundred tiles before one survivor is likely.
-Over Britain:
+**How many words a window buys is one number: how many candidate tiles it
+holds.** Each word is 11 bits, so one word fewer is 2048 times as many tiles,
+and the 7 check bits leave one in 128 standing. A length works exactly when no
+*other* candidate survives — a Poisson zero at rate `(tiles − 1)/128`. Over
+Britain:
 
 | Said | Tiles in the box | Survive the check |
 |---|---|---|
@@ -131,9 +107,42 @@ Over Britain:
 | 4 | 6 | 1 |
 | 5 | 1 | 1 |
 
-Measured over real Nominatim boxes, five words become four always in
-Switzerland and Ireland, 98 % of the time in the UK, 92 % in France and 70 % in
-Australia. Three words is out of reach everywhere.
+Nothing about countries enters into it; a country is just a box someone else
+drew, and its size is the whole story. Measured against the boxes Nominatim
+returns:
+
+| country | box | tiles in the window | said | wrong word caught |
+|---|---|---|---|---|
+| Luxembourg | 4,700 km² | 1.0 | **four**, always | 100 % |
+| Switzerland | 76,000 km² | 1.0 | **four**, always | 99 % |
+| Ireland | 193,000 km² | 1.1 | **four**, always | 100 % |
+| United Kingdom | 1.3 M km² | 5.5 | **four**, 97 % of the time | 96 % |
+| France | 1.28 M km² | 5.5 | **four**, 97 % of the time | 94 % |
+| Australia | 17.3 M km² | 71 | five — over the cap | — |
+| United States | 159 M km² | 638 | five — over the cap | — |
+
+**Shortening this way costs detection, and the cap is what bounds the cost.**
+When a word is misheard the true tile no longer matches, so every candidate in
+the window becomes a fresh lottery against the same 7 check bits: a wrong word
+is caught only `(127/128)^k` of the time. At k = 6 that is 95.4 %, against
+99.2 % for the full address. Uncapped it was far worse — a window the size of
+Australia holds ~70 candidates and falls to 58 %, where a third of mishearings
+resolve *silently* to somewhere else in the country, which is the worst failure
+there is because it looks like an answer.
+
+So `shortest_in_box()` refuses to buy a word above `MAX_CANDIDATES = 6`, and
+`decode_in_box()` refuses to read one. Australia and the United States say all
+five words every time, rather than flapping between four and five depending on
+where in the country you happened to be.
+
+`resolve_tail()` has no such loss: it takes the single nearest tile to the
+reference and tests that one candidate — one chance to be fooled rather than k —
+so it stays at 99.2 %. That asymmetry is the real difference between the two
+ways of filling a dropped word back in.
+
+The tests assert the measured uniqueness against that Poisson prediction for
+each box, and the measured detection against the 93 % floor the cap implies —
+rather than against numbers someone wrote down.
 
 **The grid does not depend on the country.** The window is used when an address
 is *read*; it is not part of the address and nothing is bound to it. So a border
@@ -147,56 +156,30 @@ is not the only survivor, and the full address is said instead. Nominatim
 reports an antimeridian country inside out (west > east), which reads as most of
 the planet — a useless window, and a safe one.
 
-## Telling them apart
-
-A terminal-length address carries a checksum over its own scope, so it
-identifies itself: four words that pass the UK check are a UK address, five
-that pass the global check are a global one. `decode_auto` does this without
-being told.
-
-**The two directions are not symmetrical, and this is the one sharp edge.** A
-global *prefix* carries no checksum at all — that is the whole point of a short
-form. So:
-
-- A four-word global prefix read as UK fails the UK checksum 99.2 % of the time
-  and is caught.
-- A four-word UK address read as a global prefix would decode **silently** to
-  a different place, because nothing checks a prefix.
-
-So the UK reading is always tried first. The tests assert that order, and the
-cross-check asserts both ports agree on it.
-
-## Outside the UK box
-
-The UK box is a **rectangle, not a border**. Dublin sits inside it and gets a
-UK-mode address, which resolves correctly because encoding and decoding use the
-same box — it is simply not a claim about jurisdiction.
-
-Outside the box there is no UK address, and `encode` refuses rather than
-inventing one: decode maps onto the box and nowhere else, so an outside point
-would alias onto an address belonging to a real place inside it and pass its own
-checksum. Every such point still has a global address.
-
-### How the global grid falls over the UK
+## How the grid falls over the UK
 
 Luck rather than design, but useful luck: the whole UK bounding box spans only
-**six** distinct first words — `lecture`, `left`, `leg`, `legal`, `present`,
-`pretty` — and most of Great Britain is `leg`.
+**six** distinct first words — `leader`, `leaf`, `learn`, `leave`, `staff`,
+`stairs` — and most of Great Britain is `leaf`.
 
 ```
-London      leg.tunnel.slab.company.confirm
-Manchester  leg.stable.divert.copper.trophy
-Cardiff     leg.hamster.spring.steel.hat
-Plymouth    leg.country.initial.monster.picnic
-Edinburgh   legal.december.exist.frozen.mixture
-Belfast     left.prevent.giraffe.pulse.unit
+London      leaf.step.cube.bubble.explain
+Manchester  leaf.toilet.garden.cable.voice
+Cardiff     leaf.nerve.proud.tube.vapor
+Plymouth    leaf.craft.hospital.exile.evidence
+Edinburgh   leave.crowd.response.purpose.outdoor
+Belfast     learn.few.gold.fury.hip
+Dublin      leader.wage.hair.shy.ask
 ```
 
-So a UK conversation drops the first word almost for free, and four words
-reaches anywhere in the country. It also shows the catch: Edinburgh and Belfast
-fall on the other side of a seam, and near a seam the dropped word is not
+So a British conversation drops the first word almost for free, and four words
+reach anywhere in the country. It also shows the catch: Edinburgh, Belfast and
+Dublin fall on the other side of a seam, and near a seam the dropped word is not
 predictable from "we are both in Britain". That is precisely the case the
-checksum catches rather than resolving quietly to the wrong place.
+checksum catches, rather than resolving quietly to the wrong place — and
+precisely why the country box search is the more reliable of the two ways to
+fill a dropped word back in, since it tries every candidate rather than
+assuming the nearest.
 
 ## Why the prefix property needs care
 
@@ -226,32 +209,34 @@ standard parallel of 55.654°.
 | frame | 34,667 × 14,713 km | 22,585 × 22,585 km |
 | 5-word cell | 1.03 × 1.75 m — 1.70 : 1 | **1.346 × 1.346 m — 1.00 : 1** |
 | 4-word cell | 4.13 × 7.02 m — 1.70 : 1 | **5.385 m square** |
-| Local's 4-word cell | 1.93 × 3.07 m — 1.59 : 1 | **2.51 × 2.36 m — 1.07 : 1** |
 
 Cell *area* is untouched — the projection is equal-area, so only the shape
 changes and the resolution figures are the same.
 
-Both terminal lengths are even bit counts (48 global, 44 local), which is why
-both land exactly square. The cost falls on the odd lengths, which go to 2 : 1 —
+The terminal length is an even bit count (48), which is why it lands exactly
+square. The cost falls on the odd lengths, which go to 2 : 1 —
 a 3-word global cell is 172 × 345 m rather than 264 × 225 m. No frame can square
 both: one exponent is odd whenever the other is even. The best compromise that
 squares *nothing* but evens everything out is a √2 frame (47.86°), which puts
 every length at 1.414 : 1; squaring the lengths that people actually say is
 worth more.
 
-Within a box the bits are still handed to whichever axis is currently wider, so
-a box with its own aspect — Local's is 1 : 1.9 — still comes out near square.
+The bits are handed to whichever axis is currently wider at each step rather
+than alternating, which is what keeps the odd lengths at 2 : 1 rather than
+carrying the frame's aspect down into every cell. With a square frame the two
+rules agree; the machinery is kept because the aspect is *derived* from the box
+rather than written down.
 
 ## The last word does two jobs
 
 A whole fifth word of position would reach 8 cm, finer than anyone needs. So its
 11 bits are split between refinement and checksum:
 
-| Refine | Check | Global cell | UK cell | Wrong word caught |
-|---|---|---|---|---|
-| 3 | 8 | 1.90 m | 3.44 m | 99.61 % |
-| **4** | **7** | **1.35 m** | **2.43 m** | **99.22 %** |
-| 5 | 6 | 0.95 m | 1.72 m | 98.44 % |
+| Refine | Check | Cell | Wrong word caught |
+|---|---|---|---|
+| 3 | 8 | 1.90 m | 99.61 % |
+| **4** | **7** | **1.35 m** | **99.22 %** |
+| 5 | 6 | 0.95 m | 98.44 % |
 
 Shipped at **4 refine + 7 check**. For comparison, what3words is 3 m with no
 checksum at all — this is finer *and* verified.
@@ -261,9 +246,10 @@ where the next word's position bits must go. Reserving 8 bits at every length
 would take 2 words from 11 km to 177 km. Putting it in the last word instead
 costs nothing at the shorter lengths, which are simply unverified.
 
-Each scope's terminal length is terminal for the same reason — a further word
-would have to reinterpret the check bits. The checksum also covers the scope
-tag, which is what keeps the two apart.
+Five words is terminal for the same reason — a sixth would have to reinterpret
+the check bits. The 7 bits cover the *whole* position, which is what makes both
+kinds of shortening safe: a reconstruction that guesses wrong fails the check,
+whether the guess came from a reference point or from a box search.
 
 ## The word list
 
@@ -288,40 +274,32 @@ a claim about cells.
 
 `python3 tools/gridcode/test_bip39grid.py`:
 
-**Global** — every point on earth encodes, poles and both sides of the
-antimeridian included; every address is a prefix of the next longer one; round
-trip inside one cell diagonal at every length; no repeats at 2 and 3 words;
-dropping leading words and filling them back in from a reference inside the
-tile reconstructs exactly; a reference too far away is caught 99.4 %; a wrong
-word is rejected 99.1 %; no cell worse than 1.7 : 1.
-
-**UK** — every point in the box encodes; prefix property and round trip hold;
-no repeats at 3 words; a coordinate outside the box is refused rather than
-aliased, and those same points still have global addresses; a wrong word is
-rejected 99.2 %. Dublin is inside the box and round trips, because the box is a
-rectangle rather than a border.
-
-**Both** — a UK address is *not* checked when read as a global prefix (asserted,
-because it is the reason resolution order matters); `decode_auto` identifies
-every UK address as UK and every five-word global address as global, and reports
-a short address as unverified.
+Every point on earth encodes, poles and both sides of the antimeridian
+included; every address is a prefix of the next longer one; round trip inside
+one cell diagonal at every length; no repeats at 2 and 3 words; dropping
+leading words and filling them back in from a reference inside the tile
+reconstructs exactly; a reference too far away is caught 99.4 %; a wrong word
+is rejected 99.1 %; no cell worse than 2 : 1, and exactly square at even
+lengths. An index is never negative and never past the end — the clamp is at
+both ends, since an unclamped negative would sign-extend under `>>` and mint a
+plausible address for the wrong place.
 
 **Shortening against a country box** — the true point is never lost from the
-search; the shortened form resolves back to the same cell; a box that excludes
-the point falls back to the full address; an inside-out box costs words, not
-correctness; the address itself does not depend on the box; survivors match the
-1-in-128 checksum rate; a search too big to be worth running is refused rather
+search; uniqueness matches the Poisson law box by box; **no address is ever
+shortened against a window over the cap**, and a window over it is refused
+rather than answered from; a misheard word in a shortened address is still
+caught over 93 % of the time, measured per country; the shortened form reads
+back to the same cell; a box that excludes the point falls back to the full
+address; an inside-out box costs words, not correctness; the address itself does
+not depend on the box; a search too big to be worth running is refused rather
 than run.
 
 `node tools/gridcode/check-demo.mjs` runs the demo's own JavaScript port against
-a fixture generated from the Python reference, so the two cannot drift: both
-scopes' encodings, truncation, checksums, the UK box and its refusals, tail
-resolution across the antimeridian, hopeless references, both bit orders, the
-scope-identification order, and address parsing. It also checks the second demo:
-that `country-shorten.html` carries the *same* codec text and word list rather
-than a drifted copy, and that its box search agrees with the reference on which
-cells it looks at, how many survive the check, and how short the address ends
-up.
+a fixture generated from the Python reference, so the two cannot drift: the bit
+order, the axis split, the box, encodings at every length, truncation,
+checksums, tail resolution across the antimeridian, hopeless references, address
+parsing, and the box search — which cells it looks at, how many survive the
+check, and how short the address ends up.
 
 Both run in CI on every push.
 

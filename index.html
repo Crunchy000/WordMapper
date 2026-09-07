@@ -69,65 +69,40 @@
 <header>
   <div class="wrap">
     <h1>WordMapper</h1>
-    <p class="tagline">Five words name any point on earth to a metre; four do it inside the UK. Say fewer for a coarser place — or, if whoever is listening already knows roughly where you are, drop the leading words and keep every metre.</p>
-    <div class="addr">flush<span>.</span>edge<span>.</span>solution<span>.</span>sun</div>
-    <p class="note">Big Ben in the Local scope &mdash; four words over a box around
-    Britain and Ireland, to 2.7&nbsp;m and checksummed. The scope follows where you
-    click; anywhere outside every regional box falls back to five words worldwide.</p>
+    <p class="tagline">Five words name any point on earth to a metre. Say fewer for a coarser place &mdash; or, if whoever is listening already knows which country you are in, drop the leading word and keep every metre.</p>
+    <div class="addr">leaf<span>.</span>step<span>.</span>cruel<span>.</span>tomato<span>.</span>easy</div>
+    <p class="note">Big Ben, to 1.35&nbsp;m and checksummed. One grid over the whole
+    earth, so this is <em>the</em> address for that spot &mdash; there is nothing to
+    switch and no box to be inside. In the UK the first word can go unsaid.</p>
   </div>
 </header>
 
 <main class="wrap">
 
   <h2>Try it</h2>
-  <ul>
-    <li><a href="demos/word-grid.html">The grid</a> &mdash; click anywhere on earth and the
-    address sits on the map, nothing else. The scope follows the click.</li>
-    <li><a href="demos/country-shorten.html">Shortening by country</a> &mdash; the same
-    address, with OpenStreetMap asked which country the click landed in so the leading
-    word can go unsaid. The greyed word is the one the country stands in for.</li>
-  </ul>
+  <p><a href="demos/word-grid.html">Open the grid</a> &mdash; click anywhere on earth and
+  the address sits on the map, nothing else. The five words appear straight away with no
+  network involved; OpenStreetMap is then asked which country the click landed in, and
+  the words that country can stand in for go grey.</p>
 
-  <h2>Scopes</h2>
-  <p>The same grid mechanism over a different box: <strong>two regional boxes at four
-  words</strong>, plus Global at five for everywhere else. The scope follows the click
-  &mdash; there is nothing to switch by hand.</p>
+  <h2>There is one grid</h2>
+  <p>No regional boxes, no scope to choose, nothing to switch. There used to be
+  &mdash; a box around Britain and Ireland at four words, another around Australia
+  &mdash; and they are gone.</p>
 
-  <div class="scroll">
-  <table>
-    <thead><tr><th>Scope</th><th>Box</th><th>4-word cell</th></tr></thead>
-    <tbody>
-      <tr><td class="num">Local &mdash; UK and Ireland</td><td class="num">0.97 M km&sup2;</td><td class="num"><strong>2.66 m</strong></td></tr>
-      <tr><td class="num">Australia</td><td class="num">13.9 M km&sup2;</td><td class="num">10.07 m</td></tr>
-      <tr><td class="num">Global &mdash; 5 words</td><td class="num">whole earth</td><td class="num">1.35 m</td></tr>
-    </tbody>
-  </table>
-  </div>
-
-  <p><strong>Only two, because a box is a rectangle</strong> and most continents cannot
-  be boxed without swallowing a neighbour. Africa and Europe interleave across the
+  <p><strong>A box has to be a rectangle, and most of the world cannot be boxed
+  without swallowing a neighbour.</strong> Africa and Europe interleave across the
   Mediterranean &mdash; Tunisia reaches further north than the southern tip of Spain
   &mdash; so no horizontal line separates them, and when both boxes existed Tunis and
-  Algiers resolved as &ldquo;Europe&rdquo;. They were also coarse enough to be barely
-  worth the word they saved: Asia came out at 31.6&nbsp;m, against Global&rsquo;s
-  1.35&nbsp;m for one more word.</p>
+  Algiers resolved as &ldquo;Europe&rdquo;. Australia could be boxed cleanly, but only
+  by cutting at 12&deg;&nbsp;S and giving up Cape York, because Papua New Guinea reaches
+  further south than Australia&rsquo;s own northern tip.</p>
 
-  <p><strong>Australia&rsquo;s box is cut at 12&deg;&nbsp;S, and that is the point.</strong>
-  Papua New Guinea reaches 11.63&deg;&nbsp;S and Indonesia 10.91&deg;&nbsp;S, both further
-  south than Australia&rsquo;s own northern tip at 10.05&deg;&nbsp;S, so no cut keeps the
-  whole continent and excludes the neighbours. Stopping at 12&deg;&nbsp;S catches no other
-  country&rsquo;s land at all. It keeps 90&nbsp;% of the coastline and every major city,
-  Darwin included; Cape York&rsquo;s tip, the Tiwi Islands and the Torres Strait fall back
-  to Global, which still works there.</p>
-
-  <p>Each scope&rsquo;s tag is bound into its checksum, so an address minted in one box
-  cannot verify in another. With two regional boxes a four-word address is accepted by
-  more than one scope only 0.8&nbsp;% of the time, so it nearly always identifies itself
-  &mdash; which was not true at seven boxes, where it was 4.6&nbsp;%.</p>
-
-  <p>Boxes are rectangles, not borders. Dublin is in Local by design; Boulogne comes
-  along with it, because the box&rsquo;s east edge is out in the Channel. Addresses
-  resolve correctly regardless, since encoding and decoding use the same box.</p>
+  <p><strong>And every box gave a place a second address.</strong> A box was also
+  <em>coarser</em> than the global grid it stood in for: four words over Britain was
+  2.66&nbsp;m, against 1.35&nbsp;m for five words anywhere. What the box was really
+  selling was the leading word &mdash; and a country supplies that just as well,
+  without a rectangle drawn by hand. That is further down.</p>
 
   <h2>Drop trailing words: coarser, needs no context</h2>
   <p>Each word narrows the area, and the words already said never change &mdash; every
@@ -137,11 +112,11 @@
   <table>
     <thead><tr><th>Words</th><th>Big Ben</th><th>Cell</th></tr></thead>
     <tbody>
-      <tr><td class="num">1</td><td class="num">leg</td><td class="num">542 &times; 460 km</td></tr>
-      <tr><td class="num">2</td><td class="num">leg.tunnel</td><td class="num">8.5 &times; 14.4 km</td></tr>
-      <tr><td class="num">3</td><td class="num">leg.tunnel.slam</td><td class="num">264 &times; 225 m</td></tr>
-      <tr><td class="num">4</td><td class="num">leg.tunnel.slam.subway</td><td class="num">4.1 &times; 7.0 m</td></tr>
-      <tr><td class="num">5</td><td class="num">leg.tunnel.slam.subway.gown</td><td class="num">1.03 &times; 1.75 m &mdash; and verified</td></tr>
+      <tr><td class="num">1</td><td class="num">leaf</td><td class="num">353 &times; 706 km</td></tr>
+      <tr><td class="num">2</td><td class="num">leaf.step</td><td class="num">11.0 &times; 11.0 km</td></tr>
+      <tr><td class="num">3</td><td class="num">leaf.step.cruel</td><td class="num">172 &times; 345 m</td></tr>
+      <tr><td class="num">4</td><td class="num">leaf.step.cruel.tomato</td><td class="num">5.38 &times; 5.38 m</td></tr>
+      <tr><td class="num">5</td><td class="num">leaf.step.cruel.tomato.unable</td><td class="num">1.35 &times; 1.35 m &mdash; and verified</td></tr>
     </tbody>
   </table>
   </div>
@@ -157,9 +132,9 @@
   <table>
     <thead><tr><th>Said</th><th>Written</th><th>Ambiguity</th><th>Needs the listener to know</th></tr></thead>
     <tbody>
-      <tr><td class="num">4</td><td class="num">.tunnel.slam.subway.gown</td><td class="num">542 &times; 460 km</td><td class="num">230 km &mdash; which country</td></tr>
-      <tr><td class="num">3</td><td class="num">.slam.subway.gown</td><td class="num">8.5 &times; 14.4 km</td><td class="num">4.2 km &mdash; which town</td></tr>
-      <tr><td class="num">2</td><td class="num">.subway.gown</td><td class="num">264 &times; 225 m</td><td class="num">112 m &mdash; which street</td></tr>
+      <tr><td class="num">4</td><td class="num">.step.cruel.tomato.unable</td><td class="num">353 &times; 706 km</td><td class="num">176 km &mdash; which country</td></tr>
+      <tr><td class="num">3</td><td class="num">.cruel.tomato.unable</td><td class="num">11.0 &times; 11.0 km</td><td class="num">5.5 km &mdash; which town</td></tr>
+      <tr><td class="num">2</td><td class="num">.tomato.unable</td><td class="num">172 &times; 345 m</td><td class="num">86 m &mdash; which street</td></tr>
     </tbody>
   </table>
   </div>
@@ -170,11 +145,10 @@
   of the time. A reference too far away says so, rather than answering confidently with
   the wrong place.</p>
 
-  <p>It falls conveniently over the UK. The whole country spans only six distinct first
-  words, and most of Great Britain is <code>leg</code> &mdash; so a British conversation
-  drops the first word almost for free. Not quite free near a seam: Edinburgh is
-  <code>legal</code> and Belfast is <code>left</code>, which is precisely the case the
-  checksum catches.</p>
+  <p>It falls conveniently over the UK. The whole country spans only a handful of
+  distinct first words, so a British conversation drops the first word almost for free.
+  Not quite free near a seam, where two neighbouring towns start with different words
+  &mdash; which is precisely the case the checksum catches.</p>
 
   <p class="note">Click anywhere to watch the address grow a word at a time.</p>
 
@@ -185,22 +159,40 @@
   128. A country is such a region, and OpenStreetMap&rsquo;s reverse geocoder will hand you
   its bounding box along with its name.</p>
 
-  <p>That buys exactly one word, and only one. Five become four almost anywhere; three is
-  out of reach everywhere, because a box the size of Britain holds ten thousand candidate
-  tiles at three words and seven checksum bits leave eighty of them standing.</p>
+  <p><strong>How many words a window buys is one number: how many candidate tiles it
+  holds.</strong> Each word is 11 bits, so one word fewer is 2048 times as many tiles.
+  A length works exactly when no <em>other</em> candidate survives the check &mdash; a
+  Poisson zero at rate (tiles&nbsp;&minus;&nbsp;1)/128. Nothing about countries enters
+  into it; a country is just a box someone else drew.</p>
 
   <div class="scroll">
   <table>
-    <thead><tr><th>Country</th><th>Box</th><th>Five words become four</th></tr></thead>
+    <thead><tr><th>Country</th><th>Box</th><th>Tiles</th><th>Said</th><th>Wrong word caught</th></tr></thead>
     <tbody>
-      <tr><td>Switzerland</td><td class="num">0.08 M km&sup2;</td><td class="num">always</td></tr>
-      <tr><td>Ireland</td><td class="num">0.19 M km&sup2;</td><td class="num">always</td></tr>
-      <tr><td>United Kingdom</td><td class="num">1.29 M km&sup2;</td><td class="num">98 %</td></tr>
-      <tr><td>France</td><td class="num">1.28 M km&sup2;</td><td class="num">92 %</td></tr>
-      <tr><td>Australia</td><td class="num">17.3 M km&sup2;</td><td class="num">70 %</td></tr>
+      <tr><td>Luxembourg</td><td class="num">4,700 km&sup2;</td><td class="num">1.0</td><td><strong>four</strong>, always</td><td class="num">100 %</td></tr>
+      <tr><td>Switzerland</td><td class="num">76,000 km&sup2;</td><td class="num">1.0</td><td><strong>four</strong>, always</td><td class="num">99 %</td></tr>
+      <tr><td>Ireland</td><td class="num">193,000 km&sup2;</td><td class="num">1.1</td><td><strong>four</strong>, always</td><td class="num">100 %</td></tr>
+      <tr><td>United Kingdom</td><td class="num">1.3 M km&sup2;</td><td class="num">5.5</td><td><strong>four</strong>, 97&nbsp;%</td><td class="num">96 %</td></tr>
+      <tr><td>France</td><td class="num">1.28 M km&sup2;</td><td class="num">5.5</td><td><strong>four</strong>, 97&nbsp;%</td><td class="num">94 %</td></tr>
+      <tr><td>Australia</td><td class="num">17.3 M km&sup2;</td><td class="num">71</td><td>five &mdash; over the cap</td><td class="num">&mdash;</td></tr>
+      <tr><td>United States</td><td class="num">159 M km&sup2;</td><td class="num">638</td><td>five &mdash; over the cap</td><td class="num">&mdash;</td></tr>
     </tbody>
   </table>
   </div>
+
+  <p><strong>Shortening this way costs detection, and the cap is what bounds the
+  cost.</strong> When a word is misheard the true tile no longer matches, so every
+  candidate in the window becomes a fresh lottery against the same seven check bits: a
+  wrong word is caught only (127/128)<sup>k</sup> of the time. At six candidates that is
+  95.4&nbsp;%, against 99.2&nbsp;% for the full address. Uncapped it was far worse &mdash;
+  a window the size of Australia holds about seventy and falls to 58&nbsp;%, where a third
+  of mishearings resolve <em>silently</em> to somewhere else in the country, which is the
+  worst failure there is because it looks like an answer. So no address is shortened
+  above six, and none is read that way either.</p>
+
+  <p>Filling the word in from a nearby <em>point</em> has no such loss: it tests the single
+  nearest tile &mdash; one chance to be fooled rather than <em>k</em> &mdash; and stays at
+  99.2&nbsp;%. That asymmetry is the real difference between the two ways of doing it.</p>
 
   <p><strong>The grid never moves.</strong> The country is consulted when the address is
   read, as a search window; it is not part of the address and nothing is bound to it. A
@@ -215,9 +207,8 @@
   therefore chosen to make the projected world <strong>exactly square</strong>: its
   aspect is &pi;K&sup2;, so K&nbsp;=&nbsp;1/&radic;&pi; gives 1, at
   55.654&deg;.</p>
-  <p>Both terminal lengths are even bit counts, so both land exactly square: the
-  five-word global cell is 1.346&nbsp;m square, and Local&rsquo;s four-word cell is
-  2.51&nbsp;&times;&nbsp;2.36&nbsp;m. The projection is equal-area, so this changes
+  <p>The terminal length is an even bit count, so it lands exactly square: the
+  five-word cell is 1.346&nbsp;m. The projection is equal-area, so this changes
   the shape and not the resolution. The odd lengths pay for it at 2:1 &mdash; no frame
   can square both, because one exponent is odd whenever the other is even.</p>
 

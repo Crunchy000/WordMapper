@@ -1,40 +1,67 @@
 #!/usr/bin/env python3
-"""Word addresses from the BIP-39 list, in two scopes.
+"""Word addresses from the BIP-39 list, on one global grid.
 
     npm install --prefix tools/gridcode
 
-GLOBAL -- five words, anywhere on earth, 1.35 m:
+FIVE WORDS name any point on earth to 1.35 m:
 
     leg.tunnel.slam.subway.gown
 
-LOCAL -- four words, over a box around the United Kingdom, self-contained.
-This is the default:
+There is one grid and one address for a place. No regional boxes, no scope to
+choose, nothing to switch. A box has to be a rectangle and most of the world
+cannot be boxed without swallowing a neighbour, so the boxes that used to exist
+here bought a word at the cost of a hand-drawn edge and a second address for the
+same place. What replaced them is below.
 
-    hollow.gadget.crane.pupil
+FOUR WORDS, WHERE SOMETHING ELSE SUPPLIES THE FIFTH. The leading words are the
+coarse ones, so they can go unsaid when whoever is listening can supply them.
+Two ways to do that:
 
-Both are the same grid mechanism over a different box. The scope is bound into
-the checksum, so a Local address read as a global one fails its check 99.2% of the
-time, and the reverse likewise -- the two can never be silently confused.
+  - resolve_tail() takes a nearby POINT and picks the nearest tile that fits.
+  - candidates_in_box() takes a REGION and lets the checksum pick, trying every
+    tile inside it. A country is such a region, and a reverse geocoder will
+    hand you its bounding box along with its name.
 
-WHICH TO USE. Local is the default: one word shorter, and it needs nothing
-said or known beyond "this is a local address". Global works everywhere and is
-finer.
+The second is what turns five words into four in ordinary use: "in the UK" is
+worth a word.
 
-Global mode can also be shortened by dropping LEADING words when whoever is
-listening already knows roughly where you are -- and four global words that
-way reach 1.35 m against Local's 2.43 m, because one dropped word is worth a
-full 11 bits of context where the Local box is worth only 9.3. Local earns its
-place on ergonomics rather than resolution: nothing to agree, nothing to
-reconstruct, no reference point.
+HOW MANY WORDS A WINDOW BUYS is one number: how many candidate tiles it holds.
+Each word is 11 bits, so one fewer word is 2048 times as many tiles, and the 7
+check bits leave one in 128 standing -- so a length works exactly when no OTHER
+candidate survives, a Poisson zero at rate (tiles - 1)/128. Nothing about
+countries enters into it; a country is just a box someone else drew. Measured
+against the boxes Nominatim returns:
 
-BOTH SHORTEN BY DROPPING TRAILING WORDS, for a coarser address that needs no
-context at all. Each word narrows the area and the words already said never
-change, because every address is a prefix of a longer one.
+    Luxembourg      4,700 km2     1.0 tiles   four, always
+    Switzerland    76,000 km2     1.0         four, always
+    Ireland       193,000 km2     1.1         four, always
+    United Kingdom  1.3 M km2     5.5         four, 97% of the time
+    France         1.28 M km2     5.5         four, 97% of the time
+    Australia      17.3 M km2      71         five -- over the cap
+    United States   159 M km2     638         five -- over the cap
 
-THE LAST WORD DOES TWO JOBS in either scope. A whole final word of position
-would be finer than anyone needs, so its 11 bits are split: 4 refine the
-position and 7 carry a checksum over the scope and the position together. Each
-scope's terminal length is terminal because a further word would have to
+AND IT COSTS DETECTION, which MAX_CANDIDATES is there to bound. A misheard word
+removes the true tile, so every candidate in the window is a fresh lottery
+against the same 7 check bits and a wrong word is caught only (127/128)**k of
+the time -- 95.4% at the cap of 6, against 99.2% for the full address. Uncapped,
+a window the size of Australia holds ~70 and falls to 58%, where a third of
+mishearings resolve SILENTLY to somewhere else in the country. resolve_tail()
+has no such loss: it tests the single nearest tile, one chance to be fooled
+rather than k.
+
+THE GRID DOES NOT DEPEND ON THE REGION. The window is used when an address is
+READ. It is not part of the address and nothing is bound to it, so a border can
+move or a territory change hands and the words for a place are unchanged. A
+wrong window costs uniqueness, never correctness: the point is simply not the
+only survivor, and the full five words are said instead.
+
+SHORTEN THE OTHER WAY BY DROPPING TRAILING WORDS, for a coarser address that
+needs no context at all. Each word narrows the area and the words already said
+never change, because every address is a prefix of a longer one.
+
+THE LAST WORD DOES TWO JOBS. A whole final word of position would be finer than
+anyone needs, so its 11 bits are split: 4 refine the position and 7 carry a
+checksum over it. Five words is terminal because a sixth would have to
 reinterpret the check bits.
 
 HOW THE PREFIX PROPERTY IS KEPT. The x and y coordinates are interleaved ONCE
@@ -43,7 +70,7 @@ interleave order per length instead does not work: 11 bits per word is odd, so
 33 bits splits the axes 17/16 while 22 and 44 split evenly, and the three
 orders are unrelated sequences rather than prefixes of one another.
 """
-import hashlib, json, math, os, subprocess, sys
+import hashlib, math, os, sys
 
 R = 6371008.8               # mean earth radius, metres
 BITS_PER_WORD = 11          # log2(2048), exactly
@@ -52,6 +79,15 @@ CHECK_BITS = BITS_PER_WORD - REFINE_BITS
 SEP = '.'
 TAIL_MARK = SEP             # a leading separator marks a context-dependent tail
 EPS = 1e-9                  # degrees of slack on a box edge, for float error
+# Searching a region trades DETECTION for a word, and this is the cap on that
+# trade. When a word is wrong the true tile is gone, so every candidate in the
+# window is a fresh lottery against the same 7 check bits and a wrong word is
+# caught only (127/128)**k of the time. Six candidates holds that at 95.4%,
+# against 99.2% for the full address; an uncapped window the size of Australia
+# holds ~70 and falls to 58%, where a third of mishearings resolve silently to
+# the wrong place. resolve_tail() has no such loss: it tests the single nearest
+# tile, one chance to be fooled rather than k.
+MAX_CANDIDATES = 6
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -76,13 +112,35 @@ class OutsideBox(ValueError):
     """Raised for a coordinate the scope's box does not cover."""
 
 
-def load_wordlist():
-    out = subprocess.check_output(
-        ['node', '-e', "console.log(JSON.stringify(require('bip39').wordlists.english))"],
-        cwd=_HERE)
-    words = json.loads(out)
+# The published BIP-39 English list, checked against the SHA-256 given in BIP-39
+# itself. Kept as a file rather than pulled from a package at run time: it is a
+# frozen 13 KB list that has not changed since 2013, and reading it needs no
+# install step, no network, and no dependency to trust.
+WORDLIST = os.path.join(_HERE, 'bip39-english.txt')
+WORDLIST_SHA256 = '2f5eed53a4727b4bf8880d8f3f199efc90e58503646d9ff8eff3a2ed3b24dbda'
+
+
+def load_wordlist(path=WORDLIST):
+    with open(path, 'rb') as fh:
+        raw = fh.read()
+    got = hashlib.sha256(raw).hexdigest()
+    if got != WORDLIST_SHA256:
+        raise ValueError(f'{path} is not the BIP-39 English list (sha256 {got})')
+    words = raw.decode().split()
     assert len(words) == 2 ** BITS_PER_WORD, len(words)
     return words
+
+
+_index_cache = (None, None)
+
+
+def _index(words):
+    """word -> value, built once. Rebuilding this 2048-entry dict per call was
+    a seventh of the test suite's runtime."""
+    global _index_cache
+    if _index_cache[0] is not words:
+        _index_cache = (words, {w: i for i, w in enumerate(words)})
+    return _index_cache[1]
 
 
 def project(lat, lng):
@@ -97,14 +155,16 @@ def unproject(x, y):
 
 
 class Scope:
-    """A box, an address length, and the bit layout they imply."""
+    """A box, an address length, and the bit layout they imply.
 
-    def __init__(self, key, name, tag, box, max_words):
+    There is one of these -- GLOBAL. It is a class rather than a handful of
+    module constants because the bit layout is DERIVED from the box: which axis
+    each bit refines depends on the box's aspect, and having that in one place
+    is what lets the tests state the derivation rather than the answer.
+    """
+
+    def __init__(self, key, name, box, max_words):
         self.key, self.name, self.box, self.max_words = key, name, box, max_words
-        # Bound into the checksum, so an address minted in one scope cannot
-        # verify in the other. Global binds the empty string, which no scope
-        # tag can be.
-        self.tag = tag
         self.position_bits = BITS_PER_WORD * (max_words - 1) + REFINE_BITS
         latMin, latMax, lngMin, lngMax = box
         self.x0, self.y0 = project(latMin, lngMin)
@@ -128,34 +188,10 @@ class Scope:
         return f'<Scope {self.key} {self.max_words} words>'
 
 
-# Five words over the whole earth. The floor: it always works, and it is what
-# anywhere outside every regional box falls back to.
-GLOBAL = Scope('global', 'Global', '', (-90.0, 90.0, -180.0, 180.0), 5)
-
-# Four words over a regional box. Each tag is bound into the checksum, so an
-# address minted in one region cannot verify in another.
-#
-# There are deliberately only two. A box has to be a rectangle, and most
-# continents cannot be boxed without swallowing a neighbour: Africa and Europe
-# interleave across the Mediterranean -- Tunisia reaches further north than
-# southern Spain -- so no horizontal line separates them, and any pair of boxes
-# there overlaps. The continental boxes that did exist were also coarse enough
-# (Asia 31.6 m) to be barely worth the word they saved. Global covers the rest.
-REGIONS = [
-    # The British Isles: Lizard Point to Shetland, Dunmore Head to Lowestoft.
-    Scope('local', 'Local', 'GB', (49.85, 60.90, -10.70, 1.80), 4),
-    # Australia, cut at 12 S -- which is what makes it CLEAN. Papua New Guinea
-    # reaches 11.6 S and Indonesia 10.9 S, both further south than Australia's
-    # northern tip at 10.05 S, so no cut keeps the whole continent and excludes
-    # the neighbours. Stopping at 12 S catches no other country's land at all,
-    # for the loss of Cape York's tip, the Tiwi Islands and the Torres Strait,
-    # which fall back to Global.
-    Scope('australia', 'Australia', 'AU', (-43.65, -12.00, 112.90, 153.70), 4),
-]
-LOCAL = REGIONS[0]
-UK = LOCAL                                  # the old name, still accepted
-DEFAULT = LOCAL
-SCOPES = {sc.key: sc for sc in REGIONS + [GLOBAL]}
+# Five words over the whole earth, and the only scope there is.
+GLOBAL = Scope('global', 'Global', (-90.0, 90.0, -180.0, 180.0), 5)
+DEFAULT = GLOBAL
+SCOPES = {GLOBAL.key: GLOBAL}
 
 
 def _wrap(latlng):
@@ -219,6 +255,26 @@ def _interleave(xi, yi, s=GLOBAL):
     return v
 
 
+def _spread(val, axis, s=GLOBAL):
+    """One axis's bits placed at their positions in the interleaved value, with
+    the other axis's positions left zero.
+
+    Interleaving is bit-disjoint between the axes -- every output bit belongs to
+    exactly one of them -- so _interleave(xi, yi) is exactly
+    _spread(xi, 0) | _spread(yi, 1). Searching a box exploits that: the two axes
+    are spread once each and OR-ed per candidate, which is what makes the search
+    O(nx + ny) interleaves rather than O(nx * ny).
+    """
+    s = scope(s)
+    out, a = 0, (s.xb if axis == 0 else s.yb)
+    for ax in s.order:
+        out <<= 1
+        if ax == axis:
+            a -= 1
+            out |= (val >> a) & 1
+    return out
+
+
 def _deinterleave(v, bits, s=GLOBAL):
     s = scope(s)
     xi = yi = 0
@@ -262,15 +318,9 @@ def tile_size(n_said, s=GLOBAL):
 
 
 def _checksum(position, s=GLOBAL):
-    """Over the scope as well as the position, so a Local address read as a global
-    one fails the same check as a wrong word."""
-    s = scope(s)
-    # Global's payload is the bare position, which is what it has always been,
-    # so every global address ever published stays valid. A tagged scope
-    # prepends its tag, which no untagged payload can begin with.
+    """Seven bits over the whole position -- which is what makes both kinds of
+    shortening safe, since a reconstruction that guesses wrong fails it."""
     payload = position.to_bytes(8, 'big')
-    if s.tag:
-        payload = s.tag.encode() + b'\0' + payload
     return int.from_bytes(hashlib.sha256(payload).digest()[:2], 'big') >> (16 - CHECK_BITS)
 
 
@@ -306,11 +356,10 @@ def _from_position(position, s=GLOBAL):
 def decode(spoken, words, s=GLOBAL):
     """Resolve an address: the first n words, coarser as n falls.
 
-    A full-length address is checked; raises ValueError if a word is wrong or
-    the address belongs to the other scope.
+    A full-length address is checked; raises ValueError if a word is wrong.
     """
     s = scope(s)
-    index = {w: i for i, w in enumerate(words)}
+    index = _index(words)
     unknown = [w for w in spoken if w not in index]
     if unknown:
         raise ValueError(f'not BIP-39 words: {unknown}')
@@ -324,82 +373,12 @@ def decode(spoken, words, s=GLOBAL):
     else:
         prefix = value >> CHECK_BITS
         if (value & (2 ** CHECK_BITS - 1)) != _checksum(prefix, s):
-            raise ValueError('checksum failed - a word is wrong, '
-                             'or this address belongs to the other scope')
+            raise ValueError('checksum failed - a word is wrong')
     bits = _position_bits(len(spoken), s)
     xb, yb = _axis_bits(len(spoken), s)
     xi, yi = _deinterleave(prefix, bits, s)
     return _wrap(unproject(s.x0 + (xi + 0.5) / 2 ** xb * s.xr,
                            s.y0 + (yi + 0.5) / 2 ** yb * s.yr))
-
-
-def best_scope(lat, lng):
-    """The scope to use for a point: the SMALLEST regional box containing it,
-    or Global where none does.
-
-    Smallest wins for two reasons that agree. It is the finest cell, and it is
-    also the region a person would name: boxes are nested where they overlap,
-    so Local beats Europe over Britain and Europe beats Asia over Moscow.
-    """
-    hit = [sc for sc in REGIONS if covers(lat, lng, sc)]
-    return min(hit, key=lambda sc: (sc.xr * sc.yr, sc.key)) if hit else GLOBAL
-
-
-def scopes_covering(lat, lng):
-    """Every regional box containing the point, smallest first."""
-    return sorted((sc for sc in REGIONS if covers(lat, lng, sc)),
-                  key=lambda sc: (sc.xr * sc.yr, sc.key))
-
-
-def decode_auto(spoken, words):
-    """Resolve without being told the scope. Returns (lat, lng, scope, verified).
-
-    A terminal-length address carries a checksum over its own scope, so it
-    identifies itself: four words that pass the Local check are a Local address, and
-    five that pass the global check are a global one. Anything shorter is an
-    unverified coarse prefix, and only the caller knows which scope it belongs
-    to, so global is assumed and `verified` says it was not confirmed.
-
-    This matters because the two directions are not symmetrical. A global
-    prefix read as UK fails its checksum 99.2% of the time and is caught. A Local
-    address read as a global prefix would decode silently to a different place
-    entirely, since nothing checks a prefix -- so the Local reading is tried first.
-    """
-    matches = []
-    for sc in REGIONS + [GLOBAL]:
-        if len(spoken) != sc.max_words:
-            continue
-        try:
-            lat, lng = decode(spoken, words, sc)
-        except ValueError:
-            continue
-        matches.append((lat, lng, sc))
-    if matches:
-        # More than one scope can accept the same words by luck: each wrong one
-        # passes its own 7-bit check with probability 1/128, so with seven
-        # regional boxes an address is ambiguous about 5% of the time. The
-        # caller usually knows the region -- pass it to decode() instead of
-        # guessing here -- so this returns the first match and leaves the
-        # ambiguity to be measured rather than hidden. See scopes_accepting().
-        lat, lng, sc = matches[0]
-        return lat, lng, sc, True
-    lat, lng = decode(spoken, words, GLOBAL)
-    return lat, lng, GLOBAL, False
-
-
-def scopes_accepting(spoken, words):
-    """Every scope whose checksum accepts these words. More than one means the
-    address does not identify itself and the region has to be stated."""
-    out = []
-    for sc in REGIONS + [GLOBAL]:
-        if len(spoken) != sc.max_words:
-            continue
-        try:
-            decode(spoken, words, sc)
-        except ValueError:
-            continue
-        out.append(sc)
-    return out
 
 
 def _known_low(n_said, s=GLOBAL):
@@ -420,7 +399,7 @@ def resolve_tail(spoken, words, near_lat, near_lng, s=GLOBAL):
     rather than resolving quietly to the wrong place.
     """
     s = scope(s)
-    index = {w: i for i, w in enumerate(words)}
+    index = _index(words)
     unknown = [w for w in spoken if w not in index]
     if unknown:
         raise ValueError(f'not BIP-39 words: {unknown}')
@@ -493,7 +472,7 @@ def candidates_in_box(spoken, words, box, s=GLOBAL, limit=20000):
     too big to pin these words down; none means the words do not belong in it.
     """
     s = scope(s)
-    index = {w: i for i, w in enumerate(words)}
+    index = _index(words)
     unknown = [w for w in spoken if w not in index]
     if unknown:
         raise ValueError(f'not BIP-39 words: {unknown}')
@@ -530,29 +509,63 @@ def candidates_in_box(spoken, words, box, s=GLOBAL, limit=20000):
     count = len(xs) * len(ys)
     if count > limit:
         return None, count                  # too many to be worth enumerating
+    # See _spread(): the axes occupy disjoint bits, so each is spread once and
+    # the candidates are an OR of the two, not an interleave apiece.
+    ys_spread = [_spread(yi, 1, s) for yi in ys]
     out = []
     for xi in xs:
-        for yi in ys:
-            position = _interleave(xi, yi, s)
+        xv = _spread(xi, 0, s)
+        for yv in ys_spread:
+            position = xv | yv
             if _checksum(position, s) == check:
                 out.append(_from_position(position, s))
     return out, count
 
 
-def shortest_in_box(lat, lng, words, box, s=GLOBAL, limit=20000):
-    """The fewest trailing words that identify this point uniquely inside `box`.
+def shortest_in_box(lat, lng, words, box, s=GLOBAL):
+    """The fewest trailing words that identify this point uniquely inside `box`,
+    WITHOUT weakening the checksum past MAX_CANDIDATES.
 
-    Falls back to the full address when the region is too big to pin anything
-    shorter down, which is the common case for a large country.
+    Falls back to the full address when the region is too big -- either because
+    nothing shorter is unique, or because pinning it down would have cost more
+    detection than a word is worth. The second is what stops a country the size
+    of Australia from shortening: a window that big is unique often enough to be
+    tempting and weak enough to be wrong.
     """
     s = scope(s)
     full = encode(lat, lng, words, s.max_words, s)
     want = _indices(lat, lng, s)
     for n in range(1, s.max_words):
-        got, _ = candidates_in_box(full[-n:], words, box, s, limit)
+        # The cap doubles as the enumeration limit: a window it would reject is
+        # counted and dropped rather than searched, which is what keeps this
+        # cheap at the lengths that were never going to work.
+        got, searched = candidates_in_box(full[-n:], words, box, s, MAX_CANDIDATES)
+        if searched > MAX_CANDIDATES:
+            continue
         if got and len(got) == 1 and _indices(got[0][0], got[0][1], s) == want:
             return n, full[-n:]
     return s.max_words, full
+
+
+def decode_in_box(spoken, words, box, s=GLOBAL):
+    """Resolve a shortened address inside a region, or refuse.
+
+    The reader's half of shortest_in_box(), and where the MAX_CANDIDATES cap
+    actually protects anyone: a window too big to search safely is refused
+    rather than answered from, so an address that should never have been
+    shortened cannot be read as though it had been.
+    """
+    got, searched = candidates_in_box(spoken, words, box, s, MAX_CANDIDATES)
+    if searched > MAX_CANDIDATES:
+        raise ValueError(
+            f'{searched} candidates in this region, more than the {MAX_CANDIDATES} '
+            f'a 7-bit check can screen - say the whole address')
+    if not got:
+        raise ValueError('checksum failed - a word is wrong, or this address '
+                         'does not belong in this region')
+    if len(got) > 1:
+        raise ValueError(f'{len(got)} places here match - say one more word')
+    return got[0]
 
 
 def words_needed(lat, lng, near_lat, near_lng, words, s=GLOBAL):
