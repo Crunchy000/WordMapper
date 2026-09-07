@@ -11,8 +11,8 @@
   #map { position: absolute; inset: 0; background: #dfe3e6; }
   /* No card: the address sits directly on the map, with a halo rather than a
      panel so it reads over pale streets and dark satellite tiles alike. */
-  #hud { position: absolute; z-index: 1000; top: 16px; left: 16px;
-         pointer-events: none; max-width: calc(100vw - 32px); }
+  #hud { position: absolute; z-index: 1000; top: 16px; right: 16px;
+         pointer-events: none; max-width: calc(100vw - 32px); text-align: right; }
   #addr { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
           font-size: 20px; letter-spacing: -0.01em;
           text-shadow: 0 1px 3px #fff, 0 0 8px #fff, 0 0 16px #fff,
@@ -28,7 +28,7 @@
           text-shadow: 0 1px 3px #fff, 0 0 8px #fff, 1px 0 3px #fff, -1px 0 3px #fff; }
   #note .dim { color: #8a8a82; font-weight: 400; }
   @media (max-width: 480px) {
-    #hud { top: 12px; left: 12px; }
+    #hud { top: 12px; right: 12px; }
     #addr { font-size: 15px; overflow-wrap: anywhere; }
   }
 </style>
