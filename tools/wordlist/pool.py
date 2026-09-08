@@ -9,7 +9,9 @@ stage never has to choose between a good word and a clean one.
 import csv, os, re, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from phonetics import phonemes, syllables
-from spelling import has_variant, is_inflection
+from semantic import classify
+from spelling import has_variant, is_compound, is_inflection
+from wordnet import WordNet
 
 DATA = os.environ.get('WORDLIST_DATA', '.')
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -18,9 +20,17 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 # every homophone in BIP-39 bar one. Two and three syllables carry enough
 # redundancy that a single misheard phoneme usually leaves the word recoverable,
 # and the stress pattern gives the listener a second cue.
-MIN_SYLL, MAX_SYLL = 2, 3
+# One syllable used to be barred outright, because that is where the confusable
+# pairs live. With BIP-39 in the pool it is allowed back in and the distinctness
+# rule decides: of pair/pear it keeps whichever is otherwise stronger, and short
+# words make for shorter addresses.
+MIN_SYLL, MAX_SYLL = 1, 3
+# Four letters minimum: below that the candidates are fragments and
+# abbreviations -- amp, ems, ifs, jib, gyro -- not words anyone dictates.
 MIN_LEN, MAX_LEN = 4, 9
-FREQ_RANK = 35000               # rarer than this and nobody is sure of the spelling
+# Deliberately loose. The pool is not the list: it is the set a person then
+# reads and rejects from, and rejecting needs somewhere to reject TO.
+FREQ_RANK = 32000
 
 def read_cmudict(path):
     """word -> pronunciations. More than one distinct pronunciation means a
@@ -114,13 +124,17 @@ def excluded():
     text next to the code and meant to be read and argued with."""
     out = set()
     for name in ('function-words.txt', 'exclude-religious.txt',
-                 'exclude-negative.txt', 'exclude-proper.txt'):
+                 'exclude-negative.txt', 'exclude-proper.txt',
+                 'exclude-register.txt'):
         out |= read_words(os.path.join(HERE, name))
     return out
 
 
+EXTRA = os.path.join(os.path.dirname(HERE), 'gridcode', 'bip39-english.txt')
+
+
 def build(max_syll=MAX_SYLL, min_syll=MIN_SYLL, min_len=MIN_LEN,
-          max_len=MAX_LEN, freq_rank=FREQ_RANK):
+          max_len=MAX_LEN, freq_rank=FREQ_RANK, extra=EXTRA):
     cmu = read_cmudict(os.path.join(DATA, 'cmudict.txt'))
     freq = read_freq(os.path.join(DATA, 'en50k.txt'))
     names = read_words(os.path.join(DATA, 'names.txt'))
@@ -137,7 +151,23 @@ def build(max_syll=MAX_SYLL, min_syll=MIN_SYLL, min_len=MIN_LEN,
               file=sys.stderr)
     excl = excluded()
     places = gazetteer()
+    # What a word MEANS, from WordNet, with an explicit allow list for the
+    # senses that mislead it. A hand-written blocklist cannot be complete --
+    # lustful, cervix, puberty and syphilis all walked through one -- and a
+    # blocklist you cannot check is worse than a filter you can argue with.
+    wn = WordNet()
+    allowed = read_words(os.path.join(HERE, 'allow-semantic.txt'))
+    if not wn.loaded:
+        print('  (no WordNet: meaning not filtered -- apt-get install wordnet-base)',
+              file=sys.stderr)
     ranked = {w: i for i, w in enumerate(sorted(freq, key=freq.get, reverse=True))}
+    # BIP-39's words are already known to be typable and unambiguous in print;
+    # what nobody checked is how they sound. They go in as candidates and face
+    # exactly the same rules as everything else -- which is how pair, pear,
+    # peace, piece, right and write get sorted out rather than shipped.
+    bonus = read_words(extra) if extra and os.path.exists(extra) else set()
+    for w in bonus:
+        ranked.setdefault(w, freq_rank)
 
     pool, reasons = [], {}
     def drop(why):
@@ -169,6 +199,17 @@ def build(max_syll=MAX_SYLL, min_syll=MIN_SYLL, min_len=MIN_LEN,
             drop('capitalised in the dictionary, so a proper noun'); continue
         if w in excl:
             drop('excluded by hand (function, religious or grim)'); continue
+        if w not in allowed:
+            kind = classify(wn, w)
+            if kind:
+                drop(f'what it means: {kind}'); continue
+        # No compounds. landlady / ladybug / boyfriend / cowboy / busboy all
+        # share a component, and a shared component is a shared way to mishear
+        # a word boundary -- which whole-word phonetic distance cannot see.
+        # It costs a few good words to accidental splits (capable is cap+able)
+        # and the pool can afford them.
+        if common and is_compound(w, common):
+            drop('two words stuck together'); continue
         if is_inflection(w, cmu, freq):
             drop('an inflection of a word that exists'); continue
         if has_variant(w, cmu) or has_variant(w, common):

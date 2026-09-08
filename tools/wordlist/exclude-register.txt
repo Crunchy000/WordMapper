@@ -1,0 +1,17 @@
+# Words that are real, common and still wrong here: slang, brand names,
+# clippings and joke words. An address is read out by strangers in situations
+# nobody chose, and "howdy.gizmo.smurf" is not a house.
+#
+# Frequency cannot catch these -- a subtitle corpus is full of them precisely
+# because people talk this way. Only judgement can, which is why this file
+# exists rather than another rule.
+ahoy blah bozo catchy comfy cuddly dodo dopey dude dweeb edgy foxy gizmo gonzo
+goofy gosh granny gusto hairdo hooray howdy jiffy jinx jitters klutz kook
+kudos luau meow newbie nifty pesky pronto puffy showbiz sitcom smurf snuck
+soggy spooky squeaky swagger teeny tweet wacky wannabe wiggle wobbly yeti
+# clippings and abbreviations
+cardio decaf detox disco expo info intro limo rehab techno
+# brands and trademarks
+iphone ipod itunes
+# archaic or bookish enough to trip a listener
+thou whilst thereof thereby betwixt hitherto amidst amongst albeit

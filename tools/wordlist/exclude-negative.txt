@@ -93,3 +93,31 @@ gunman gunshot gunpowder homicide genocide holocaust mayhem onslaught
 inferno mutiny perjury pervert nudist murderous madhouse madman lunatic
 asylum blockade boycott vendetta vengeful warpath wasteland weaponry
 wrongful unlawful felony jailhouse
+# second curation pass, read off the generated list
+abduct accuse acquittal astray berserk brute cannibal charlatan craziness
+crucify defeat defiance destitute deprive disrupt disturb drunkard dubious
+extremist forgery ghastly grotesque growl harass hassle havoc hazardous
+heinous hideous hoax holdup hoodlum horrid hypocrite idiot imbalance
+impatient imperfect impolite impotent improper impulsive incorrect indebted
+infamous inflict inhuman injustice insane insecure insolence intrusion
+jealous jeopardy larceny lousy ludicrous maniac mistrial mockery monster
+monstrous mutant nasty needy nuisance obnoxious obstinate offensive ominous
+ordeal painful paranoid penalty penniless perilous piracy pirate pitiful
+plight pollution poverty prank predator prejudice prison probation provoke
+psycho puke punish pushy quack quagmire rabble racial racism rascal reckless
+recluse remorse reprimand resentful ridicule rivalry rubbish sabotage
+scandal scapegoat scary scold scoundrel scrawny scream scruffy scum
+selfish sham shrapnel slag slander slavery sleazy sloppy smuggle sneaky
+sniper snitch snot sordid spank spinster spree stampede stingy strenuous
+struggle suspect suspicion swine taunt terribly threaten thug torment
+travesty treachery trickster trouble turmoil tyranny tyrant ugliness
+unhappy unkind unlucky unrest unruly unsafe unstable untimely untrue
+unwanted unwelcome unwilling unwise unworthy uptight villain wimp wretch
+zombie ecstasy envy envious delusion demise denial deception dangerous
+# clinical and bodily, second pass
+appendix breast cavity cranial chronic dizziness edema excrement fetus
+forceps frontal groin hormonal hospice incision manure nasal ointment
+physician pharmacy rehab scalp senile serum skeleton spinal sterile tampon
+therapy torso vertigo toilet tush
+# crude, second pass
+concubine gigolo macho seduce seductive suitor vixen sassy

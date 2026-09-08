@@ -43,7 +43,14 @@ from spelling import edit1
 # there, and 2048 is 11 bits exactly, with nothing wasted rounding to a word
 # boundary. 2.0 is the strictest margin an 11-bit list can have.
 THRESHOLD = 2.0
-PREFIX = 4                      # unique first four letters, the one thing BIP-39 got right
+# BIP-39 guarantees unique FOUR-letter prefixes so a seed phrase can be typed
+# short. As a hard rule that cost more than anything else here -- over a
+# thousand candidates -- and pushed the selection out of common vocabulary into
+# abattoir, bivouac and gazpacho. So it is a preference instead: take every word
+# whose three-letter prefix is still free, then fill the remainder from what is
+# left. As many words as possible are identified by three letters, and none is
+# lost to the rule.
+PREFER = 3
 REFERENCE = 30000               # how much of the language a word is measured against
 BAND = 4.0                      # frequency bands within which isolation decides
 
@@ -132,24 +139,40 @@ def main():
     band = lambda rank: int(math.log(rank + 2, BAND))
     order = sorted(eligible, key=lambda t: (band(t[2]), -iso[t[0]], t[2]))
 
-    print(f'\n4.  taking {args.size}: nothing within {args.threshold} by sound, '
-          f'one keystroke by spelling, or sharing {PREFIX} first letters')
-    taken, prefixes, dropped = [], set(), {'prefix': 0, 'sound': 0, 'spelling': 0}
-    for w, ph, rank in order:
-        if w[:PREFIX] in prefixes:
-            dropped['prefix'] += 1; continue
+    print(f'\n4.  taking {args.size}: nothing within {args.threshold} by sound '
+          f'or one keystroke by spelling, preferring a free {PREFER}-letter prefix')
+    taken, prefixes, seen = [], set(), set()
+    dropped = {'sound': 0, 'spelling': 0}
+
+    def consider(w, ph, rank):
         if any(distance(ph, ph2, args.threshold) < args.threshold
                for _, ph2, _ in taken if abs(len(ph2) - len(ph)) <= 2):
-            dropped['sound'] += 1; continue
+            dropped['sound'] += 1; return False
         # One keystroke apart is invisible to phonetics and fatal in a text box:
         # water/later, hollow/follow, batter/butter.
         if any(edit1(w, v) for v, _, _ in taken if abs(len(v) - len(w)) <= 1):
-            dropped['spelling'] += 1; continue
+            dropped['spelling'] += 1; return False
         taken.append((w, ph, rank))
-        prefixes.add(w[:PREFIX])
+        prefixes.add(w[:PREFER])
+        seen.add(w)
+        return True
+
+    # First pass: only words whose short prefix is still free. Second pass:
+    # everything else, so the preference never costs a word.
+    for w, ph, rank in order:
         if len(taken) >= args.size:
             break
+        if w[:PREFER] not in prefixes:
+            consider(w, ph, rank)
+    unique = len(taken)
+    for w, ph, rank in order:
+        if len(taken) >= args.size:
+            break
+        if w not in seen:
+            consider(w, ph, rank)
     print('       skipped ' + ', '.join(f'{n} on {k}' for k, n in dropped.items()))
+    print(f'       {unique} of {len(taken)} are the only word with their first '
+          f'{PREFER} letters')
     if len(taken) < args.size:
         print(f'       only {len(taken)} -- widen the pool or lower the threshold')
         return 1
@@ -162,7 +185,7 @@ def main():
               for s_ in (2.0, 1.5, 1.0, 0.5)))
     print(f'\n    sha256 {hashlib.sha256(text.encode()).hexdigest()}')
     print('    syllables: ' + ', '.join(
-        f'{n}: {sum(1 for _, ph, _ in taken if syllables(ph) == n)}' for n in (2, 3)))
+        f'{n}: {sum(1 for _, ph, _ in taken if syllables(ph) == n)}' for n in (1, 2, 3)))
     print(f'    letters {min(map(len, words))}-{max(map(len, words))}, '
           f'mean {sum(map(len, words)) / len(words):.1f}')
     report([(w, ph) for w, ph, _ in taken], '    result')

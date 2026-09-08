@@ -48,8 +48,14 @@ selection rules can be tuned without paying for it again.
 grim is out whatever it sounds like, so the phonetic stage never has to choose
 between a good word and a clean one.
 
-1. **`pool.py`** — every 2–3 syllable word, 4–9 letters, common enough to be
-   recognised (top 35,000), minus:
+0. **The pool starts from this list's predecessor AND BIP-39.** BIP-39's words
+   are already known to be typable and unambiguous in print; what nobody
+   checked is how they sound. They face the same rules as everything else,
+   which is how `pair`, `pear`, `peace`, `piece`, `right` and `write` get
+   sorted out rather than shipped.
+
+1. **`pool.py`** — every 1–3 syllable word, 4–9 letters, common enough to be
+   recognised (top 32,000), minus:
    - anything with two pronunciations (`read`, `live`, `bow`, `wind`): a
      heteronym cannot be said unambiguously;
    - **proper nouns**, caught by capitalisation in the system dictionary. This
@@ -64,15 +70,38 @@ between a good word and a clean one.
    - **words spelled two ways** — `colour`/`color`, `centre`/`center`,
      `analyse`/`analyze`. Neither form can be dictated without a follow-up
      question, so the word is unusable at all;
+   - **compounds** — `landlady` is land + lady, `ladybug` is lady + bug,
+     `boyfriend`, `cowboy`, `busboy` and `boyhood` are all boy + something.
+     Phonetic distance says these are far apart, and phonetic distance is the
+     wrong ruler: a listener does not compare whole words, they mishear a word
+     boundary, and a shared component is a shared way to do it. It costs a few
+     good words to accidental splits (`capable` is cap + able) and the pool can
+     afford them;
+   - **what a word MEANS**, from WordNet (`semantic.py`) — `lustful`, `cervix`,
+     `puberty` and `syphilis` all walked through a hand-written blocklist,
+     because a blocklist holds only what someone thought of. WordNet knows each
+     of them is a state of sexual desire, an opening to the uterus, the onset
+     of sexual maturity, a venereal disease. Two senses deep, never all of
+     them: read every sense and English will tell you a banana is a
+     reproductive structure and a mother is a nun. `allow-semantic.txt` records
+     every word the filter is wrong about, so it can stay strict;
    - the hand lists: `function-words.txt`, `exclude-religious.txt`,
-     `exclude-negative.txt`, `exclude-proper.txt`.
+     `exclude-negative.txt`, `exclude-proper.txt`, `exclude-register.txt`.
 
 2. **`isolation.py`** — how far each survivor stands from its nearest neighbour
    in the *rest of the language*, not just from the list.
 
 3. **`build.py`** — takes them in order, skipping any word that a single
-   mishearing, a single keystroke, or a shared four-letter prefix could confuse
-   with one already taken.
+   mishearing or a single keystroke could confuse with one already taken.
+
+   A unique short prefix is a **preference, not a rule**. BIP-39 guarantees
+   unique four-letter prefixes so a seed phrase can be typed short; as a hard
+   rule here it cost more than everything else put together — over a thousand
+   candidates — and pushed the selection out of common vocabulary into
+   `abattoir`, `bivouac` and `gazpacho`. So the build takes every word whose
+   three-letter prefix is still free, then fills the remainder from what is
+   left: **1,017 of 2,048** are the only word with their first three letters,
+   and not one word was lost to the rule.
 
 ### Why isolation is a tie-break and not a sort key
 
@@ -123,7 +152,11 @@ so **2.0 is the strictest margin an 11-bit list can have**.
 
 Everything in the table at the top is measured and re-checkable with `--audit`.
 
-The **tone** of the list is not. `exclude-religious.txt`, `exclude-negative.txt`
-and `exclude-proper.txt` are hand-written, deliberately over-broad, and meant to
-be read and argued with — they are why `cruel`, `plague` and `corpse` are not
-here. They will not be complete. Read the output before adopting it.
+The **tone** of the list is not, and no rule reaches it. The exclusion files are
+hand-written, deliberately over-broad, and meant to be read and argued with.
+They exist because reading the generated list is the only thing that finds
+`lustful`, `bozo`, `iphone` and `landlady` — measurement finds none of them.
+`exclude-register.txt` is the clearest case: slang and brand names are *common*,
+so frequency actively argues for keeping them.
+
+They will not be complete. Read the output before adopting it.

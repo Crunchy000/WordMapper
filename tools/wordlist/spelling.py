@@ -107,3 +107,23 @@ def edit1(a, b):
     while i < la and a[i] == b[i]:
         i += 1
     return a[i:] == b[i + 1:]
+
+
+def is_compound(word, vocab, min_part=3):
+    """True if this word is two words stuck together.
+
+    `landlady` is land + lady, `ladybug` is lady + bug, `boyfriend`, `cowboy`,
+    `busboy`, `bellboy` and `boyhood` are all boy + something or something +
+    boy. Phonetic distance says these are far apart -- adding four phonemes is
+    twice the margin -- and phonetic distance is the wrong ruler here, because a
+    listener does not compare whole words. They hear a word boundary that is not
+    there, or miss one that is, and a set of words sharing a component is a set
+    of ways to make that slip.
+
+    It does not matter whether the component is itself on the list: what a
+    listener nearly hears is any word they know, not just the 2047 others.
+    """
+    for i in range(min_part, len(word) - min_part + 1):
+        if word[:i] in vocab and word[i:] in vocab:
+            return True
+    return False

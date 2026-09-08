@@ -1,0 +1,35 @@
+# Words the semantic filter flags that are fine, with the sense that misleads it.
+#
+# WordNet is consulted two senses deep, and a second sense is still sometimes a
+# rare one. This file is the record of every such case, so the filter can stay
+# strict without quietly eating good words. Each line is a word the filter would
+# have removed and a judgement that it should not.
+agent        # "an active agent" -- a chemical, not a disease
+amulet       # grouped with talismans, which WordNet files under medicine
+animal       # "animal instincts" reaches the sexual cluster
+avatar       # the Hindu sense is second; the ordinary one is first
+benign       # the opposite of malignant is still under it in the tree
+boomerang     # filed near thrown weapons
+cleanup      # "clean up" reaches a killing sense in slang
+control      # "controlled substance" pulls it toward drugs
+dangerous    # an attribute of harm, not harm
+echo         # Echo the nymph
+ethnic       # "ethnic religion" is a subsense
+evidence     # medical evidence
+healthy      # the whole point is that it is the good end
+immune       # immunity is a defence, not a disease
+inhale       # breathing, and also what one does with smoke
+jellyfish    # its reproductive biology is in the gloss
+juicy        # "juicy gossip" reaches a sexual sense
+medicine     # the practice, which is not itself an illness
+palpable     # a clinical adjective in origin, ordinary in use
+partner      # the sexual-partner sense is second
+powder       # gunpowder is a second sense
+remedy       # a cure is not a disease
+romantic     # romance reaches eroticism
+section      # a caesarean section is one sense of many
+stubborn     # "a stubborn infection"
+talisman     # see amulet
+throttle     # to throttle is to strangle; the ordinary sense is a lever
+vintage      # wine, not intoxication
+volatile     # chemistry, and also explosives
