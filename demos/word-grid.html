@@ -551,9 +551,26 @@ async function show(lat, lng) {
   draw(lat, lng, said);
   // The cell size is the hint worth showing: it is the same 4.5 m whether the
   // country bought a word or not, which is the point of one grid.
+  //
+  // There are TWO reasons a country can fail to buy a word, and they are not
+  // the same thing. A window over the cap is a property of the country -- the
+  // United States always fails, everywhere. A second place matching the same
+  // words is a property of the ADDRESS: a 1-in-144 coincidence that hits about
+  // one UK point in eighty, scattered at random. Saying "too wide a box" for
+  // both told the wrong story about Britain.
   noteEl.innerHTML = `${country.name} &middot; ${gridHint()}`
-    + (said < scope.maxWords ? ''
-       : '<span class="dim"> &mdash; too wide a box to drop a word safely</span>');
+    + (said < scope.maxWords ? '' : `<span class="dim"> &mdash; ${whyNotShort(
+         lat, lng, country.box, scope)}</span>`);
+}
+
+function whyNotShort(lat, lng, box, sc) {
+  const full = encode(lat, lng, sc.maxWords, sc);
+  const { searched } = candidatesInBox(full.slice(1 - sc.maxWords), box, sc,
+                                       MAX_CANDIDATES);
+  return searched > MAX_CANDIDATES
+    ? 'too wide a box to drop a word safely'
+    : `another place here matches those last ${sc.maxWords - 1} words, so all `
+      + `${sc.maxWords}`;
 }
 
 map.on('click', (e) => show(e.latlng.lat, wrapLng(e.latlng.lng)));
