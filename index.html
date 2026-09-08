@@ -69,9 +69,9 @@
 <header>
   <div class="wrap">
     <h1>WordMapper</h1>
-    <p class="tagline">Six everyday words name any point on earth to 34&nbsp;centimetres. Say fewer for a coarser place &mdash; or, if whoever is listening already knows which country you are in, drop the leading word and keep every centimetre.</p>
-    <div class="addr">laptop<span>.</span>tournament<span>.</span>simply<span>.</span>govern<span>.</span>pasta<span>.</span>energy</div>
-    <p class="note">Big Ben, to 34&nbsp;cm and checksummed. Every word is graded
+    <p class="tagline">Five everyday words name any point on earth to about ten metres. Say fewer for a coarser place &mdash; or, if whoever is listening already knows which country you are in, drop the leading word and keep every metre.</p>
+    <div class="addr">laptop<span>.</span>tournament<span>.</span>simply<span>.</span>govern<span>.</span>outdo</div>
+    <p class="note">Big Ben, to 10.8&nbsp;m and checksummed. Every word is graded
     CEFR&nbsp;A1&ndash;B2 &mdash; everyday English, nothing you would have to spell out.
     One grid over the whole earth, so this is <em>the</em> address for that spot; in the
     UK the first word can go unsaid.</p>
@@ -82,7 +82,7 @@
 
   <h2>Try it</h2>
   <p><a href="demos/word-grid.html">Open the grid</a> &mdash; click anywhere on earth and
-  the address sits on the map, nothing else. The six words appear straight away with no
+  the address sits on the map, nothing else. The five words appear straight away with no
   network involved; OpenStreetMap is then asked which country the click landed in, and
   the words that country can stand in for go grey.</p>
 
@@ -101,7 +101,7 @@
 
   <p><strong>And every box gave a place a second address.</strong> A box was also
   <em>coarser</em> than the global grid it stood in for: four words over Britain was
-  2.66&nbsp;m, against 34&nbsp;cm for six words anywhere. What the box was really
+  2.66&nbsp;m, against 10.8&nbsp;m for five words anywhere &mdash; and one word shorter. What the box was really
   selling was the leading word &mdash; and a country supplies that just as well,
   without a rectangle drawn by hand. That is further down.</p>
 
@@ -117,8 +117,7 @@
       <tr><td class="num">2</td><td class="num">laptop.tournament</td><td class="num">22.1 &times; 22.1 km</td></tr>
       <tr><td class="num">3</td><td class="num">laptop.tournament.simply</td><td class="num">689 &times; 689 m</td></tr>
       <tr><td class="num">4</td><td class="num">laptop.tournament.simply.govern</td><td class="num">21.5 &times; 21.5 m</td></tr>
-      <tr><td class="num">5</td><td class="num">laptop.tournament.simply.govern.pasta</td><td class="num">67 &times; 67 cm</td></tr>
-      <tr><td class="num">6</td><td class="num">laptop.&hellip;.pasta.energy</td><td class="num">34 &times; 34 cm &mdash; and verified</td></tr>
+      <tr><td class="num">5</td><td class="num">laptop.tournament.simply.govern.outdo</td><td class="num">10.8 &times; 10.8 m &mdash; and verified</td></tr>
     </tbody>
   </table>
   </div>
@@ -134,10 +133,10 @@
   <table>
     <thead><tr><th>Said</th><th>Written</th><th>Ambiguity</th><th>Needs the listener to know</th></tr></thead>
     <tbody>
-      <tr><td class="num">5</td><td class="num">.tournament.simply.govern.pasta.energy</td><td class="num">706 &times; 706 km</td><td class="num">353 km &mdash; which country</td></tr>
-      <tr><td class="num">4</td><td class="num">.simply.govern.pasta.energy</td><td class="num">22.1 &times; 22.1 km</td><td class="num">11 km &mdash; which town</td></tr>
-      <tr><td class="num">3</td><td class="num">.govern.pasta.energy</td><td class="num">689 &times; 689 m</td><td class="num">345 m &mdash; which street</td></tr>
-      <tr><td class="num">2</td><td class="num">.pasta.energy</td><td class="num">21.5 &times; 21.5 m</td><td class="num">11 m &mdash; which building</td></tr>
+      <tr><td class="num">4</td><td class="num">.tournament.simply.govern.outdo</td><td class="num">706 &times; 706 km</td><td class="num">353 km &mdash; which country</td></tr>
+      <tr><td class="num">3</td><td class="num">.simply.govern.outdo</td><td class="num">22.1 &times; 22.1 km</td><td class="num">11 km &mdash; which town</td></tr>
+      <tr><td class="num">2</td><td class="num">.govern.outdo</td><td class="num">689 &times; 689 m</td><td class="num">345 m &mdash; which street</td></tr>
+      <tr><td class="num">1</td><td class="num">.outdo</td><td class="num">21.5 &times; 21.5 m</td><td class="num">11 m &mdash; which building</td></tr>
     </tbody>
   </table>
   </div>
@@ -201,7 +200,7 @@
   <p><strong>The grid never moves.</strong> The country is consulted when the address is
   read, as a search window; it is not part of the address and nothing is bound to it. A
   border can be redrawn, a territory can change hands, and the words for a place are
-  unchanged. The worst a wrong window can do is cost a word &mdash; the full six are
+  unchanged. The worst a wrong window can do is cost a word &mdash; the full five are
   always correct, and are shown straight away, before any network call.</p>
 
   <h2>Cells are square</h2>
@@ -212,8 +211,8 @@
   aspect is &pi;K&sup2;, so K&nbsp;=&nbsp;1/&radic;&pi; gives 1, at
   55.654&deg;.</p>
   <p>Ten bits to a word makes <strong>every</strong> length an even bit count, so every
-  length lands exactly square &mdash; 706&nbsp;km, 22.1&nbsp;km, 689&nbsp;m, 21.5&nbsp;m,
-  67&nbsp;cm, 34&nbsp;cm, all of them 1:1. The projection is equal-area, so this changes
+  length lands exactly square &mdash; 706&nbsp;km, 22.1&nbsp;km, 689&nbsp;m, 21.5&nbsp;m
+  and 10.8&nbsp;m, all of them 1:1. The projection is equal-area, so this changes
   the shape and not the resolution. At eleven bits to a word the odd lengths paid for it
   at 2:1; that penalty is simply gone.</p>
 
@@ -238,9 +237,9 @@
   <table>
     <thead><tr><th>Refine</th><th>Check</th><th>Cell</th><th>Wrong word caught</th></tr></thead>
     <tbody>
-      <tr><td class="num">0</td><td class="num">10</td><td class="num">67 cm</td><td class="num">99.90 %</td></tr>
-      <tr><td class="num">2</td><td class="num">8</td><td class="num"><strong>34 cm</strong></td><td class="num"><strong>99.61 %</strong></td></tr>
-      <tr><td class="num">3</td><td class="num">7</td><td class="num">24 cm</td><td class="num">99.22 %</td></tr>
+      <tr><td class="num">0</td><td class="num">10</td><td class="num">21.5 m</td><td class="num">99.90 %</td></tr>
+      <tr><td class="num">2</td><td class="num">8</td><td class="num"><strong>10.8 m</strong></td><td class="num"><strong>99.61 %</strong></td></tr>
+      <tr><td class="num">4</td><td class="num">6</td><td class="num">5.4 m</td><td class="num">98.44 %</td></tr>
     </tbody>
   </table>
   </div>
@@ -250,7 +249,7 @@
   <p>A checksum genuinely cannot live at <em>every</em> length: its bits would sit where
   the next word's position bits must go, and reserving eight at every length would take
   two words from 11&nbsp;km to 176&nbsp;km. Putting it in the last word costs nothing at
-  the shorter lengths, which are simply unverified. Six words is therefore terminal
+  the shorter lengths, which are simply unverified. Five words is therefore terminal
   &mdash; a sixth would have to reinterpret the check bits.</p>
 
   <h2>The word list</h2>
@@ -275,9 +274,10 @@
   53&nbsp;% of its words have a same-or-one-phoneme twin. Its only guarantee is unique
   four-letter prefixes, which says nothing about what happens down a phone line.</p>
 
-  <p>The cost is a word: 1,024 is 10 bits against BIP-39&rsquo;s 11, so an address is six
-  words rather than five. It is finer for it &mdash; six words of 10 bits beats five of 11,
-  34&nbsp;cm against 1.35&nbsp;m.</p>
+  <p>1,024 is 10 bits against BIP-39&rsquo;s 11, so five words carry 50 bits rather than
+  55. That is the whole cost: 10.8&nbsp;m against 1.35&nbsp;m, for a vocabulary anyone can
+  say and a checksum that is stronger for it &mdash; 8 bits rather than 7. Ten metres is a
+  building; going to six words would reach 34&nbsp;cm if a doorstep were ever needed.</p>
 
   <h2>Reading</h2>
   <ul>

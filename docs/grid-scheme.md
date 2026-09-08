@@ -6,7 +6,7 @@ Setup: `npm install --prefix tools/gridcode`.
 
 ## One grid
 
-**Six everyday words name any point on earth to 34 cm**, and that is the whole scheme.
+**Five everyday words name any point on earth to 10.8 m**, and that is the whole scheme.
 There is one grid, one address for a place, no scope to choose and nothing to
 switch.
 
@@ -25,7 +25,7 @@ the Tiwi Islands and the Torres Strait — because Papua New Guinea reaches
 tip at 10.05° S.
 
 **A box was coarser than the grid it stood in for.** Four words over Britain was
-2.66 m; six words anywhere is 34 cm. The continental boxes were worse still —
+2.66 m; five words anywhere is 10.8 m, one word shorter. The continental boxes were worse still —
 Asia came out at 31.6 m.
 
 **And a box gave a place a second address.** Two addresses for one spot is a
@@ -48,8 +48,7 @@ address is a prefix of a longer one.
 | 2 | `laptop.tournament` | 22.1 km square |
 | 3 | `laptop.tournament.simply` | 689 m square |
 | 4 | `laptop.tournament.simply.govern` | 21.5 m square |
-| 5 | `laptop.tournament.simply.govern.pasta` | 67 cm square |
-| 6 | `laptop.…​.pasta.energy` | **34 cm square, verified** |
+| 5 | `laptop.tournament.simply.govern.outdo` | **10.8 m square, verified** |
 
 ## Drop leading words: same precision, fewer words, needs context
 
@@ -235,9 +234,9 @@ A whole fifth word of position would reach 8 cm, finer than anyone needs. So its
 
 | Refine | Check | Cell | Wrong word caught |
 |---|---|---|---|
-| 0 | 10 | 67 cm | 99.90 % |
-| **2** | **8** | **34 cm** | **99.61 %** |
-| 3 | 7 | 24 cm | 99.22 % |
+| 0 | 10 | 21.5 m | 99.90 % |
+| **2** | **8** | **10.8 m** | **99.61 %** |
+| 4 | 6 | 5.4 m | 98.44 % |
 
 Shipped at **4 refine + 7 check**. For comparison, what3words is 3 m with no
 checksum at all — this is finer *and* verified.
@@ -247,7 +246,7 @@ where the next word's position bits must go. Reserving 8 bits at every length
 would take 2 words from 11 km to 177 km. Putting it in the last word instead
 costs nothing at the shorter lengths, which are simply unverified.
 
-Six words is terminal for the same reason — a seventh would have to reinterpret
+Five words is terminal for the same reason — a sixth would have to reinterpret
 the check bits. The 7 bits cover the *whole* position, which is what makes both
 kinds of shortening safe: a reconstruction that guesses wrong fails the check,
 whether the guess came from a reference point or from a box search.
@@ -269,10 +268,10 @@ to be *typed and checksummed*: it holds `pair`/`pear`, `peace`/`piece`,
 twin, and its only guarantee is unique four-letter prefixes, which says nothing
 about a phone line.
 
-The cost is a word — 10 bits against 11, so six words instead of five. It buys
-back more than it costs: 34 cm instead of 1.35 m, an 8-bit checksum instead of
-7, and every address length landing exactly square, where 11 bits put the odd
-lengths at 2:1.
+10 bits against 11 means five words carry 50 rather than 55, so the cell is
+10.8 m instead of 1.35 m. That is the cost, and it buys a vocabulary anyone can
+say, an 8-bit checksum instead of 7, and every address length landing exactly
+square where 11 bits put the odd lengths at 2:1.
 
 ## Projection
 

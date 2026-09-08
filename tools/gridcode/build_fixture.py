@@ -16,16 +16,15 @@ POINTS = [
 ]
 # Tails resolved from a reference POINT: (lat, lng, n_said, ref_lat, ref_lng).
 # The reference has to sit inside the tile the dropped words leave, and those
-# tiles are 21.5 m, 689 m, 22.1 km and 706 km at 2, 3, 4 and 5 words said.
+# tiles are 21.5 m, 689 m, 22.1 km and 706 km at 1, 2, 3 and 4 words said.
 TAILS = [
     (51.50072, -0.12456, 2, 51.50077, -0.12460),      # a few metres: same room
     (51.50072, -0.12456, 3, 51.50200, -0.12500),      # 150 m: same street
     (51.50072, -0.12456, 4, 51.52000, -0.14000),      # 2.5 km: across London
-    (51.50072, -0.12456, 5, 52.48620, -1.89040),      # 160 km: Birmingham
-    (-16.50000, -179.99000, 4, -16.49000, -179.97000),
+    (-16.50000, -179.99000, 3, -16.49000, -179.97000),
     # The reference sits on the far side of the antimeridian, 2 km away on the
     # ground but a world apart in index terms. x has to wrap.
-    (-16.50000, -179.99000, 4, -16.49000, 179.99000),
+    (-16.50000, -179.99000, 3, -16.49000, 179.99000),
 ]
 # References too far away to pick the right tile: must be refused, not resolved
 # quietly to the wrong place.

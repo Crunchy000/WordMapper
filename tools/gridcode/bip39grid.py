@@ -193,7 +193,7 @@ class Scope:
 
 
 # Five words over the whole earth, and the only scope there is.
-GLOBAL = Scope('global', 'Global', (-90.0, 90.0, -180.0, 180.0), 6)
+GLOBAL = Scope('global', 'Global', (-90.0, 90.0, -180.0, 180.0), 5)
 DEFAULT = GLOBAL
 SCOPES = {GLOBAL.key: GLOBAL}
 

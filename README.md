@@ -9,11 +9,11 @@ Experiments in encoding geographic coordinates as short, memorable word sequence
 ### `demos/word-grid.html`
 
 The scheme, live and deliberately bare: click anywhere on earth and the address
-sits on the map, nothing else. **Six everyday words name any point to 34 cm.** Five
+sits on the map, nothing else. **Five everyday words name any point to 10.8 m.** Four
 plus a fourth set apart, because that one does a different job — it refines the
 position *and* carries the checksum.
 
-Then the address *shortens*. The six words are drawn immediately, with no
+Then the address *shortens*. The five words are drawn immediately, with no
 network involved; OpenStreetMap's reverse geocoder is asked which country the
 click landed in, and the leading words the country can stand in for are shown
 greyed rather than said:
@@ -32,7 +32,7 @@ world cannot be boxed without swallowing a neighbour: Africa and Europe
 interleave across the Mediterranean, since Tunisia reaches further north than
 southern Spain, so no horizontal line separates them. Each box also gave a place
 a *second* address, and was coarser than the global grid it replaced (2.66 m
-over the UK against 34 cm). A country supplies the leading word instead, and
+over the UK against 10.8 m, and one word shorter). A country supplies the leading word instead, and
 does it without any rectangle being drawn by hand.
 
 **A region is the other way to fill in a dropped leading word.** `resolve_tail()`
@@ -137,10 +137,12 @@ checksummed*, not spoken: it contains `pair`/`pear`, `peace`/`piece`,
 twin, and its only guarantee is unique four-letter prefixes — which says nothing
 about a phone line.
 
-The cost is a word: 1,024 is 10 bits against BIP-39's 11, so an address is six
-words rather than five. It is finer for it — six words of 10 bits beats five of
-11, 34 cm against 1.35 m — and ten bits makes *every* address length land
-exactly square, where eleven put the odd lengths at 2:1.
+1,024 is 10 bits against BIP-39's 11, so five words carry 50 bits rather than
+55. That is the whole cost: 10.8 m against 1.35 m, for a vocabulary anyone can
+say and a checksum that is stronger for it — 8 bits rather than 7. Ten bits also
+makes *every* address length land exactly square, where eleven put the odd
+lengths at 2:1. Ten metres is a building; a sixth word would reach 34 cm if a
+doorstep were ever needed.
 
 ## Tools
 

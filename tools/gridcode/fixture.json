@@ -1,10 +1,10 @@
 {
- "max_words": 6,
+ "max_words": 5,
  "max_candidates": 6,
- "order": "xyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxy",
+ "order": "xyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxy",
  "axis_bits": [
-  26,
-  26
+  21,
+  21
  ],
  "box": [
   -90.0,
@@ -40,15 +40,7 @@
      "tournament",
      "simplify",
      "obtain",
-     "arm"
-    ],
-    "6": [
-     "laptop",
-     "tournament",
-     "simplify",
-     "obtain",
-     "arm",
-     "acquire"
+     "busy"
     ]
    }
   },
@@ -79,15 +71,7 @@
      "novel",
      "plural",
      "telephone",
-     "pasta"
-    ],
-    "6": [
-     "large",
-     "novel",
-     "plural",
-     "telephone",
-     "pasta",
-     "examine"
+     "musician"
     ]
    }
   },
@@ -118,15 +102,7 @@
      "deny",
      "showcase",
      "vanish",
-     "physics"
-    ],
-    "6": [
-     "laptop",
-     "deny",
-     "showcase",
-     "vanish",
-     "physics",
-     "essayist"
+     "modern"
     ]
    }
   },
@@ -157,15 +133,7 @@
      "jaw",
      "foggy",
      "fix",
-     "review"
-    ],
-    "6": [
-     "laptop",
-     "jaw",
-     "foggy",
-     "fix",
-     "review",
-     "unlike"
+     "ski"
     ]
    }
   },
@@ -196,15 +164,7 @@
      "analyst",
      "shelf",
      "allergic",
-     "cake"
-    ],
-    "6": [
-     "speculate",
-     "analyst",
-     "shelf",
-     "allergic",
-     "cake",
-     "photo"
+     "diet"
     ]
    }
   },
@@ -235,15 +195,7 @@
      "dignity",
      "moment",
      "section",
-     "romance"
-    ],
-    "6": [
-     "impartial",
-     "dignity",
-     "moment",
-     "section",
-     "romance",
-     "triumph"
+     "stop"
     ]
    }
   },
@@ -274,15 +226,7 @@
      "fact",
      "stage",
      "obey",
-     "excursion"
-    ],
-    "6": [
-     "fix",
-     "fact",
-     "stage",
-     "obey",
-     "excursion",
-     "honeymoon"
+     "dose"
     ]
    }
   },
@@ -313,15 +257,7 @@
      "cinema",
      "afternoon",
      "expect",
-     "insect"
-    ],
-    "6": [
-     "spy",
-     "cinema",
-     "afternoon",
-     "expect",
-     "insect",
-     "kilo"
+     "drink"
     ]
    }
   },
@@ -352,15 +288,7 @@
      "coat",
      "elephant",
      "decisive",
-     "fashion"
-    ],
-    "6": [
-     "policeman",
-     "coat",
-     "elephant",
-     "decisive",
-     "fashion",
-     "attractive"
+     "historic"
     ]
    }
   },
@@ -391,15 +319,7 @@
      "bone",
      "happy",
      "statue",
-     "daddy"
-    ],
-    "6": [
-     "suspend",
-     "bone",
-     "happy",
-     "statue",
-     "daddy",
-     "photo"
+     "child"
     ]
    }
   },
@@ -430,15 +350,7 @@
      "ozone",
      "romantic",
      "entrance",
-     "novelist"
-    ],
-    "6": [
-     "rebuild",
-     "ozone",
-     "romantic",
-     "entrance",
-     "novelist",
-     "oval"
+     "phrase"
     ]
    }
   },
@@ -469,15 +381,7 @@
      "banana",
      "giraffe",
      "emperor",
-     "central"
-    ],
-    "6": [
-     "attempt",
-     "banana",
-     "giraffe",
-     "emperor",
-     "central",
-     "razor"
+     "compare"
     ]
    }
   },
@@ -508,15 +412,7 @@
      "balcony",
      "solution",
      "mirror",
-     "naked"
-    ],
-    "6": [
-     "latecomer",
-     "balcony",
-     "solution",
-     "mirror",
-     "naked",
-     "consensus"
+     "photo"
     ]
    }
   },
@@ -547,15 +443,7 @@
      "abandon",
      "abandon",
      "abandon",
-     "abandon"
-    ],
-    "6": [
-     "research",
-     "abandon",
-     "abandon",
-     "abandon",
-     "abandon",
-     "decisive"
+     "country"
     ]
    }
   },
@@ -586,15 +474,7 @@
      "depend",
      "brush",
      "beauty",
-     "risk"
-    ],
-    "6": [
-     "haunt",
-     "depend",
-     "brush",
-     "beauty",
-     "risk",
-     "purposeful"
+     "slice"
     ]
    }
   },
@@ -625,15 +505,7 @@
      "abandon",
      "abandon",
      "abandon",
-     "abandon"
-    ],
-    "6": [
-     "laziness",
-     "abandon",
-     "abandon",
-     "abandon",
-     "abandon",
-     "bureau"
+     "atomic"
     ]
    }
   },
@@ -664,15 +536,7 @@
      "faulty",
      "faulty",
      "faulty",
-     "faulty"
-    ],
-    "6": [
-     "spider",
-     "faulty",
-     "faulty",
-     "faulty",
-     "faulty",
-     "extra"
+     "interrupt"
     ]
    }
   },
@@ -703,15 +567,7 @@
      "picture",
      "picture",
      "picture",
-     "picture"
-    ],
-    "6": [
-     "tournament",
-     "picture",
-     "picture",
-     "picture",
-     "picture",
-     "literal"
+     "punctual"
     ]
    }
   },
@@ -742,15 +598,7 @@
      "abandon",
      "abandon",
      "abandon",
-     "abandon"
-    ],
-    "6": [
-     "disposal",
-     "abandon",
-     "abandon",
-     "abandon",
-     "abandon",
-     "dishwasher"
+     "astronaut"
     ]
    }
   },
@@ -781,15 +629,7 @@
      "zoom",
      "zoom",
      "zoom",
-     "suitable"
-    ],
-    "6": [
-     "zoom",
-     "zoom",
-     "zoom",
-     "zoom",
-     "suitable",
-     "shampoo"
+     "sneeze"
     ]
    }
   }
@@ -804,12 +644,12 @@
     -0.1246
    ],
    "words": [
-    "arm",
-    "acquire"
+    "obtain",
+    "busy"
    ],
    "resolved": [
-    51.50071954027699,
-    -0.12455910444259644
+    51.50073462692618,
+    -0.12454032897949219
    ]
   },
   {
@@ -821,13 +661,13 @@
     -0.125
    ],
    "words": [
+    "simplify",
     "obtain",
-    "arm",
-    "acquire"
+    "busy"
    ],
    "resolved": [
-    51.50071954027699,
-    -0.12455910444259644
+    51.50073462692618,
+    -0.12454032897949219
    ]
   },
   {
@@ -839,40 +679,20 @@
     -0.14
    ],
    "words": [
-    "simplify",
-    "obtain",
-    "arm",
-    "acquire"
-   ],
-   "resolved": [
-    51.50071954027699,
-    -0.12455910444259644
-   ]
-  },
-  {
-   "lat": 51.50072,
-   "lng": -0.12456,
-   "n": 5,
-   "ref": [
-    52.4862,
-    -1.8904
-   ],
-   "words": [
     "tournament",
     "simplify",
     "obtain",
-    "arm",
-    "acquire"
+    "busy"
    ],
    "resolved": [
-    51.50071954027699,
-    -0.12455910444259644
+    51.50073462692618,
+    -0.12454032897949219
    ]
   },
   {
    "lat": -16.5,
    "lng": -179.99,
-   "n": 4,
+   "n": 3,
    "ref": [
     -16.49,
     -179.97
@@ -880,18 +700,17 @@
    "words": [
     "dolphin",
     "tuition",
-    "appear",
-    "active"
+    "apron"
    ],
    "resolved": [
-    -16.49999987387004,
-    -179.98999804258347
+    -16.499990079005034,
+    -179.98995780944827
    ]
   },
   {
    "lat": -16.5,
    "lng": -179.99,
-   "n": 4,
+   "n": 3,
    "ref": [
     -16.49,
     179.99
@@ -899,12 +718,11 @@
    "words": [
     "dolphin",
     "tuition",
-    "appear",
-    "active"
+    "apron"
    ],
    "resolved": [
-    -16.49999987387004,
-    -179.98999804258347
+    -16.499990079005034,
+    -179.98995780944827
    ]
   }
  ],
@@ -916,9 +734,9 @@
     -74.006
    ],
    "words": [
+    "simplify",
     "obtain",
-    "arm",
-    "acquire"
+    "busy"
    ]
   },
   {
@@ -928,8 +746,8 @@
     2.3522
    ],
    "words": [
-    "arm",
-    "acquire"
+    "obtain",
+    "busy"
    ]
   }
  ],
@@ -946,53 +764,53 @@
     {
      "lat": 51.50072,
      "lng": -0.12456,
-     "said": 5,
+     "said": 4,
      "search": {
       "3": {
-       "hits": null,
-       "searched": 2709549
+       "hits": 11,
+       "searched": 2668
       },
       "4": {
-       "hits": 5,
-       "searched": 2668
+       "hits": 1,
+       "searched": 4
       },
       "5": {
        "hits": 1,
-       "searched": 4
+       "searched": 1
       }
      }
     },
     {
      "lat": 55.94859,
      "lng": -3.19951,
-     "said": 5,
+     "said": 4,
      "search": {
       "3": {
-       "hits": null,
-       "searched": 2709549
-      },
-      "4": {
        "hits": 10,
        "searched": 2622
       },
-      "5": {
+      "4": {
        "hits": 1,
        "searched": 2
+      },
+      "5": {
+       "hits": 1,
+       "searched": 1
       }
      }
     },
     {
      "lat": 54.5973,
      "lng": -5.9301,
-     "said": 5,
+     "said": 4,
      "search": {
       "3": {
-       "hits": null,
-       "searched": 2707702
+       "hits": 14,
+       "searched": 2565
       },
       "4": {
-       "hits": 5,
-       "searched": 2565
+       "hits": 1,
+       "searched": 1
       },
       "5": {
        "hits": 1,
@@ -1014,15 +832,15 @@
     {
      "lat": 53.3498,
      "lng": -6.2603,
-     "said": 5,
+     "said": 4,
      "search": {
       "3": {
-       "hits": null,
-       "searched": 406832
+       "hits": 3,
+       "searched": 391
       },
       "4": {
-       "hits": 2,
-       "searched": 391
+       "hits": 1,
+       "searched": 1
       },
       "5": {
        "hits": 1,
@@ -1044,15 +862,15 @@
     {
      "lat": 46.948,
      "lng": 7.4474,
-     "said": 5,
+     "said": 4,
      "search": {
       "3": {
-       "hits": null,
-       "searched": 160657
+       "hits": 1,
+       "searched": 156
       },
       "4": {
        "hits": 1,
-       "searched": 156
+       "searched": 1
       },
       "5": {
        "hits": 1,
@@ -1074,19 +892,19 @@
     {
      "lat": -33.8688,
      "lng": 151.2093,
-     "said": 6,
+     "said": 5,
      "search": {
       "3": {
        "hits": null,
-       "searched": 36512015
+       "searched": 35632
       },
       "4": {
-       "hits": null,
-       "searched": 35632
+       "hits": 1,
+       "searched": 36
       },
       "5": {
        "hits": 1,
-       "searched": 36
+       "searched": 1
       }
      }
     }
@@ -1104,19 +922,19 @@
     {
      "lat": 51.50072,
      "lng": -0.12456,
-     "said": 6,
+     "said": 5,
      "search": {
       "3": {
-       "hits": null,
-       "searched": 2688285
+       "hits": 8,
+       "searched": 2580
       },
       "4": {
-       "hits": 17,
-       "searched": 2580
+       "hits": 0,
+       "searched": 1
       },
       "5": {
        "hits": 0,
-       "searched": 1
+       "searched": 0
       }
      }
     }
@@ -1134,19 +952,19 @@
     {
      "lat": -18.1416,
      "lng": 178.4419,
-     "said": 6,
+     "said": 5,
      "search": {
       "3": {
        "hits": null,
-       "searched": 72521592
+       "searched": 70700
       },
       "4": {
-       "hits": null,
-       "searched": 70700
+       "hits": 1,
+       "searched": 62
       },
       "5": {
        "hits": 0,
-       "searched": 62
+       "searched": 0
       }
      }
     }

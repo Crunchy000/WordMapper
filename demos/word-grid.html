@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Six everyday words name any point on earth to 34 cm. Say five where the country you are in supplies the sixth.">
-<title>Word grid — six easy words anywhere, five where a country supplies the last</title>
+<meta name="description" content="Five everyday words name any point on earth to about ten metres. Say four where the country you are in supplies the fifth.">
+<title>Word grid — five easy words anywhere, four where a country supplies the last</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
   html, body { margin: 0; height: 100%; }
@@ -101,7 +101,7 @@ function makeScope(key, name, box, maxWords) {
 // be a rectangle and most of the world cannot be boxed without swallowing a
 // neighbour, so the regional boxes that used to be here are gone; a country
 // supplies the leading word instead, further down.
-const GLOBAL = makeScope('global', 'Global', [-90, 90, -180, 180], 6);
+const GLOBAL = makeScope('global', 'Global', [-90, 90, -180, 180], 5);
 
 const wrapLng = (lng) => ((lng + 180) % 360 + 360) % 360 - 180;
 
