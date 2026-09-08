@@ -78,6 +78,10 @@ def main():
     ap.add_argument('--threshold', type=float, default=THRESHOLD)
     ap.add_argument('--out')
     ap.add_argument('--audit', help='score an existing list instead of building')
+    ap.add_argument('--cefr', metavar='LEVELS', default=None,
+                    help='keep only words graded at these CEFR levels, e.g. A1,A2,B1,B2. '
+                         'Graded vocabulary is what a person can retrieve under pressure; '
+                         'see cefr.json and the README for what it costs.')
     args = ap.parse_args()
     data = os.environ.get('WORDLIST_DATA', '.')
     cmu = read_cmudict(os.path.join(data, 'cmudict.txt'))
@@ -91,6 +95,17 @@ def main():
         return 0
 
     pool, reasons = build_pool()
+    if args.cefr:
+        # CEFR grades a word by the level at which a learner reliably knows it.
+        # A1-B2 is roughly "everyday English": the vocabulary someone can
+        # produce and recognise without stopping to think, which is the only
+        # kind that survives being read out in a hurry.
+        want = {x.strip().upper() for x in args.cefr.split(',')}
+        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cefr.json')
+        graded = json.load(open(path))['level']
+        before = len(pool)
+        pool = [t for t in pool if graded.get(t[0]) in want]
+        reasons[f'not graded {"/".join(sorted(want))} in CEFR'] = before - len(pool)
     print(f'1-2. pool: {len(pool)} words worth saying')
     for why, n in sorted(reasons.items(), key=lambda kv: -kv[1]):
         print(f'       dropped {n:6d}  {why}')

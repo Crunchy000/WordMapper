@@ -183,6 +183,51 @@ one film needed the word once.
 
 They will not be complete. Read the output before adopting it.
 
+## Reading level
+
+There are real British standards for "words a person can retrieve under
+pressure", and they are better evidence than a frequency count:
+
+- **CEFR** grades a word by the level at which a learner reliably knows it.
+  A1–B2 is roughly everyday English. `cefr.json` here merges the
+  **Oxford 5000** (Oxford University Press) with the **CEFR-J / English
+  Vocabulary Profile** (openlanguageprofiles), 9,025 graded headwords.
+- The **Oxford 3000** is the same idea as a flat list of core vocabulary.
+- The **GOV.UK content style guide** targets a reading age of 9 and keeps a
+  plain-English alternatives list; the **Plain English Campaign**'s A–Z is the
+  older British reference.
+
+Build against them with `--cefr A1,A2,B1,B2`.
+
+**They will not stretch to 2,048 words.** Measured, holding every other rule
+fixed:
+
+| reading level | largest list |
+|---|---|
+| CEFR A1–A2 | 529 |
+| Oxford 3000 | 694 |
+| CEFR A1–B1 | 918 |
+| **CEFR A1–B2** | **1,227** |
+| anything graded at all (A1–C2) | 1,423 |
+| no reading-level rule | 2,225 |
+
+Graded English simply does not contain 2,048 words that also survive being
+2.0 apart by sound, two edits apart by spelling, and one-word-per-piece. Today's
+2,048 is 40 % A1–B1, 15 % B2, 8 % C1–C2 and 36 % ungraded — the ungraded third
+being `alpaca`, `amethyst`, `amulet`, `anklet`.
+
+**But 1,227 clears 1,024, and 1,024 is 10 bits.** So there is a real second
+option, built here as `spoken-1024-plain.txt`:
+
+| | words per address | cell | vocabulary |
+|---|---|---|---|
+| `spoken-2048.txt` | **5** | 1.35 m | mixed; a third ungraded |
+| `spoken-1024-plain.txt` | **6** | 0.24 m | every word CEFR A1–B2 |
+
+One more word per address buys a vocabulary everyone already has. That is the
+whole trade, and it is a decision about who says these addresses out loud rather
+than a technical one.
+
 ## What 2,048 words costs in familiarity
 
 Not every rule can be satisfied by common words, and it is worth knowing where

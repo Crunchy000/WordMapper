@@ -75,9 +75,18 @@ def read_words(path):
     return out
 
 
-# Debian ships these with capitalisation intact: `wamerican` and `wbritish`.
-CASED_DICTS = ('/usr/share/dict/american-english', '/usr/share/dict/british-english',
-               '/usr/share/dict/words')
+# Debian ships these with capitalisation intact: `wbritish` and `wamerican`.
+#
+# BRITISH FIRST, and British alone for the vocabulary. This is a British
+# project and the address is spoken here, so `artefact` is the word and
+# `artifact` is not; likewise liquorice, manoeuvre and omelette. Taking the
+# vocabulary from the British list drops the American spellings without anyone
+# having to list them. The American list is still read, but only to LEARN the
+# American spellings, so a word that differs between the two can be recognised
+# and refused outright -- neither form can be dictated without a follow-up
+# question about how to spell it.
+CASED_DICTS = ('/usr/share/dict/british-english',)
+OTHER_DICTS = ('/usr/share/dict/american-english',)
 
 
 def cased_dictionary(paths=CASED_DICTS):
@@ -137,7 +146,8 @@ def excluded():
     out = set()
     for name in ('function-words.txt', 'exclude-religious.txt',
                  'exclude-negative.txt', 'exclude-proper.txt',
-                 'exclude-register.txt', 'exclude-obscure.txt'):
+                 'exclude-register.txt', 'exclude-obscure.txt',
+                 'exclude-american.txt'):
         out |= read_words(os.path.join(HERE, name))
     return out
 
@@ -158,6 +168,10 @@ def build(max_syll=MAX_SYLL, min_syll=MIN_SYLL, min_len=MIN_LEN,
     # A crowd-sourced list like dwyl/words_alpha does not work here: it holds
     # gatsby, hitler, jehovah and bethlehem in lower case alongside real words.
     common, proper = cased_dictionary()
+    # Everything the other dialect spells differently, so has_variant() can see
+    # across the Atlantic and not just inside one dictionary.
+    other, _ = cased_dictionary(OTHER_DICTS)
+    both = common | other
     if not common:
         print('  (no cased system dictionary: proper nouns not filtered)',
               file=sys.stderr)
@@ -219,7 +233,7 @@ def build(max_syll=MAX_SYLL, min_syll=MIN_SYLL, min_len=MIN_LEN,
                 drop(f'what it means: {kind}'); continue
         if is_inflection(w, cmu, freq):
             drop('an inflection of a word that exists'); continue
-        if has_variant(w, cmu) or has_variant(w, common):
+        if has_variant(w, cmu) or has_variant(w, both):
             drop('spelled two ways (colour/color, centre/center)'); continue
         pool.append((w, ph, r))
     pool.sort(key=lambda t: t[2])

@@ -54,7 +54,6 @@ alien
 allergic
 allergy
 alliance
-aloha
 alone
 aloof
 alpaca
@@ -118,7 +117,6 @@ arrest
 arrival
 arrogance
 arsenal
-artifact
 artistic
 ashore
 aspect
@@ -215,6 +213,7 @@ bounty
 bouquet
 boutique
 boyfriend
+brainy
 brave
 bravery
 breakfast
@@ -317,6 +316,7 @@ circle
 circular
 citadel
 citation
+citrus
 city
 civil
 civilian
@@ -332,7 +332,6 @@ client
 climax
 clinic
 clock
-closet
 cloudy
 clumsy
 cluster
@@ -383,6 +382,7 @@ confident
 conquer
 consensus
 consider
+consist
 consult
 contact
 contain
@@ -408,6 +408,7 @@ cradle
 crafty
 cranberry
 cranky
+crayon
 crazy
 create
 creative
@@ -464,12 +465,14 @@ declare
 decline
 decoy
 dedicate
+deduce
 deepen
 default
 defend
 defensive
 defiant
 definite
+deflect
 defrost
 defy
 degree
@@ -499,7 +502,6 @@ devotion
 diagnose
 diagram
 dialect
-diaper
 dictate
 diet
 difficult
@@ -509,7 +511,7 @@ dilemma
 diligent
 dimension
 diminish
-dingy
+dinky
 dinner
 dinosaur
 dioxide
@@ -554,14 +556,12 @@ dwarf
 dwell
 dynamic
 earthy
-eatery
 echo
 ecstatic
 edible
 eerie
 efficient
 effort
-eggplant
 elbow
 eldest
 electric
@@ -587,6 +587,7 @@ enhance
 enigma
 enlighten
 ensemble
+enslave
 entail
 entire
 entrance
@@ -627,7 +628,6 @@ exclude
 exclusive
 exempt
 exercise
-exert
 exhale
 exhibit
 exist
@@ -697,6 +697,7 @@ fireplace
 firm
 fishy
 fixation
+flaky
 flamingo
 flask
 flat
@@ -720,13 +721,11 @@ forceful
 forecast
 forever
 forfeit
-formal
 formula
 fortify
 forum
 fossil
 found
-foxhole
 fraction
 fragile
 fragment
@@ -755,11 +754,10 @@ futile
 future
 galactic
 galaxy
-garbage
+garage
 garlic
 garment
 garnish
-gasoline
 gasp
 gather
 gauze
@@ -838,6 +836,7 @@ hectic
 hedgehog
 heirloom
 helium
+helix
 hellish
 help
 helpful
@@ -872,6 +871,7 @@ hulk
 humane
 humankind
 humbly
+humbug
 hummus
 humorous
 hungry
@@ -894,6 +894,7 @@ imagine
 imitate
 immature
 immigrant
+immoral
 immune
 impede
 implement
@@ -917,7 +918,6 @@ indoor
 induce
 indulge
 industry
-inert
 infancy
 infantry
 infidel
@@ -939,6 +939,7 @@ inmate
 innocence
 input
 inquire
+insert
 inspector
 inspire
 instance
@@ -973,6 +974,7 @@ isolate
 issue
 item
 jagged
+jangle
 janitor
 jealousy
 jerky
@@ -995,7 +997,6 @@ karate
 kayak
 kebab
 keepsake
-kerosene
 ketchup
 kibbutz
 kilo
@@ -1015,6 +1016,7 @@ landlady
 lantern
 laptop
 late
+launder
 laundry
 lava
 lavish
@@ -1030,7 +1032,6 @@ liar
 libel
 liberate
 library
-licorice
 life
 lightning
 likewise
@@ -1052,7 +1053,7 @@ logic
 logical
 logo
 lollipop
-loopy
+loophole
 lost
 lottery
 lotto
@@ -1081,7 +1082,6 @@ maintain
 majestic
 majesty
 mammoth
-maneuver
 manicure
 mannequin
 manpower
@@ -1109,6 +1109,7 @@ medium
 mellow
 membrane
 memento
+memoir
 memory
 mention
 menu
@@ -1131,7 +1132,6 @@ mimic
 mindful
 minimum
 minus
-mirage
 mirror
 mischief
 mishap
@@ -1155,7 +1155,8 @@ monitor
 monkey
 monoxide
 month
-moral
+morale
+morbid
 mosquito
 mother
 motion
@@ -1163,7 +1164,6 @@ motivate
 motive
 mouthful
 move
-muffler
 multiple
 muscular
 museum
@@ -1196,7 +1196,7 @@ nitrate
 noisy
 nomad
 nominee
-norm
+normal
 nostalgia
 notably
 notepad
@@ -1213,7 +1213,6 @@ nutmeg
 nutrition
 nylon
 oasis
-oatmeal
 obey
 objective
 oblige
@@ -1229,7 +1228,6 @@ occupy
 octopus
 office
 official
-omelet
 oneself
 onward
 open
@@ -1239,10 +1237,10 @@ opponent
 optic
 optical
 optimist
-orbit
 orbital
 orchestra
 order
+ordnance
 organic
 origin
 ornament
@@ -1262,6 +1260,7 @@ papaya
 paper
 parachute
 parade
+paradigm
 paradox
 parallel
 parental
@@ -1309,6 +1308,7 @@ pineapple
 pinnacle
 pioneer
 piranha
+pivot
 pivotal
 pixie
 plan
@@ -1366,7 +1366,6 @@ presto
 presume
 pretend
 pretty
-pretzel
 previous
 pricey
 primal
@@ -1440,6 +1439,7 @@ razor
 react
 realist
 realm
+reappear
 reassure
 rebound
 rebuild
@@ -1449,7 +1449,6 @@ recital
 reclaim
 recommend
 reconcile
-recoup
 recover
 rectify
 recycle
@@ -1483,6 +1482,7 @@ remarry
 rematch
 remedy
 remind
+remnant
 remodel
 removal
 remove
@@ -1563,6 +1563,7 @@ satellite
 save
 saxophone
 scaffold
+scallop
 scarce
 scarecrow
 scarf
@@ -1590,12 +1591,10 @@ secrecy
 secretive
 section
 secure
-sedan
 sedate
 seemingly
 select
 selfie
-semester
 seminar
 sensation
 sense
@@ -1607,7 +1606,6 @@ sequence
 serenade
 serious
 servant
-sexting
 shadow
 shady
 shaggy
@@ -1625,6 +1623,7 @@ shut
 side
 signal
 signature
+signify
 silicon
 silky
 similar
@@ -1655,7 +1654,6 @@ snooze
 snort
 snowy
 snuggle
-soccer
 sociable
 social
 soda
@@ -1670,7 +1668,6 @@ somehow
 sonar
 sonata
 sonic
-sophomore
 soulful
 souvenir
 sovereign
@@ -1706,7 +1703,10 @@ sprung
 spur
 squad
 squadron
+squander
 squeeze
+squint
+squirm
 squirrel
 stadium
 stamina
@@ -1720,6 +1720,7 @@ steady
 stealth
 stereo
 sticky
+stigma
 stimulate
 stimulus
 sting
@@ -1896,8 +1897,8 @@ uncle
 unclear
 uncommon
 uncover
+underage
 undergo
-undermine
 undone
 undying
 uneasy
@@ -1953,7 +1954,6 @@ utterly
 vacancy
 vacant
 vacate
-vacation
 vacuum
 vagabond
 valet
@@ -1964,12 +1964,12 @@ vanilla
 vanish
 vanquish
 various
-varsity
 vector
 vegetable
 veggie
 venison
 venture
+veranda
 verdict
 verify
 version
@@ -1986,11 +1986,13 @@ vinegar
 vintage
 violin
 virtual
+viscount
 visit
 vista
 visual
 vitamin
 vocalist
+vocation
 voice
 volatile
 volcanic
@@ -2006,8 +2008,7 @@ wallet
 walrus
 warehouse
 warlord
-warmth
-warp
+warm
 warranty
 wasteful
 water
@@ -2045,4 +2046,3 @@ zigzag
 zinc
 zodiac
 zone
-zucchini

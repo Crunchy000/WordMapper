@@ -1,0 +1,32 @@
+# American vocabulary. This project is British, and the address is spoken here.
+#
+# WHY THIS FILE HAS TO EXIST. The frequency corpus underneath everything is
+# OpenSubtitles, which is overwhelmingly American film and television, so
+# `zucchini` outranks `courgette` and `diaper` outranks `nappy` by a wide margin.
+# Frequency therefore argues FOR the American word every time. The dictionaries
+# do not help either: `zucchini` and `aloha` are perfectly good English, listed
+# in the British dictionary too -- they are simply not what anyone here says.
+#
+# Spelling Americanisms (artifact/artefact, licorice/liquorice) are handled
+# separately and automatically, by taking the vocabulary from the BRITISH
+# dictionary. This file is for the cases where the two dialects use a different
+# WORD, which no dictionary comparison can see.
+#
+# food
+zucchini eggplant cilantro arugula scallion rutabaga endive popsicle
+oatmeal pretzel jello donut candy cookie broiler skillet
+# the car and the road
+gasoline kerosene muffler fender windshield sedan hatchback
+freeway expressway sidewalk crosswalk overpass median parkway
+streetcar caboose
+# the house
+closet drapes comforter faucet garbage trash dumpster stoop
+# people and school
+sophomore varsity semester recess kindergarten grader
+mailman realtor drugstore
+# sport and leisure
+soccer touchdown quarterback linebacker fastball shortstop bleachers
+scrimmage cheerleader checkers
+# odds and ends
+diaper pacifier flashlight vacation aluminum
+aloha howdy hokey folksy
