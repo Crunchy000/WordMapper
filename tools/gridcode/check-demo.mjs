@@ -29,7 +29,7 @@ const src = `const WORDS = ${words};\n`
   + html.slice(html.indexOf('const INDEX = new Map'), html.indexOf('// --- map ---'))
   + '\nexport { encode, decode, resolveTail, cellSize, tileSize, covers, indices,'
   + ' parseAddress, formatAddress, candidatesInBox, shortestInBox, decodeInBox,'
-  + ' MAX_CANDIDATES, RADIX, REFINE, CHECK, GLOBAL };';
+  + ' MAX_CANDIDATES, RADIX, REFINE, CHECK, checkDigits, undigitsCheck, GLOBAL };';
 const tmp = join(tmpdir(), `word-grid-check-${process.pid}.mjs`);
 writeFileSync(tmp, src);
 let mod;
@@ -41,6 +41,11 @@ const G = mod.GLOBAL;
 if (G.splits.join(',') !== fixture.splits.join(','))
   fail(`splits: js ${G.splits} vs py ${fixture.splits}`);
 if (G.div !== fixture.div) fail(`divisions: js ${G.div} vs py ${fixture.div}`);
+// The per-word check budget is the sixth word's whole reason to exist, so the
+// ports have to agree on it word by word, not merely on the product.
+if (G.checks.join(',') !== fixture.checks.join(','))
+  fail(`checks: js ${G.checks} vs py ${fixture.checks}`);
+if (G.check !== fixture.check) fail(`checksum size: js ${G.check} vs py ${fixture.check}`);
 if (mod.RADIX !== fixture.radix || mod.REFINE !== fixture.refine
     || mod.CHECK !== fixture.check)
   fail(`radix/refine/check: js ${[mod.RADIX, mod.REFINE, mod.CHECK]} vs py `
@@ -123,9 +128,9 @@ for (const b of fixture.boxes) {
 
 // The leading separator is the whole notation for a tail, so parsing it back
 // has to survive the round trip in both ports.
-for (const [text, n, tail] of [['maintain.studio.scribble', 3, false],
-                               ['.maintain.studio.scribble', 3, true],
-                               ['  MAINTAIN studio Scribble ', 3, false]]) {
+for (const [text, n, tail] of [['studio.scribble.critical', 3, false],
+                               ['.studio.scribble.critical', 3, true],
+                               ['  STUDIO scribble Critical ', 3, false]]) {
   const [parts, isTail] = mod.parseAddress(text);
   if (parts.length !== n || isTail !== tail)
     fail(`PARSE ${JSON.stringify(text)} -> ${parts.length} words, tail=${isTail}`);
@@ -136,5 +141,21 @@ console.log(`demo codec vs python reference: ${fixture.points.length} points, `
   + `${fixture.boxes.length} country boxes `
   + `(${fixture.boxes.reduce((n, b) => n + b.points.length, 0)} points)`);
 if (bad) { console.error(`FAIL: ${bad} problem(s)`); process.exit(1); }
+// The five-word address has to survive the sixth word being added, or every
+// address already in circulation quietly became wrong.
+for (const c of fixture.points) {
+  const six = c.words[String(fixture.max_words)];
+  const five = c.words[String(fixture.max_words - 1)];
+  if (six.slice(0, five.length).join('.') !== five.join('.'))
+    fail(`the sixth word moved the first five at ${c.lat},${c.lng}`);
+  if (mod.checkDigits(mod.CHECK - 1, G.checks).length !== G.checks.length)
+    fail('checkDigits does not produce one digit per word');
+}
+for (let i = 0; i < 500; i++) {
+  const v = Math.floor(Math.random() * mod.CHECK);
+  if (mod.undigitsCheck(mod.checkDigits(v, G.checks), G.checks) !== v)
+    fail(`check digits do not round-trip at ${v}`);
+}
+
 console.log('OK: encodings match, truncation holds, checksums verify, '
-  + 'both kinds of shortening agree');
+  + 'both kinds of shortening agree, the sixth word leaves the first five alone');

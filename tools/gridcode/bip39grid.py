@@ -3,7 +3,7 @@
 
 FIVE WORDS name any point on earth to 4.48 m:
 
-    kilo.waitress.maintain.studio.scribble
+    kilo.waitress.maintain.studio.scribble.critical
 
 There is one grid and one address for a place. No regional boxes, no scope to
 choose, nothing to switch. A box has to be a rectangle and most of the world
@@ -42,7 +42,7 @@ against the boxes Nominatim returns:
 AND IT COSTS DETECTION, which MAX_CANDIDATES is there to bound. A misheard word
 removes the true tile, so every candidate in the window is a fresh lottery
 against the same checksum and a wrong word is caught only ((CHECK-1)/CHECK)**k
-of the time -- 95.9% at the cap of 6, against 99.31% for the full address.
+of the time -- 95.9% at the cap of 6, against 99.9995% for the full address.
 Uncapped, a window the size of Australia holds ~45 and falls to 73%, where a
 quarter of mishearings resolve SILENTLY to somewhere else in the country.
 resolve_tail() has no such loss: it tests the single nearest tile, one chance to
@@ -72,7 +72,7 @@ the bit string: deriving the interleave order per length does not work, because
 evenly, and the three orders are unrelated sequences rather than prefixes of one
 another.
 """
-import hashlib, math, os, sys
+import collections, hashlib, math, os, sys
 
 R = 6371008.8               # mean earth radius, metres
 # THE ADDRESS IS BASE-36, NOT BINARY. Each word subdivides a cell RADIX x RADIX,
@@ -86,22 +86,47 @@ R = 6371008.8               # mean earth radius, metres
 # do not depend on the trailing ones, and the prefix property falls out for
 # free. The frame is square and both axes get the same splits, so every cell at
 # every length is exactly square without anyone arranging it.
-RADIX = 36                  # each word splits a cell RADIX x RADIX
-REFINE = 3                  # ...except the last, which splits only REFINE x REFINE
+RADIX = 36                  # a word that splits a cell RADIX x RADIX
+REFINE = 3                  # ...one that only refines it this far...
 LIST_SIZE = RADIX * RADIX                       # 1296 words
-CHECK = LIST_SIZE // (REFINE * REFINE)          # 144 values of checksum
+# EVERY WORD CAN CARRY CHECK, AND THE CHECKS MULTIPLY. A word that splits its
+# cell r x r spends r**2 of its LIST_SIZE values on position and has
+# LIST_SIZE // r**2 left over -- so SPLITS fixes both the resolution and the
+# strength of the checksum, and they trade against each other one for one.
+#
+# The last word splits 1 x 1: it moves the position not at all and is pure
+# check. That is the whole of what the sixth word is. It costs no resolution
+# and multiplies the check by 1296, taking a misheard word from 1-in-144
+# undetected to 1-in-186,624.
+#
+# The first five entries are unchanged from when there were only five, and the
+# check digits are assigned least-significant-first, so word five still carries
+# exactly `checksum % 144` and THE FIRST FIVE WORDS OF AN ADDRESS ARE
+# BYTE-IDENTICAL to the five-word scheme this replaces. A five-word address
+# already in circulation is still valid, still checked at 1 in 186,624, and is
+# upgraded rather than replaced by appending its sixth word.
+SPLITS = [RADIX, RADIX, RADIX, RADIX, REFINE, 1]
+CHECKS = [LIST_SIZE // (r * r) for r in SPLITS]  # [1, 1, 1, 1, 144, 1296]
+CHECK = math.prod(CHECKS)                        # 186,624 values of checksum
 SEP = '.'
 TAIL_MARK = SEP             # a leading separator marks a context-dependent tail
 EPS = 1e-9                  # degrees of slack on a box edge, for float error
 # Searching a region trades DETECTION for a word, and this is the cap on that
 # trade. When a word is wrong the true tile is gone, so every candidate in the
 # window is a fresh lottery against the same checksum and a wrong word is caught
-# only ((CHECK-1)/CHECK)**k of the time. Six candidates holds that at 95.9%,
-# against 99.31% for the full address; an uncapped window the size of Australia
-# holds ~35 and falls to 78%, where a fifth of mishearings resolve silently to
-# the wrong place. resolve_tail() has no such loss: it tests the single nearest
-# tile, one chance to be fooled rather than k.
-MAX_CANDIDATES = 6
+# only ((CHECK-1)/CHECK)**k of the time.
+#
+# So the cap is DERIVED from the checksum rather than written down, as the most
+# candidates that still leave FLOOR of the detection standing. That matters
+# because the sixth word moved the checksum by three orders of magnitude: at a
+# 144-value check the honest cap was 6 candidates, which refused Australia and
+# the United States outright. At 186,624 it is over nine hundred, and every
+# country on earth can buy a word while giving up half a percent.
+#
+# resolve_tail() has no such loss either way: it tests the single nearest tile,
+# one chance to be fooled rather than k.
+FLOOR = 0.995               # never give up more than this much to buy a word
+MAX_CANDIDATES = int(math.log(FLOOR) / math.log(1 - 1 / CHECK))
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -116,6 +141,9 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 # projection is equal-area, so fixing it changes shape and never resolution.
 _K = 1.0 / math.sqrt(math.pi)
 STD_PARALLEL = math.degrees(math.acos(_K))         # 55.654 degrees
+
+
+Tail = collections.namedtuple('Tail', 'known_x known_y check modulus divisor period')
 
 
 class OutsideBox(ValueError):
@@ -176,12 +204,14 @@ class Scope:
     rather than restate its answer.
     """
 
-    def __init__(self, key, name, box, max_words):
-        self.key, self.name, self.box, self.max_words = key, name, box, max_words
-        # How far each word subdivides a cell, coarsest first. Every word but
-        # the last splits RADIX x RADIX; the last splits only REFINE x REFINE
-        # and spends the rest of itself on the checksum.
-        self.splits = [RADIX] * (max_words - 1) + [REFINE]
+    def __init__(self, key, name, box, splits=None):
+        self.key, self.name, self.box = key, name, box
+        # How far each word subdivides a cell, coarsest first, and what each
+        # therefore has left over for the checksum.
+        self.splits = list(SPLITS if splits is None else splits)
+        self.checks = [LIST_SIZE // (r * r) for r in self.splits]
+        self.max_words = len(self.splits)
+        self.check = math.prod(self.checks)
         self.div = math.prod(self.splits)       # divisions per axis at full length
         latMin, latMax, lngMin, lngMax = box
         self.x0, self.y0 = project(latMin, lngMin)
@@ -197,7 +227,7 @@ class Scope:
 
 
 # Five words over the whole earth, and the only scope there is.
-GLOBAL = Scope('global', 'Global', (-90.0, 90.0, -180.0, 180.0), 5)
+GLOBAL = Scope('global', 'Global', (-90.0, 90.0, -180.0, 180.0))
 DEFAULT = GLOBAL
 SCOPES = {GLOBAL.key: GLOBAL}
 
@@ -269,6 +299,29 @@ def _undigits(digits, splits):
     return i
 
 
+def _check_digits(v, checks):
+    """One checksum spread across the words, LEAST significant first.
+
+    Least-significant-first is the whole of the backwards compatibility: word
+    five gets `v % 144`, which is exactly the checksum it carried when it was
+    the last word, and everything above 144 goes to word six. Big-endian would
+    have moved word five and invalidated every address in circulation.
+    """
+    out = []
+    for c in checks:
+        out.append(v % c)
+        v //= c
+    return out
+
+
+def _undigits_check(digits, checks):
+    """Check digits back to the value they encode, for the same checks."""
+    v = 0
+    for d, c in zip(reversed(digits), reversed(checks)):
+        v = v * c + d
+    return v
+
+
 def cell_size(n_words, s=GLOBAL):
     """Metres on the ground for an address of this many words."""
     s = scope(s)
@@ -286,18 +339,29 @@ def tile_size(n_said, s=GLOBAL):
 def _checksum(xi, yi, s=GLOBAL):
     """One of CHECK values over the whole position -- which is what makes both
     kinds of shortening safe, since a reconstruction that guesses wrong fails
-    it."""
+    it.
+
+    Note 144 divides 186,624, so this modulo agrees with the old one on its low
+    digit: the five-word check is a genuine prefix of the six-word one, not a
+    different function that happens to be near it.
+    """
+    s = scope(s)
     payload = xi.to_bytes(8, 'big') + yi.to_bytes(8, 'big')
-    return int.from_bytes(hashlib.sha256(payload).digest()[:8], 'big') % CHECK
+    return int.from_bytes(hashlib.sha256(payload).digest()[:8], 'big') % s.check
 
 
 def _word_values(xi, yi, s=GLOBAL):
-    """The value of each word of the full address, coarsest first."""
+    """The value of each word of the full address, coarsest first.
+
+    Each word packs a digit of x, a digit of y and a digit of the checksum:
+    (xd * split + yd) * check + chk. A word that splits 36 x 36 has nothing
+    left for check; the last word splits 1 x 1 and is nothing but check.
+    """
     s = scope(s)
     xd, yd = _digits(xi, s.splits), _digits(yi, s.splits)
-    out = [xd[k] * RADIX + yd[k] for k in range(s.max_words - 1)]
-    last = xd[-1] * REFINE + yd[-1]
-    return out + [last * CHECK + _checksum(xi, yi, s)]
+    cd = _check_digits(_checksum(xi, yi, s), s.checks)
+    return [(xd[k] * s.splits[k] + yd[k]) * s.checks[k] + cd[k]
+            for k in range(s.max_words)]
 
 
 def encode(lat, lng, words, n_words=None, s=GLOBAL):
@@ -336,17 +400,17 @@ def decode(spoken, words, s=GLOBAL):
     n = len(spoken)
     if not 1 <= n <= s.max_words:
         raise ValueError(f'1..{s.max_words} words in {s.name}')
-    xd, yd, check = [], [], None
+    xd, yd, cd = [], [], []
     for k, w in enumerate(spoken):
-        v = index[w]
-        if k == s.max_words - 1:
-            pos, check = divmod(v, CHECK)
-            xd.append(pos // REFINE); yd.append(pos % REFINE)
-        else:
-            xd.append(v // RADIX); yd.append(v % RADIX)
+        pos, chk = divmod(index[w], s.checks[k])
+        xd.append(pos // s.splits[k]); yd.append(pos % s.splits[k]); cd.append(chk)
     splits = s.splits[:n]
     xi, yi = _undigits(xd, splits), _undigits(yd, splits)
-    if check is not None and _checksum(xi, yi, s) != check:
+    # Only as much of the checksum as the words said actually carry. Below five
+    # words that is none of it, so a short address is unverified; at five it is
+    # one digit in 144; at six the whole 186,624.
+    modulus = math.prod(s.checks[:n])
+    if modulus > 1 and _checksum(xi, yi, s) % modulus != _undigits_check(cd, s.checks[:n]):
         raise ValueError('checksum failed - a word is wrong')
     return _from_indices(xi, yi, n, s)
 
@@ -363,9 +427,11 @@ def _known_period(n_said, s=GLOBAL):
 
 
 def _tail_position(spoken, words, s=GLOBAL):
-    """(known_x, known_y, check, period) for an address missing its leading
-    words. The known digits are the low ones; the period is how far apart the
-    candidates sit."""
+    """Tail(known_x, known_y, check, modulus, divisor, period) for an address
+    missing its leading words. The known digits are the low ones; the period is
+    how far apart the candidates sit; the check the words carry is
+    `(checksum // divisor) % modulus`, since the dropped words took their own
+    check digits with them."""
     s = scope(s)
     index = _index(words)
     unknown = [w for w in spoken if w not in index]
@@ -375,17 +441,15 @@ def _tail_position(spoken, words, s=GLOBAL):
     if not 1 <= n <= s.max_words:
         raise ValueError(f'1..{s.max_words} words in {s.name}')
     dropped = s.max_words - n
-    xd, yd, check = [], [], None
+    xd, yd, cd = [], [], []
     for k, w in enumerate(spoken):
-        v = index[w]
-        if dropped + k == s.max_words - 1:
-            pos, check = divmod(v, CHECK)
-            xd.append(pos // REFINE); yd.append(pos % REFINE)
-        else:
-            xd.append(v // RADIX); yd.append(v % RADIX)
-    tail_splits = s.splits[dropped:]
-    return (_undigits(xd, tail_splits), _undigits(yd, tail_splits), check,
-            math.prod(tail_splits))
+        j = dropped + k
+        pos, chk = divmod(index[w], s.checks[j])
+        xd.append(pos // s.splits[j]); yd.append(pos % s.splits[j]); cd.append(chk)
+    tail_splits, tail_checks = s.splits[dropped:], s.checks[dropped:]
+    return Tail(_undigits(xd, tail_splits), _undigits(yd, tail_splits),
+                _undigits_check(cd, tail_checks), math.prod(tail_checks),
+                math.prod(s.checks[:dropped]), math.prod(tail_splits))
 
 
 def resolve_tail(spoken, words, near_lat, near_lng, s=GLOBAL):
@@ -398,10 +462,10 @@ def resolve_tail(spoken, words, near_lat, near_lng, s=GLOBAL):
     quietly to the wrong place.
     """
     s = scope(s)
-    known_x, known_y, check, period = _tail_position(spoken, words, s)
-    if check is None:
-        raise ValueError('a tail must include the last word, which carries the '
-                         'checksum')
+    t = _tail_position(spoken, words, s)
+    known_x, known_y, period = t.known_x, t.known_y, t.period
+    if t.modulus == 1:
+        raise ValueError('a tail must reach the words that carry the checksum')
     xi_ref, yi_ref = _indices(near_lat, near_lng, s)
 
     def nearest_x(known, ref):
@@ -419,7 +483,7 @@ def resolve_tail(spoken, words, near_lat, near_lng, s=GLOBAL):
 
     xi = nearest_x(known_x, xi_ref)
     yi = _clamp_lattice(known_y, period, yi_ref, s.div)
-    if _checksum(xi, yi, s) != check:
+    if (_checksum(xi, yi, s) // t.divisor) % t.modulus != t.check:
         raise ValueError('checksum failed - a word is wrong, or the reference '
                          'point is too far away to fill in the missing words')
     return _from_indices(xi, yi, s.max_words, s)
@@ -445,8 +509,9 @@ def candidates_in_box(spoken, words, box, s=GLOBAL, limit=20000):
     too big to pin these words down; none means the words do not belong in it.
     """
     s = scope(s)
-    known_x, known_y, check, period = _tail_position(spoken, words, s)
-    if check is None:
+    t = _tail_position(spoken, words, s)
+    known_x, known_y, period = t.known_x, t.known_y, t.period
+    if t.modulus == 1:
         return [], 0
     # The window, clipped to the scope's own box.
     latMin, latMax, lngMin, lngMax = box
@@ -462,8 +527,8 @@ def candidates_in_box(spoken, words, box, s=GLOBAL, limit=20000):
     count = len(xs) * len(ys)
     if count > limit:
         return None, count                  # too many to be worth enumerating
-    out = [_from_indices(xi, yi, s.max_words, s)
-           for xi in xs for yi in ys if _checksum(xi, yi, s) == check]
+    out = [_from_indices(xi, yi, s.max_words, s) for xi in xs for yi in ys
+           if (_checksum(xi, yi, s) // t.divisor) % t.modulus == t.check]
     return out, count
 
 

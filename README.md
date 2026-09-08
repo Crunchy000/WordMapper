@@ -9,21 +9,40 @@ Experiments in encoding geographic coordinates as short, memorable word sequence
 ### `demos/word-grid.html`
 
 The scheme, live and deliberately bare: click anywhere on earth and the address
-sits on the map, nothing else. **Five everyday words name any point to 4.48 m.** Four
-plus a fourth set apart, because that one does a different job — it refines the
-position *and* carries the checksum.
+sits on the map, nothing else. **Six everyday words name any point to 4.48 m,
+and catch a misheard one 99.9995 % of the time** — two words to a line, with the
+last set apart because it does a different job: it moves the position not at all
+and is nothing but checksum.
 
-Then the address *shortens*. The five words are drawn immediately, with no
+**The sixth word is additive.** Five words already reach 4.48 m; the sixth only
+takes a misheard word from 1-in-144 undetected to 1-in-186,624. The first five
+are byte-identical to the five-word scheme it replaced, so an address already
+written down is still valid and is upgraded, not replaced, by appending its
+sixth word.
+
+Then the address *shortens*. The six words are drawn immediately, with no
 network involved; OpenStreetMap's reverse geocoder is asked which country the
 click landed in, and the leading words the country can stand in for are shown
-greyed rather than said:
+greyed rather than said. Two words to a line, because six on one line is a long
+thing to read back to someone and an easy one to lose your place in:
 
 ```
-kilo. waitress.maintain.studio · scribble        Big Ben — United Kingdom, 4 said
-kilo. freedom.innermost.plastic · sweat          Dublin — Ireland, 4 said
-loyalty. papaya.attentive.popular · prospect     Luxembourg City — 4 said
-gallery.sparkle.crazy.year · brush               mid-Atlantic — no country, all 5
+Big Ben, United Kingdom          Luxembourg City
+  kilo.waitress.                   loyalty.papaya.
+  maintain.studio.                 attentive.popular.
+  scribble.critical                prospect.annoy
+  5 said                           4 said - a small box buys two
+
+Dublin, Ireland                  mid-Atlantic, no country
+  kilo.freedom.                    gallery.sparkle.
+  innermost.plastic.               crazy.year.
+  sweat.companion                  brush.juicy
+  4 said                           all 6
 ```
+
+Greyed words are the ones the country supplies. The last word is set apart
+because it does a different job: it moves the position not at all and is nothing
+but checksum.
 
 **One grid, one address for a place.** There are no regional boxes and no scope
 to switch. There used to be — a box around Britain and Ireland, another around
@@ -40,39 +59,39 @@ needs a nearby *point* and takes the nearest tile; `candidates_in_box()` needs
 only a *region* and lets the checksum choose, trying every tile inside it.
 
 **How many words a window buys is one number: how many candidate tiles it
-holds.** Each word is a base-36 digit on each axis, so one fewer word is 1,296
-times as many tiles, and the check leaves one in 144 standing — a length works
-exactly when no *other* candidate survives, a Poisson zero at rate
-`(tiles − 1)/144`. Nothing
-about countries enters into it; a country is just a box someone else drew.
+holds.** Each *position* word is a base-36 digit on each axis, so one fewer word
+is 1,296 times as many tiles, and the check leaves one in 186,624 standing — a
+length works exactly when no *other* candidate survives, a Poisson zero at rate
+`(tiles − 1)/186,624`. Nothing about countries enters into it; a country is just
+a box someone else drew — and at this check strength **every country on earth
+buys a word, and the small ones buy two.**
 
 | country | box | tiles in the window | said | wrong word caught |
 |---|---|---|---|---|
-| Luxembourg | 4,700 km² | 1.0 | **four**, always | 100 % |
-| Switzerland | 76,000 km² | 1.0 | **four**, always | 100 % |
-| Ireland | 193,000 km² | 1.0 | **four**, always | 100 % |
-| United Kingdom | 1.3 M km² | 3.6 | **four**, 97 % of the time | 98 % |
-| France | 1.28 M km² | 3.5 | **four**, 98 % of the time | 96 % |
-| Australia | 17.3 M km² | 45 | five — over the cap | — |
-| United States | 159 M km² | 405 | five — over the cap | — |
+| Luxembourg | 4,700 km² | 1.0 | **four** — two words bought | 100 % |
+| Switzerland | 76,000 km² | 1.0 | **four** — two words bought | 99.8 % |
+| Ireland | 193,000 km² | 1.0 | **four** — two words bought | 99.8 % |
+| United Kingdom | 1.3 M km² | 3.6 | **five**, always | 100 % |
+| France | 1.28 M km² | 3.7 | **five**, always | 100 % |
+| Australia | 17.3 M km² | 45 | **five**, always | 100 % |
+| United States | 159 M km² | 404 | **five**, always | 99.7 % |
 
 **Shortening this way costs detection, and the cap is what bounds the cost.**
 When a word is misheard the true tile no longer matches, so every candidate in
 the window becomes a fresh lottery against the same checksum: a wrong word is
-caught only `(143/144)^k` of the time. At k = 6 that is 95.9 %, against
-99.31 % for the full address. Uncapped it was far worse — a window the size of
-Australia holds ~45 candidates and falls to 73 %, where a quarter of mishearings
-resolve *silently* to somewhere else in the country, which is the worst failure
-there is because it looks like an answer.
+caught only `(1 − 1/CHECK)^k` of the time.
 
-So `shortest_in_box()` refuses to buy a word above `MAX_CANDIDATES = 6`, and
-`decode_in_box()` refuses to read one. Australia and the United States say all
-every word every time, rather than flapping depending on
-where in the country you happened to be.
+So the cap is **derived from the checksum** rather than written down — the most
+candidates that still leave `FLOOR` of the detection standing. At `FLOOR = 0.995`
+and a 186,624-value check that is **935 candidates**, against 6 when the check
+was 144. That is why Australia and the United States, refused outright before,
+now buy a word and still catch 99.7 %: under the old check the US window fell to
+6 %, where nearly every mishearing resolved *silently* to somewhere else in the
+country.
 
 `resolve_tail()` has no such loss: it takes the single nearest tile to the
 reference and tests that one candidate — one chance to be fooled rather than k —
-so it stays at 99.31 %. That asymmetry is the real difference between the two
+so it stays at 99.9995 %. That asymmetry is the real difference between the two
 ways of filling a dropped word back in.
 
 **The grid never moves.** The country is consulted when the address is *read*,

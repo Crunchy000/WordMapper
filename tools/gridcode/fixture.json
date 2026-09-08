@@ -1,15 +1,24 @@
 {
- "max_words": 5,
- "max_candidates": 6,
+ "max_words": 6,
+ "max_candidates": 935,
  "radix": 36,
  "refine": 3,
- "check": 144,
+ "check": 186624,
  "splits": [
   36,
   36,
   36,
   36,
-  3
+  3,
+  1
+ ],
+ "checks": [
+  1,
+  1,
+  1,
+  1,
+  144,
+  1296
  ],
  "div": 5038848,
  "box": [
@@ -47,6 +56,14 @@
      "maintain",
      "studio",
      "scribble"
+    ],
+    "6": [
+     "kilo",
+     "waitress",
+     "maintain",
+     "studio",
+     "scribble",
+     "critical"
     ]
    }
   },
@@ -78,6 +95,14 @@
      "kilo",
      "extra",
      "observe"
+    ],
+    "6": [
+     "kilo",
+     "professor",
+     "kilo",
+     "extra",
+     "observe",
+     "bone"
     ]
    }
   },
@@ -109,6 +134,14 @@
      "hyphen",
      "electron",
      "people"
+    ],
+    "6": [
+     "keystroke",
+     "hurry",
+     "hyphen",
+     "electron",
+     "people",
+     "spicy"
     ]
    }
   },
@@ -140,6 +173,14 @@
      "innermost",
      "plastic",
      "sweat"
+    ],
+    "6": [
+     "kilo",
+     "freedom",
+     "innermost",
+     "plastic",
+     "sweat",
+     "companion"
     ]
    }
   },
@@ -171,6 +212,14 @@
      "insert",
      "stove",
      "footnote"
+    ],
+    "6": [
+     "loyalty",
+     "decline",
+     "insert",
+     "stove",
+     "footnote",
+     "blackboard"
     ]
    }
   },
@@ -202,6 +251,14 @@
      "patron",
      "inspire",
      "ethic"
+    ],
+    "6": [
+     "enhance",
+     "objective",
+     "patron",
+     "inspire",
+     "ethic",
+     "chair"
     ]
    }
   },
@@ -233,6 +290,14 @@
      "athlete",
      "routine",
      "undergo"
+    ],
+    "6": [
+     "clean",
+     "revolve",
+     "athlete",
+     "routine",
+     "undergo",
+     "commute"
     ]
    }
   },
@@ -264,6 +329,14 @@
      "humane",
      "confess",
      "careful"
+    ],
+    "6": [
+     "obvious",
+     "script",
+     "humane",
+     "confess",
+     "careful",
+     "unite"
     ]
    }
   },
@@ -295,6 +368,14 @@
      "fireplace",
      "regulate",
      "exist"
+    ],
+    "6": [
+     "truck",
+     "cautious",
+     "fireplace",
+     "regulate",
+     "exist",
+     "clerk"
     ]
    }
   },
@@ -326,6 +407,14 @@
      "strange",
      "wagon",
      "approach"
+    ],
+    "6": [
+     "signpost",
+     "fragrance",
+     "strange",
+     "wagon",
+     "approach",
+     "justify"
     ]
    }
   },
@@ -357,6 +446,14 @@
      "glint",
      "atomic",
      "pink"
+    ],
+    "6": [
+     "website",
+     "stimulate",
+     "glint",
+     "atomic",
+     "pink",
+     "invade"
     ]
    }
   },
@@ -388,6 +485,14 @@
      "flat",
      "various",
      "liar"
+    ],
+    "6": [
+     "achieve",
+     "agree",
+     "flat",
+     "various",
+     "liar",
+     "dictator"
     ]
    }
   },
@@ -419,6 +524,14 @@
      "absolute",
      "cute",
      "nonsense"
+    ],
+    "6": [
+     "ignorance",
+     "song",
+     "absolute",
+     "cute",
+     "nonsense",
+     "engage"
     ]
    }
   },
@@ -450,6 +563,14 @@
      "abandon",
      "abandon",
      "ambulance"
+    ],
+    "6": [
+     "library",
+     "abandon",
+     "abandon",
+     "abandon",
+     "ambulance",
+     "hardware"
     ]
    }
   },
@@ -481,6 +602,14 @@
      "work",
      "wardrobe",
      "venture"
+    ],
+    "6": [
+     "fume",
+     "work",
+     "work",
+     "wardrobe",
+     "venture",
+     "agency"
     ]
    }
   },
@@ -512,6 +641,14 @@
      "abandon",
      "abandon",
      "battery"
+    ],
+    "6": [
+     "large",
+     "abandon",
+     "abandon",
+     "abandon",
+     "battery",
+     "ambulance"
     ]
    }
   },
@@ -543,6 +680,14 @@
      "alert",
      "alert",
      "explain"
+    ],
+    "6": [
+     "lyric",
+     "alert",
+     "alert",
+     "alert",
+     "explain",
+     "parallel"
     ]
    }
   },
@@ -574,6 +719,14 @@
      "volunteer",
      "volunteer",
      "pupil"
+    ],
+    "6": [
+     "width",
+     "volunteer",
+     "volunteer",
+     "volunteer",
+     "pupil",
+     "advance"
     ]
    }
   },
@@ -605,6 +758,14 @@
      "abandon",
      "abandon",
      "airport"
+    ],
+    "6": [
+     "admire",
+     "abandon",
+     "abandon",
+     "abandon",
+     "airport",
+     "tumble"
     ]
    }
   },
@@ -636,6 +797,14 @@
      "zoom",
      "zoom",
      "motivate"
+    ],
+    "6": [
+     "zoom",
+     "zoom",
+     "zoom",
+     "zoom",
+     "motivate",
+     "synonym"
     ]
    }
   }
@@ -644,32 +813,15 @@
   {
    "lat": 51.50072,
    "lng": -0.12456,
-   "n": 2,
+   "n": 3,
    "ref": [
     51.50077,
     -0.1246
    ],
    "words": [
     "studio",
-    "scribble"
-   ],
-   "resolved": [
-    51.50072067083656,
-    -0.12456418609966136
-   ]
-  },
-  {
-   "lat": 51.50072,
-   "lng": -0.12456,
-   "n": 3,
-   "ref": [
-    51.502,
-    -0.125
-   ],
-   "words": [
-    "maintain",
-    "studio",
-    "scribble"
+    "scribble",
+    "critical"
    ],
    "resolved": [
     51.50072067083656,
@@ -681,6 +833,25 @@
    "lng": -0.12456,
    "n": 4,
    "ref": [
+    51.502,
+    -0.125
+   ],
+   "words": [
+    "maintain",
+    "studio",
+    "scribble",
+    "critical"
+   ],
+   "resolved": [
+    51.50072067083656,
+    -0.12456418609966136
+   ]
+  },
+  {
+   "lat": 51.50072,
+   "lng": -0.12456,
+   "n": 5,
+   "ref": [
     51.52,
     -0.14
    ],
@@ -688,7 +859,8 @@
     "waitress",
     "maintain",
     "studio",
-    "scribble"
+    "scribble",
+    "critical"
    ],
    "resolved": [
     51.50072067083656,
@@ -698,7 +870,7 @@
   {
    "lat": -16.5,
    "lng": -179.99,
-   "n": 3,
+   "n": 4,
    "ref": [
     -16.49,
     -179.97
@@ -706,7 +878,8 @@
    "words": [
     "arrest",
     "elephant",
-    "microphone"
+    "microphone",
+    "salsa"
    ],
    "resolved": [
     -16.50001006095903,
@@ -716,7 +889,7 @@
   {
    "lat": -16.5,
    "lng": -179.99,
-   "n": 3,
+   "n": 4,
    "ref": [
     -16.49,
     179.99
@@ -724,7 +897,8 @@
    "words": [
     "arrest",
     "elephant",
-    "microphone"
+    "microphone",
+    "salsa"
    ],
    "resolved": [
     -16.50001006095903,
@@ -734,7 +908,7 @@
  ],
  "hopeless": [
   {
-   "n": 3,
+   "n": 4,
    "ref": [
     40.7128,
     -74.006
@@ -742,18 +916,20 @@
    "words": [
     "maintain",
     "studio",
-    "scribble"
+    "scribble",
+    "critical"
    ]
   },
   {
-   "n": 2,
+   "n": 3,
    "ref": [
     48.8566,
     2.3522
    ],
    "words": [
     "studio",
-    "scribble"
+    "scribble",
+    "critical"
    ]
   }
  ],
@@ -770,17 +946,17 @@
     {
      "lat": 51.50072,
      "lng": -0.12456,
-     "said": 4,
+     "said": 5,
      "search": {
-      "3": {
-       "hits": 34,
+      "4": {
+       "hits": 1,
        "searched": 4234
       },
-      "4": {
+      "5": {
        "hits": 1,
        "searched": 4
       },
-      "5": {
+      "6": {
        "hits": 1,
        "searched": 1
       }
@@ -789,17 +965,17 @@
     {
      "lat": 55.94859,
      "lng": -3.19951,
-     "said": 4,
+     "said": 5,
      "search": {
-      "3": {
-       "hits": 25,
+      "4": {
+       "hits": 1,
        "searched": 4234
       },
-      "4": {
+      "5": {
        "hits": 1,
        "searched": 4
       },
-      "5": {
+      "6": {
        "hits": 1,
        "searched": 1
       }
@@ -808,17 +984,17 @@
     {
      "lat": 54.5973,
      "lng": -5.9301,
-     "said": 4,
+     "said": 5,
      "search": {
-      "3": {
-       "hits": 32,
+      "4": {
+       "hits": 1,
        "searched": 4234
       },
-      "4": {
+      "5": {
        "hits": 1,
        "searched": 2
       },
-      "5": {
+      "6": {
        "hits": 1,
        "searched": 1
       }
@@ -840,15 +1016,15 @@
      "lng": -6.2603,
      "said": 4,
      "search": {
-      "3": {
-       "hits": 5,
+      "4": {
+       "hits": 1,
        "searched": 660
       },
-      "4": {
+      "5": {
        "hits": 1,
        "searched": 1
       },
-      "5": {
+      "6": {
        "hits": 1,
        "searched": 1
       }
@@ -870,15 +1046,15 @@
      "lng": 7.4474,
      "said": 4,
      "search": {
-      "3": {
-       "hits": 2,
+      "4": {
+       "hits": 1,
        "searched": 240
       },
-      "4": {
+      "5": {
        "hits": 1,
        "searched": 1
       },
-      "5": {
+      "6": {
        "hits": 1,
        "searched": 1
       }
@@ -900,15 +1076,15 @@
      "lng": 151.2093,
      "said": 5,
      "search": {
-      "3": {
+      "4": {
        "hits": null,
        "searched": 57104
       },
-      "4": {
+      "5": {
        "hits": 1,
        "searched": 40
       },
-      "5": {
+      "6": {
        "hits": 1,
        "searched": 1
       }
@@ -928,17 +1104,17 @@
     {
      "lat": 51.50072,
      "lng": -0.12456,
-     "said": 5,
+     "said": 6,
      "search": {
-      "3": {
-       "hits": 30,
+      "4": {
+       "hits": 0,
        "searched": 4235
       },
-      "4": {
-       "hits": 1,
+      "5": {
+       "hits": 0,
        "searched": 2
       },
-      "5": {
+      "6": {
        "hits": 0,
        "searched": 0
       }
@@ -958,17 +1134,17 @@
     {
      "lat": -18.1416,
      "lng": 178.4419,
-     "said": 5,
+     "said": 6,
      "search": {
-      "3": {
+      "4": {
        "hits": null,
        "searched": 113742
       },
-      "4": {
-       "hits": 1,
+      "5": {
+       "hits": 0,
        "searched": 70
       },
-      "5": {
+      "6": {
        "hits": 0,
        "searched": 0
       }

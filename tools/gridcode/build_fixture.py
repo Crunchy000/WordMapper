@@ -16,20 +16,21 @@ POINTS = [
 ]
 # Tails resolved from a reference POINT: (lat, lng, n_said, ref_lat, ref_lng).
 # The reference has to sit inside the tile the dropped words leave, and those
-# tiles are 13.45 m, 484 m, 17.4 km and 627 km at 1, 2, 3 and 4 words said.
+# tiles are 13.45 m, 484 m, 17.4 km and 627 km at 2, 3, 4 and 5 words said --
+# one word later than before, because the sixth word carries no position.
 TAILS = [
-    (51.50072, -0.12456, 2, 51.50077, -0.12460),      # a few metres: same room
-    (51.50072, -0.12456, 3, 51.50200, -0.12500),      # 150 m: same street
-    (51.50072, -0.12456, 4, 51.52000, -0.14000),      # 2.5 km: across London
-    (-16.50000, -179.99000, 3, -16.49000, -179.97000),
+    (51.50072, -0.12456, 3, 51.50077, -0.12460),      # a few metres: same room
+    (51.50072, -0.12456, 4, 51.50200, -0.12500),      # 150 m: same street
+    (51.50072, -0.12456, 5, 51.52000, -0.14000),      # 2.5 km: across London
+    (-16.50000, -179.99000, 4, -16.49000, -179.97000),
     # The reference sits on the far side of the antimeridian, 2 km away on the
     # ground but a world apart in index terms. x has to wrap.
-    (-16.50000, -179.99000, 3, -16.49000, 179.99000),
+    (-16.50000, -179.99000, 4, -16.49000, 179.99000),
 ]
 # References too far away to pick the right tile: must be refused, not resolved
 # quietly to the wrong place.
-HOPELESS = [(51.50072, -0.12456, 3, 40.71280, -74.00600),
-            (51.50072, -0.12456, 2, 48.85660, 2.35220)]
+HOPELESS = [(51.50072, -0.12456, 4, 40.71280, -74.00600),
+            (51.50072, -0.12456, 3, 48.85660, 2.35220)]
 
 # The other way to fill a dropped word back in: a REGION rather than a point.
 # These are country boxes as Nominatim returns them (south, north, west, east).
@@ -67,7 +68,7 @@ if __name__ == '__main__':
         """What a search of this box turns up at each length, and how short the
         address gets. `hits` is null where the search was too big to run."""
         out = {}
-        for n in (3, 4, 5):
+        for n in (4, 5, 6):
             got, searched = g.candidates_in_box(
                 g.encode(la, lo, words)[-n:], words, box)
             out[str(n)] = {'hits': None if got is None else len(got),
@@ -82,6 +83,7 @@ if __name__ == '__main__':
         'refine': g.REFINE,
         'check': g.CHECK,
         'splits': list(sc.splits),
+        'checks': list(sc.checks),
         'div': sc.div,
         'box': list(sc.box),
         'points': [{'lat': la, 'lng': lo,
