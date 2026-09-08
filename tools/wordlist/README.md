@@ -216,13 +216,39 @@ Graded English simply does not contain 2,048 words that also survive being
 2,048 is 40 % A1–B1, 15 % B2, 8 % C1–C2 and 36 % ungraded — the ungraded third
 being `alpaca`, `amethyst`, `amulet`, `anklet`.
 
-**But 1,227 clears 1,024, and 1,024 is 10 bits.** So there is a real second
-option, built here as `spoken-1024-plain.txt`:
+### Building FROM the graded vocabulary
+
+`--base cefr` treats the 9,025 graded headwords as the pool itself rather than
+as a filter over a frequency list, which is the better way round: the frequency
+corpus was only ever a proxy for "would someone know this word", and CEFR is the
+real measurement. Everything else is subtraction — names, places, offensive and
+vulgar words, inflections of other words, words spelled two ways, words with two
+pronunciations, and words whose meaning is clinical, sexual, violent or
+religious — then the confusable and sound-alike ones.
+
+Names there come from **capitalisation in the dictionary**, not from a census
+list: a census kills `baker`, `cook`, `green`, `young`, `bell`, `wood`, `field`
+and `price`, which are ordinary words that happen to be surnames too.
+
+```
+9,025 graded headwords
+  -> 3,077 sayable      after names, places, vulgarity, inflections, meaning
+  -> 1,024 chosen       after removing everything confusable or sound-alike
+```
+
+The ceiling from this base is **1,835** across all levels, or **1,473** at
+A1–B2. The similarity rule is what binds: over half the pool goes to it.
+
+**1,473 clears 1,024, and 1,024 is 10 bits.** So there is a real second option,
+built here as `spoken-1024-plain.txt`:
 
 | | words per address | cell | vocabulary |
 |---|---|---|---|
 | `spoken-2048.txt` | **5** | 1.35 m | mixed; a third ungraded |
 | `spoken-1024-plain.txt` | **6** | 0.24 m | every word CEFR A1–B2 |
+
+Its mix is 290 A1, 286 A2, 222 B1, 226 B2 — over half of it at the two easiest
+levels.
 
 One more word per address buys a vocabulary everyone already has. That is the
 whole trade, and it is a decision about who says these addresses out loud rather

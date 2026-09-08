@@ -6,7 +6,7 @@ a word that is offensive, a name, religious, or grim is out whatever it sounds
 like. Only what survives goes on to be thinned for distinctness, so the phonetic
 stage never has to choose between a good word and a clean one.
 """
-import csv, os, re, sys
+import csv, json, os, re, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from phonetics import phonemes, syllables
 from semantic import classify
@@ -153,6 +153,75 @@ def excluded():
 
 
 EXTRA = os.path.join(os.path.dirname(HERE), 'gridcode', 'bip39-english.txt')
+
+
+CEFR_ORDER = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
+
+
+def build_from_cefr(levels=None, min_syll=1, max_syll=3, min_len=3, max_len=10):
+    """The graded vocabulary as the BASE, rather than as a filter over frequency.
+
+    9,025 headwords that somebody has certified a learner knows, which is a far
+    better answer to "could you say this under pressure" than a count of how
+    often it turns up in film subtitles. Everything else here is subtraction:
+    names, places, offensive and vulgar words, inflections of other words, words
+    spelled two ways, words with two pronunciations, and words whose meaning is
+    clinical, sexual, violent or religious.
+
+    Names come from CAPITALISATION in the dictionary and not from a census list:
+    a census kills Baker, Cook, Green, Young, Bell, Wood, Field and Price, which
+    are ordinary words that happen to be surnames too.
+
+    Returns (pool, reasons) like build(), with the CEFR level in place of a
+    frequency rank -- so the caller orders by level, easiest first.
+    """
+    levels = set(levels or CEFR_ORDER)
+    graded = json.load(open(os.path.join(HERE, 'cefr.json')))['level']
+    cmu = read_cmudict(os.path.join(DATA, 'cmudict.txt'))
+    bad = read_words(os.path.join(DATA, 'badwords.txt'))
+    common, proper = cased_dictionary()
+    other, _ = cased_dictionary(OTHER_DICTS)
+    places = gazetteer()
+    excl = excluded()
+    allowed = read_words(os.path.join(HERE, 'allow-semantic.txt'))
+    wn = WordNet()
+
+    pool, reasons = [], {}
+    def drop(why):
+        reasons[why] = reasons.get(why, 0) + 1
+
+    for w, lvl in sorted(graded.items(), key=lambda kv: (CEFR_ORDER.index(kv[1]), kv[0])):
+        if lvl not in levels:
+            drop('not at a wanted level'); continue
+        if not re.fullmatch(r'[a-z]+', w):
+            drop('not plain letters'); continue
+        if not min_len <= len(w) <= max_len:
+            drop('too short or long'); continue
+        if w not in cmu:
+            drop('no pronunciation in CMUdict'); continue
+        if len({' '.join(phonemes(p)) for p in cmu[w]}) > 1:
+            drop('more than one pronunciation'); continue
+        ph = phonemes(cmu[w][0])
+        if not min_syll <= syllables(ph) <= max_syll:
+            drop('wrong syllable count'); continue
+        if w in bad:
+            drop('offensive'); continue
+        if w in proper:
+            drop('capitalised in the dictionary, so a proper noun'); continue
+        if w in places:
+            drop('a place'); continue
+        if common and w not in common:
+            drop('not British vocabulary'); continue
+        if has_variant(w, common | other):
+            drop('spelled two ways'); continue
+        if is_inflection(w, cmu, None):
+            drop('an inflection of a word that exists'); continue
+        if w in excl:
+            drop('excluded by hand (vulgar, grim, religious, register)'); continue
+        if w not in allowed and classify(wn, w):
+            drop('what it means: clinical, sexual, violent or religious'); continue
+        pool.append((w, ph, lvl))
+    return pool, reasons
 
 
 def build(max_syll=MAX_SYLL, min_syll=MIN_SYLL, min_len=MIN_LEN,

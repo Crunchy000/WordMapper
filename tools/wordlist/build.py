@@ -31,7 +31,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from phonetics import distance, phonemes, syllables
 from distinct import audit
 from isolation import isolation_parallel, CUTOFF
-from pool import build as build_pool, cased_dictionary, read_cmudict, read_freq
+from pool import (CEFR_ORDER, build as build_pool, build_from_cefr,
+                  cased_dictionary, read_cmudict, read_freq)
 from spelling import edit1, parts
 
 # Every pair on the list is at least this far apart. One substitution, insertion
@@ -78,6 +79,9 @@ def main():
     ap.add_argument('--threshold', type=float, default=THRESHOLD)
     ap.add_argument('--out')
     ap.add_argument('--audit', help='score an existing list instead of building')
+    ap.add_argument('--base', choices=('frequency', 'cefr'), default='frequency',
+                    help='what the pool is drawn FROM. "cefr" starts from the '
+                         '9,025 graded headwords instead of a frequency list.')
     ap.add_argument('--cefr', metavar='LEVELS', default=None,
                     help='keep only words graded at these CEFR levels, e.g. A1,A2,B1,B2. '
                          'Graded vocabulary is what a person can retrieve under pressure; '
@@ -94,7 +98,17 @@ def main():
             print(f'      {d:.1f}  {a} / {b}')
         return 0
 
-    pool, reasons = build_pool()
+    if args.base == 'cefr':
+        # The graded vocabulary IS the pool: certified-known words, minus
+        # everything unsayable. Ordered easiest first, so the list fills with
+        # A1 before it ever reaches C1.
+        pool, reasons = build_from_cefr(
+            args.cefr.split(',') if args.cefr else None)
+        rank_of = {lvl: i for i, lvl in enumerate(CEFR_ORDER)}
+        pool = [(w, ph, rank_of[lvl] * 1000) for w, ph, lvl in pool]
+        args.cefr = None
+    else:
+        pool, reasons = build_pool()
     if args.cefr:
         # CEFR grades a word by the level at which a learner reliably knows it.
         # A1-B2 is roughly "everyday English": the vocabulary someone can

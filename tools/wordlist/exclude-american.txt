@@ -30,3 +30,5 @@ scrimmage cheerleader checkers
 # odds and ends
 diaper pacifier flashlight vacation aluminum
 aloha howdy hokey folksy
+# more, found in the CEFR-based list
+bookstore barbershop subway baseball cheerleading
