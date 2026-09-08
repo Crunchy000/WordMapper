@@ -21,9 +21,10 @@ const words = html.match(/const WORDS = (\[[^\n]*\]);/)[1];
 // The demo embeds the word list; the reference reads it from a file. One of the
 // two would drift silently, so they are compared directly rather than only
 // through the encodings.
-const listed = readFileSync(join(here, 'bip39-english.txt'), 'utf8').trim().split('\n');
+const listed = readFileSync(
+  join(here, '..', 'wordlist', 'spoken-1024-plain.txt'), 'utf8').trim().split('\n');
 if (JSON.parse(words).join('\n') !== listed.join('\n'))
-  fail('the demo\'s word list is not bip39-english.txt');
+  fail("the demo's word list is not tools/wordlist/spoken-1024-plain.txt");
 const src = `const WORDS = ${words};\n`
   + html.slice(html.indexOf('const INDEX = new Map'), html.indexOf('// --- map ---'))
   + '\nexport { encode, decode, resolveTail, cellSize, tileSize, covers, indices,'

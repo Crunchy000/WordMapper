@@ -6,7 +6,7 @@ Setup: `npm install --prefix tools/gridcode`.
 
 ## One grid
 
-**Five words name any point on earth to 1.35 m**, and that is the whole scheme.
+**Six everyday words name any point on earth to 34 cm**, and that is the whole scheme.
 There is one grid, one address for a place, no scope to choose and nothing to
 switch.
 
@@ -25,7 +25,7 @@ the Tiwi Islands and the Torres Strait — because Papua New Guinea reaches
 tip at 10.05° S.
 
 **A box was coarser than the grid it stood in for.** Four words over Britain was
-2.66 m; five words anywhere is 1.35 m. The continental boxes were worse still —
+2.66 m; six words anywhere is 34 cm. The continental boxes were worse still —
 Asia came out at 31.6 m.
 
 **And a box gave a place a second address.** Two addresses for one spot is a
@@ -44,11 +44,12 @@ address is a prefix of a longer one.
 
 | Words | Big Ben | Cell |
 |---|---|---|
-| 1 | `leaf` | 353 × 706 km |
-| 2 | `leaf.step` | 11.0 km square |
-| 3 | `leaf.step.cruel` | 172 × 345 m |
-| 4 | `leaf.step.cruel.tomato` | 5.38 m square |
-| 5 | `leaf.step.cruel.tomato.unable` | **1.346 m square, verified** |
+| 1 | `laptop` | 706 km square |
+| 2 | `laptop.tournament` | 22.1 km square |
+| 3 | `laptop.tournament.simply` | 689 m square |
+| 4 | `laptop.tournament.simply.govern` | 21.5 m square |
+| 5 | `laptop.tournament.simply.govern.pasta` | 67 cm square |
+| 6 | `laptop.…​.pasta.energy` | **34 cm square, verified** |
 
 ## Drop leading words: same precision, fewer words, needs context
 
@@ -96,9 +97,9 @@ The two are the same information in different shapes. Both are a search window;
 one is centred on a point, the other is a rectangle someone else drew.
 
 **How many words a window buys is one number: how many candidate tiles it
-holds.** Each word is 11 bits, so one word fewer is 2048 times as many tiles,
+holds.** Each word is 10 bits, so one word fewer is 1024 times as many tiles,
 and the 7 check bits leave one in 128 standing. A length works exactly when no
-*other* candidate survives — a Poisson zero at rate `(tiles − 1)/128`. Over
+*other* candidate survives — a Poisson zero at rate `(tiles − 1)/256`. Over
 Britain:
 
 | Said | Tiles in the box | Survive the check |
@@ -124,7 +125,7 @@ returns:
 **Shortening this way costs detection, and the cap is what bounds the cost.**
 When a word is misheard the true tile no longer matches, so every candidate in
 the window becomes a fresh lottery against the same 7 check bits: a wrong word
-is caught only `(127/128)^k` of the time. At k = 6 that is 95.4 %, against
+is caught only `(255/256)^k` of the time. At k = 6 that is 97.7 %, against
 99.2 % for the full address. Uncapped it was far worse — a window the size of
 Australia holds ~70 candidates and falls to 58 %, where a third of mishearings
 resolve *silently* to somewhere else in the country, which is the worst failure
@@ -132,7 +133,7 @@ there is because it looks like an answer.
 
 So `shortest_in_box()` refuses to buy a word above `MAX_CANDIDATES = 6`, and
 `decode_in_box()` refuses to read one. Australia and the United States say all
-five words every time, rather than flapping between four and five depending on
+every word every time, rather than flapping depending on
 where in the country you happened to be.
 
 `resolve_tail()` has no such loss: it takes the single nearest tile to the
@@ -185,7 +186,7 @@ assuming the nearest.
 
 Coordinates are interleaved **once at full precision** and the resulting bit
 string is truncated. Deriving the interleave order per length does not work, and
-fails in a way that is easy to miss: 11 bits per word is odd, so 33 bits splits
+fails in a way that was easy to miss when a word was 11 bits: 33 bits splits
 the axes 17/16 while 22 and 44 split evenly. Those are unrelated sequences, not
 prefixes of one another. Measured, the three-word address came out completely
 different from the two- and four-word ones, which agreed with each other — so a
@@ -230,13 +231,13 @@ rather than written down.
 ## The last word does two jobs
 
 A whole fifth word of position would reach 8 cm, finer than anyone needs. So its
-11 bits are split between refinement and checksum:
+10 bits are split between refinement and checksum:
 
 | Refine | Check | Cell | Wrong word caught |
 |---|---|---|---|
-| 3 | 8 | 1.90 m | 99.61 % |
-| **4** | **7** | **1.35 m** | **99.22 %** |
-| 5 | 6 | 0.95 m | 98.44 % |
+| 0 | 10 | 67 cm | 99.90 % |
+| **2** | **8** | **34 cm** | **99.61 %** |
+| 3 | 7 | 24 cm | 99.22 % |
 
 Shipped at **4 refine + 7 check**. For comparison, what3words is 3 m with no
 checksum at all — this is finer *and* verified.
@@ -246,18 +247,32 @@ where the next word's position bits must go. Reserving 8 bits at every length
 would take 2 words from 11 km to 177 km. Putting it in the last word instead
 costs nothing at the shorter lengths, which are simply unverified.
 
-Five words is terminal for the same reason — a sixth would have to reinterpret
+Six words is terminal for the same reason — a seventh would have to reinterpret
 the check bits. The 7 bits cover the *whole* position, which is what makes both
 kinds of shortening safe: a reconstruction that guesses wrong fails the check,
 whether the guess came from a reference point or from a box search.
 
 ## The word list
 
-[BIP-39][bip39] English: exactly 2,048 words, so exactly 11 bits each, with no
-waste and no ambiguity about how many bits a word carries. Every word is 3–8
-letters with a unique 4-letter prefix, which is a typing property rather than a
-sound property — the list was designed for written seed phrases, not for being
-read aloud over a bad line. The checksum is what covers that gap here.
+1,024 words, every one graded **CEFR A1–B2** — the band a person can retrieve
+under pressure, not merely recognise — so exactly 10 bits each, with nothing
+wasted rounding to a word boundary. Generated by `tools/wordlist` from the 9,025
+graded headwords of the Oxford 5000 and the English Vocabulary Profile, minus
+names, places, offensive and vulgar words, inflections of other words, words
+spelled two ways, and then everything confusable or sound-alike. **Zero
+homophones, zero pairs one articulatory feature apart, zero pairs within one
+phoneme error.**
+
+[BIP-39][bip39] was here first and was the wrong list for this. It is designed
+to be *typed and checksummed*: it holds `pair`/`pear`, `peace`/`piece`,
+`right`/`write` and `wear`/`where`, 53 % of its words have a same-or-one-phoneme
+twin, and its only guarantee is unique four-letter prefixes, which says nothing
+about a phone line.
+
+The cost is a word — 10 bits against 11, so six words instead of five. It buys
+back more than it costs: 34 cm instead of 1.35 m, an 8-bit checksum instead of
+7, and every address length landing exactly square, where 11 bits put the odd
+lengths at 2:1.
 
 ## Projection
 

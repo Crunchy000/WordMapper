@@ -73,9 +73,10 @@ orders are unrelated sequences rather than prefixes of one another.
 import hashlib, math, os, sys
 
 R = 6371008.8               # mean earth radius, metres
-BITS_PER_WORD = 11          # log2(2048), exactly
-REFINE_BITS = 4             # of the last word's 11 bits, how many refine position
+BITS_PER_WORD = 10          # log2(1024), exactly
+REFINE_BITS = 2             # of the last word's 10 bits, how many refine position
 CHECK_BITS = BITS_PER_WORD - REFINE_BITS
+WORD_MASK = 2 ** BITS_PER_WORD - 1
 SEP = '.'
 TAIL_MARK = SEP             # a leading separator marks a context-dependent tail
 EPS = 1e-9                  # degrees of slack on a box edge, for float error
@@ -112,12 +113,15 @@ class OutsideBox(ValueError):
     """Raised for a coordinate the scope's box does not cover."""
 
 
-# The published BIP-39 English list, checked against the SHA-256 given in BIP-39
-# itself. Kept as a file rather than pulled from a package at run time: it is a
-# frozen 13 KB list that has not changed since 2013, and reading it needs no
-# install step, no network, and no dependency to trust.
-WORDLIST = os.path.join(_HERE, 'bip39-english.txt')
-WORDLIST_SHA256 = '2f5eed53a4727b4bf8880d8f3f199efc90e58503646d9ff8eff3a2ed3b24dbda'
+# 1,024 words, every one graded CEFR A1-B2 -- the vocabulary a person can
+# retrieve under pressure -- with everything confusable or sound-alike removed.
+# Built by tools/wordlist; see that directory's README for how and why.
+#
+# BIP-39 was here before it, and was the wrong list for this: it is designed to
+# be TYPED and checksummed, and contains pair/pear, peace/piece, right/write and
+# wear/where, with 53% of it one articulatory feature from another entry.
+WORDLIST = os.path.join(_HERE, '..', 'wordlist', 'spoken-1024-plain.txt')
+WORDLIST_SHA256 = '33fc2169cabc4ba9232cce43d015f728ab96b0acb971a402077bfb3040430c20'
 
 
 def load_wordlist(path=WORDLIST):
@@ -125,7 +129,7 @@ def load_wordlist(path=WORDLIST):
         raw = fh.read()
     got = hashlib.sha256(raw).hexdigest()
     if got != WORDLIST_SHA256:
-        raise ValueError(f'{path} is not the BIP-39 English list (sha256 {got})')
+        raise ValueError(f'{path} is not the expected word list (sha256 {got})')
     words = raw.decode().split()
     assert len(words) == 2 ** BITS_PER_WORD, len(words)
     return words
@@ -135,7 +139,7 @@ _index_cache = (None, None)
 
 
 def _index(words):
-    """word -> value, built once. Rebuilding this 2048-entry dict per call was
+    """word -> value, built once. Rebuilding this whole dict per call was
     a seventh of the test suite's runtime."""
     global _index_cache
     if _index_cache[0] is not words:
@@ -189,7 +193,7 @@ class Scope:
 
 
 # Five words over the whole earth, and the only scope there is.
-GLOBAL = Scope('global', 'Global', (-90.0, 90.0, -180.0, 180.0), 5)
+GLOBAL = Scope('global', 'Global', (-90.0, 90.0, -180.0, 180.0), 6)
 DEFAULT = GLOBAL
 SCOPES = {GLOBAL.key: GLOBAL}
 
@@ -289,7 +293,7 @@ def _deinterleave(v, bits, s=GLOBAL):
 
 def _position_bits(n_words, s=GLOBAL):
     """Position bits an n-word address carries. The last word contributes only
-    REFINE_BITS, the rest all 11."""
+    REFINE_BITS, the rest all 10."""
     s = scope(s)
     if n_words < s.max_words:
         return BITS_PER_WORD * n_words
@@ -342,7 +346,7 @@ def encode(lat, lng, words, n_words=None, s=GLOBAL):
     if n_words < s.max_words:
         # Truncate the position; the check bits are not part of a short form.
         value >>= BITS_PER_WORD * (s.max_words - n_words)
-    return [words[(value >> (BITS_PER_WORD * (n_words - 1 - i))) & 0x7ff]
+    return [words[(value >> (BITS_PER_WORD * (n_words - 1 - i))) & WORD_MASK]
             for i in range(n_words)]
 
 

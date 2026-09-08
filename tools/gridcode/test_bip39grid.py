@@ -73,7 +73,8 @@ check('the poles and the antimeridian encode',
           for lng in (-180, -179.999, 0, 179.999, 180)), True)
 # The projected world is square, so the axes split evenly at full depth.
 check('the frame is square', round(g.GLOBAL.xr / g.GLOBAL.yr, 9), 1.0)
-check('the axes split evenly at full depth', (g.GLOBAL.xb, g.GLOBAL.yb), (24, 24))
+check('the axes split evenly at full depth', (g.GLOBAL.xb, g.GLOBAL.yb),
+      (g.GLOBAL.position_bits // 2, g.GLOBAL.position_bits // 2))
 # Even bit counts land on frame*4**k and odd ones on frame*2*4**k, so with a
 # square frame the even lengths are exactly square and the odd ones are 2:1.
 # The terminal length, 48 bits, is even.
@@ -227,13 +228,18 @@ print('\nthe antimeridian')
 # The box does not cross 180, but tail resolution still has to wrap: a reference
 # just west of the seam is a whole world away in index terms.
 check('a point either side of the seam encodes',
-      all(len(g.encode(lat, lng, WORDS)) == 5
+      all(len(g.encode(lat, lng, WORDS)) == g.GLOBAL.max_words
           for lat, lng in [(-16.5, 179.99), (-16.5, -179.99), (0.0, 180.0), (0.0, -180.0)]), True)
 near = g.encode(-16.50, -179.99, WORDS)
+# Say enough words that the reference, 2 km away on the ground, is inside the
+# tile the dropped ones leave -- otherwise this measures the reference being
+# too far away rather than the wrap being handled.
+said = next(n for n in range(1, g.GLOBAL.max_words + 1)
+            if max(g.tile_size(n)) > 4000)
 check('a global tail resolves from the far side of the seam',
       proj_err((-16.50, -179.99),
-               g.resolve_tail(near[-3:], WORDS, -16.49, 179.99))
-      < math.hypot(*g.cell_size(5)), True)
+               g.resolve_tail(near[-said:], WORDS, -16.49, 179.99))
+      < math.hypot(*g.cell_size(g.GLOBAL.max_words)), True)
 
 print('\nthe whole earth, and only the whole earth')
 check('every point on earth is covered',
@@ -250,8 +256,7 @@ check('an index is never negative and never past the end',
       all(0 <= xi < 2 ** g.GLOBAL.xb and 0 <= yi < 2 ** g.GLOBAL.yb
           for xi, yi in (g._indices(lat, lng) for lat, lng in
                          PTS + [(-90.0, -180.0), (90.0, 180.0)])), True)
-check('there is exactly one scope',
-      (sorted(g.SCOPES), g.GLOBAL.max_words), (['global'], 5))
+check('there is exactly one scope', sorted(g.SCOPES), ['global'])
 
 print('\nshortening against a country box')
 # The other way to fill in dropped leading words. resolve_tail() needs a nearby
@@ -270,13 +275,16 @@ BOXES = {                       # as Nominatim returns them: south, north, west,
 }
 IN_UK = [(51.50072, -0.12456), (55.94859, -3.19951), (54.59730, -5.93010),
          (50.06569, -5.71531), (57.47780, -4.22470)]
+# "The country supplies one word" is max_words - 1 said, whatever the address
+# length happens to be. Writing 4 here was right once and silently wrong after.
+SAY = g.GLOBAL.max_words - 1
 
 check('the true point is never lost from the search',
-      all(g.candidates_in_box(g.encode(la, lo, WORDS)[-4:], WORDS,
+      all(g.candidates_in_box(g.encode(la, lo, WORDS)[-SAY:], WORDS,
                               BOXES['United Kingdom'])[0] is not None
           and g._indices(la, lo) in
           [g._indices(a, b) for a, b in
-           g.candidates_in_box(g.encode(la, lo, WORDS)[-4:], WORDS,
+           g.candidates_in_box(g.encode(la, lo, WORDS)[-SAY:], WORDS,
                                BOXES['United Kingdom'])[0]]
           for la, lo in IN_UK), True)
 
@@ -299,21 +307,21 @@ said, tiles, over_cap = {}, {}, []
 for name, box in BOXES.items():
     pts = in_box(box, 60)
     said[name] = [g.shortest_in_box(la, lo, WORDS, box)[0] for la, lo in pts]
-    ks = [g.candidates_in_box(g.encode(la, lo, WORDS)[-4:], WORDS, box)[1]
+    ks = [g.candidates_in_box(g.encode(la, lo, WORDS)[-SAY:], WORDS, box)[1]
           for la, lo in pts]
     tiles[name] = sum(ks) / len(ks)
     # The cap is per point, not per country: a box averaging under it still has
-    # corners where the window is wider, and those points say all five words.
+    # corners where the window is wider, and those points say every word.
     over_cap += [(name, k) for n, k in zip(said[name], ks)
                  if n < g.GLOBAL.max_words and k > g.MAX_CANDIDATES]
     # The same points on both sides, so this compares the rule against the
     # measurement rather than against a second sample of it.
     unique = sum(1 for la, lo in pts
                  if len(g.candidates_in_box(
-                     g.encode(la, lo, WORDS)[-4:], WORDS, box)[0] or []) == 1)
+                     g.encode(la, lo, WORDS)[-SAY:], WORDS, box)[0] or []) == 1)
     unique = unique / len(pts) * 100
     poisson = sum(math.exp(-(k - 1) / 2 ** g.CHECK_BITS) for k in ks) / len(ks) * 100
-    four = sum(1 for n in said[name] if n <= 4) / len(said[name]) * 100
+    four = sum(1 for n in said[name] if n <= SAY) / len(said[name]) * 100
     print(f'  ----  {name}: {tiles[name]:6.1f} tiles, unique {unique:3.0f}% '
           f'(poisson {poisson:3.0f}%), shortens {four:3.0f}%')
     check(f'{name} uniqueness matches the Poisson law', abs(unique - poisson) < 12, True)
@@ -323,12 +331,14 @@ for name, box in BOXES.items():
 # temptingly unique the survivor looked.
 check('no address is shortened against a window over the cap', over_cap, [])
 check('a box comfortably under the cap always buys its word',
-      all(n == 4 for name in ('Luxembourg', 'Switzerland', 'Ireland')
+      all(n == SAY for name in ('Luxembourg', 'Switzerland', 'Ireland')
           for n in said[name]), True)
 check('a country-sized box buys exactly one word, never two',
-      sorted({n for name in BOXES for n in said[name]}), [4, 5])
-check('Australia is over the cap and says all five',
-      (tiles['Australia'] > g.MAX_CANDIDATES, set(said['Australia'])), (True, {5}))
+      sorted({n for name in BOXES for n in said[name]}),
+      [SAY, g.GLOBAL.max_words])
+check('Australia is over the cap and says every word',
+      (tiles['Australia'] > g.MAX_CANDIDATES, set(said['Australia'])),
+      (True, {g.GLOBAL.max_words}))
 
 # WHAT THE CAP IS FOR. A wrong word removes the true tile, so all k candidates
 # are lotteries against the same 7 check bits and detection falls to
@@ -371,7 +381,7 @@ check('the full address is better than either, and unaffected',
 # from, so an address that should never have been shortened cannot be read as
 # though it had been.
 try:
-    g.decode_in_box(g.encode(-33.8688, 151.2093, WORDS)[-4:], WORDS, BOXES['Australia'])
+    g.decode_in_box(g.encode(-33.8688, 151.2093, WORDS)[-SAY:], WORDS, BOXES['Australia'])
     refused = False
 except ValueError:
     refused = True
@@ -388,12 +398,13 @@ check('a shortened address reads back to the same cell',
 check('the address does not depend on the box',
       len({tuple(g.encode(51.50072, -0.12456, WORDS)) for _ in BOXES}), 1)
 check('a box that excludes the point falls back to the full address',
-      all(g.shortest_in_box(la, lo, WORDS, BOXES['France'])[0] == 5
+      all(g.shortest_in_box(la, lo, WORDS, BOXES['France'])[0] == g.GLOBAL.max_words
           for la, lo in IN_UK), True)
 # Nominatim reports an antimeridian country inside out (west > east). That box
 # reads as most of the planet, which is a useless window but a safe one.
 check('an inside-out box costs words, not correctness',
-      g.shortest_in_box(-18.14160, 178.44190, WORDS, (-20.68, -12.48, 176.9, -178.1))[0], 5)
+      g.shortest_in_box(-18.14160, 178.44190, WORDS,
+                        (-20.68, -12.48, 176.9, -178.1))[0], g.GLOBAL.max_words)
 
 # Whatever tail comes back, saying it inside that box has to land back here.
 def lands_back(la, lo, box):
@@ -403,20 +414,33 @@ def lands_back(la, lo, box):
 check('the shortened form resolves back to the same cell',
       all(lands_back(la, lo, BOXES['United Kingdom']) for la, lo in IN_UK), True)
 
-tail3 = g.encode(51.50072, -0.12456, WORDS)[-3:]
-hits, searched = g.candidates_in_box(tail3, WORDS, BOXES['United Kingdom'])
-print(f'  ----  3 words over the UK: {searched} cells searched, {len(hits)} pass the check '
-      f'(1 in {searched / len(hits):.0f}, theory 1 in {2 ** g.CHECK_BITS})')
+# One word further back than the country can supply: far too many candidates
+# to pin a place down, and a direct look at the 1-in-2**CHECK_BITS rate the
+# whole scheme rests on. Averaged over several points, because a single box is
+# one Poisson sample and will sit a factor of two off often enough to fail a
+# test that means nothing by it.
+survivors = searched_total = 0
+for la, lo in IN_UK:
+    hits, searched = g.candidates_in_box(
+        g.encode(la, lo, WORDS)[-(SAY - 1):], WORDS, BOXES['United Kingdom'],
+        limit=10 ** 7)
+    survivors += len(hits)
+    searched_total += searched
+rate = searched_total / survivors
+print(f'  ----  {SAY - 1} words over the UK: {searched_total} cells searched across '
+      f'{len(IN_UK)} points, {survivors} pass the check '
+      f'(1 in {rate:.0f}, theory 1 in {2 ** g.CHECK_BITS})')
 check('survivors are within a factor of two of the checksum rate',
-      0.5 < len(hits) / (searched / 2 ** g.CHECK_BITS) < 2.0, True)
+      0.5 < (2 ** g.CHECK_BITS) / rate < 2.0, True)
 check('a search too big to be worth running is refused, not run',
-      g.candidates_in_box(g.encode(51.50072, -0.12456, WORDS)[-2:], WORDS,
+      g.candidates_in_box(g.encode(51.50072, -0.12456, WORDS)[-(SAY - 2):], WORDS,
                           BOXES['United Kingdom'])[0], None)
 
 print()
 w, h = g.cell_size(g.GLOBAL.max_words)
-print(f'  ----  global: 5 words is {w:.2f} x {h:.2f} m; 4 words alone is '
-      f'{math.sqrt(math.prod(g.cell_size(4))):.2f} m')
+print(f'  ----  {g.GLOBAL.max_words} words is {w:.2f} x {h:.2f} m; '
+      f'{g.GLOBAL.max_words - 1} words alone is '
+      f'{math.sqrt(math.prod(g.cell_size(g.GLOBAL.max_words - 1))):.2f} m')
 print('  ----  one grid, one address for a place; a country buys one word')
 print()
 if fails:

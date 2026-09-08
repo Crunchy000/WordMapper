@@ -1,10 +1,10 @@
 {
- "max_words": 5,
+ "max_words": 6,
  "max_candidates": 6,
- "order": "xyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxy",
+ "order": "xyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxy",
  "axis_bits": [
-  24,
-  24
+  26,
+  26
  ],
  "box": [
   -90.0,
@@ -18,29 +18,37 @@
    "lng": -0.12456,
    "words": {
     "1": [
-     "leaf"
+     "laptop"
     ],
     "2": [
-     "leaf",
-     "step"
+     "laptop",
+     "tournament"
     ],
     "3": [
-     "leaf",
-     "step",
-     "cruel"
+     "laptop",
+     "tournament",
+     "simplify"
     ],
     "4": [
-     "leaf",
-     "step",
-     "cruel",
-     "tomato"
+     "laptop",
+     "tournament",
+     "simplify",
+     "obtain"
     ],
     "5": [
-     "leaf",
-     "step",
-     "cruel",
-     "tomato",
-     "unable"
+     "laptop",
+     "tournament",
+     "simplify",
+     "obtain",
+     "arm"
+    ],
+    "6": [
+     "laptop",
+     "tournament",
+     "simplify",
+     "obtain",
+     "arm",
+     "acquire"
     ]
    }
   },
@@ -49,29 +57,37 @@
    "lng": -3.19951,
    "words": {
     "1": [
-     "leave"
+     "large"
     ],
     "2": [
-     "leave",
-     "crowd"
+     "large",
+     "novel"
     ],
     "3": [
-     "leave",
-     "crowd",
-     "reject"
+     "large",
+     "novel",
+     "plural"
     ],
     "4": [
-     "leave",
-     "crowd",
-     "reject",
-     "clip"
+     "large",
+     "novel",
+     "plural",
+     "telephone"
     ],
     "5": [
-     "leave",
-     "crowd",
-     "reject",
-     "clip",
-     "foster"
+     "large",
+     "novel",
+     "plural",
+     "telephone",
+     "pasta"
+    ],
+    "6": [
+     "large",
+     "novel",
+     "plural",
+     "telephone",
+     "pasta",
+     "examine"
     ]
    }
   },
@@ -80,29 +96,37 @@
    "lng": -5.71531,
    "words": {
     "1": [
-     "leader"
+     "laptop"
     ],
     "2": [
-     "leader",
-     "install"
+     "laptop",
+     "deny"
     ],
     "3": [
-     "leader",
-     "install",
-     "confirm"
+     "laptop",
+     "deny",
+     "showcase"
     ],
     "4": [
-     "leader",
-     "install",
-     "confirm",
-     "power"
+     "laptop",
+     "deny",
+     "showcase",
+     "vanish"
     ],
     "5": [
-     "leader",
-     "install",
-     "confirm",
-     "power",
-     "permit"
+     "laptop",
+     "deny",
+     "showcase",
+     "vanish",
+     "physics"
+    ],
+    "6": [
+     "laptop",
+     "deny",
+     "showcase",
+     "vanish",
+     "physics",
+     "essayist"
     ]
    }
   },
@@ -111,29 +135,37 @@
    "lng": -6.2603,
    "words": {
     "1": [
-     "leader"
+     "laptop"
     ],
     "2": [
-     "leader",
-     "wage"
+     "laptop",
+     "jaw"
     ],
     "3": [
-     "leader",
-     "wage",
-     "hair"
+     "laptop",
+     "jaw",
+     "foggy"
     ],
     "4": [
-     "leader",
-     "wage",
-     "hair",
-     "shy"
+     "laptop",
+     "jaw",
+     "foggy",
+     "fix"
     ],
     "5": [
-     "leader",
-     "wage",
-     "hair",
-     "shy",
-     "ask"
+     "laptop",
+     "jaw",
+     "foggy",
+     "fix",
+     "review"
+    ],
+    "6": [
+     "laptop",
+     "jaw",
+     "foggy",
+     "fix",
+     "review",
+     "unlike"
     ]
    }
   },
@@ -142,29 +174,37 @@
    "lng": 2.3522,
    "words": {
     "1": [
-     "staff"
+     "speculate"
     ],
     "2": [
-     "staff",
-     "belt"
+     "speculate",
+     "analyst"
     ],
     "3": [
-     "staff",
-     "belt",
-     "clown"
+     "speculate",
+     "analyst",
+     "shelf"
     ],
     "4": [
-     "staff",
-     "belt",
-     "clown",
-     "dinner"
+     "speculate",
+     "analyst",
+     "shelf",
+     "allergic"
     ],
     "5": [
-     "staff",
-     "belt",
-     "clown",
-     "dinner",
-     "below"
+     "speculate",
+     "analyst",
+     "shelf",
+     "allergic",
+     "cake"
+    ],
+    "6": [
+     "speculate",
+     "analyst",
+     "shelf",
+     "allergic",
+     "cake",
+     "photo"
     ]
    }
   },
@@ -173,29 +213,37 @@
    "lng": -73.9855,
    "words": {
     "1": [
-     "immense"
+     "impartial"
     ],
     "2": [
-     "immense",
-     "kitten"
+     "impartial",
+     "dignity"
     ],
     "3": [
-     "immense",
-     "kitten",
-     "drift"
+     "impartial",
+     "dignity",
+     "moment"
     ],
     "4": [
-     "immense",
-     "kitten",
-     "drift",
-     "elegant"
+     "impartial",
+     "dignity",
+     "moment",
+     "section"
     ],
     "5": [
-     "immense",
-     "kitten",
-     "drift",
-     "elegant",
-     "choose"
+     "impartial",
+     "dignity",
+     "moment",
+     "section",
+     "romance"
+    ],
+    "6": [
+     "impartial",
+     "dignity",
+     "moment",
+     "section",
+     "romance",
+     "triumph"
     ]
    }
   },
@@ -204,29 +252,37 @@
    "lng": -122.4786,
    "words": {
     "1": [
-     "flee"
+     "fix"
     ],
     "2": [
-     "flee",
-     "planet"
+     "fix",
+     "fact"
     ],
     "3": [
-     "flee",
-     "planet",
-     "future"
+     "fix",
+     "fact",
+     "stage"
     ],
     "4": [
-     "flee",
-     "planet",
-     "future",
-     "teach"
+     "fix",
+     "fact",
+     "stage",
+     "obey"
     ],
     "5": [
-     "flee",
-     "planet",
-     "future",
-     "teach",
-     "tomorrow"
+     "fix",
+     "fact",
+     "stage",
+     "obey",
+     "excursion"
+    ],
+    "6": [
+     "fix",
+     "fact",
+     "stage",
+     "obey",
+     "excursion",
+     "honeymoon"
     ]
    }
   },
@@ -235,29 +291,37 @@
    "lng": 37.6173,
    "words": {
     "1": [
-     "strategy"
+     "spy"
     ],
     "2": [
-     "strategy",
-     "exhibit"
+     "spy",
+     "cinema"
     ],
     "3": [
-     "strategy",
-     "exhibit",
-     "best"
+     "spy",
+     "cinema",
+     "afternoon"
     ],
     "4": [
-     "strategy",
-     "exhibit",
-     "best",
-     "liberty"
+     "spy",
+     "cinema",
+     "afternoon",
+     "expect"
     ],
     "5": [
-     "strategy",
-     "exhibit",
-     "best",
-     "liberty",
-     "key"
+     "spy",
+     "cinema",
+     "afternoon",
+     "expect",
+     "insect"
+    ],
+    "6": [
+     "spy",
+     "cinema",
+     "afternoon",
+     "expect",
+     "insect",
+     "kilo"
     ]
    }
   },
@@ -266,29 +330,37 @@
    "lng": 151.2093,
    "words": {
     "1": [
-     "punch"
+     "policeman"
     ],
     "2": [
-     "punch",
-     "file"
+     "policeman",
+     "coat"
     ],
     "3": [
-     "punch",
-     "file",
-     "brass"
+     "policeman",
+     "coat",
+     "elephant"
     ],
     "4": [
-     "punch",
-     "file",
-     "brass",
-     "shop"
+     "policeman",
+     "coat",
+     "elephant",
+     "decisive"
     ],
     "5": [
-     "punch",
-     "file",
-     "brass",
-     "shop",
-     "flee"
+     "policeman",
+     "coat",
+     "elephant",
+     "decisive",
+     "fashion"
+    ],
+    "6": [
+     "policeman",
+     "coat",
+     "elephant",
+     "decisive",
+     "fashion",
+     "attractive"
     ]
    }
   },
@@ -297,29 +369,37 @@
    "lng": 103.8501,
    "words": {
     "1": [
-     "they"
+     "suspend"
     ],
     "2": [
-     "they",
-     "dash"
+     "suspend",
+     "bone"
     ],
     "3": [
-     "they",
-     "dash",
-     "patch"
+     "suspend",
+     "bone",
+     "happy"
     ],
     "4": [
-     "they",
-     "dash",
-     "patch",
-     "settle"
+     "suspend",
+     "bone",
+     "happy",
+     "statue"
     ],
     "5": [
-     "they",
-     "dash",
-     "patch",
-     "settle",
-     "knee"
+     "suspend",
+     "bone",
+     "happy",
+     "statue",
+     "daddy"
+    ],
+    "6": [
+     "suspend",
+     "bone",
+     "happy",
+     "statue",
+     "daddy",
+     "photo"
     ]
    }
   },
@@ -328,29 +408,37 @@
    "lng": 178.4419,
    "words": {
     "1": [
-     "room"
+     "rebuild"
     ],
     "2": [
-     "room",
-     "earth"
+     "rebuild",
+     "ozone"
     ],
     "3": [
-     "room",
-     "earth",
-     "arrange"
+     "rebuild",
+     "ozone",
+     "romantic"
     ],
     "4": [
-     "room",
-     "earth",
-     "arrange",
-     "essay"
+     "rebuild",
+     "ozone",
+     "romantic",
+     "entrance"
     ],
     "5": [
-     "room",
-     "earth",
-     "arrange",
-     "essay",
-     "pass"
+     "rebuild",
+     "ozone",
+     "romantic",
+     "entrance",
+     "novelist"
+    ],
+    "6": [
+     "rebuild",
+     "ozone",
+     "romantic",
+     "entrance",
+     "novelist",
+     "oval"
     ]
    }
   },
@@ -359,29 +447,37 @@
    "lng": -179.9,
    "words": {
     "1": [
-     "bacon"
+     "attempt"
     ],
     "2": [
-     "bacon",
-     "clay"
+     "attempt",
+     "banana"
     ],
     "3": [
-     "bacon",
-     "clay",
-     "main"
+     "attempt",
+     "banana",
+     "giraffe"
     ],
     "4": [
-     "bacon",
-     "clay",
-     "main",
-     "detail"
+     "attempt",
+     "banana",
+     "giraffe",
+     "emperor"
     ],
     "5": [
-     "bacon",
-     "clay",
-     "main",
-     "detail",
-     "earn"
+     "attempt",
+     "banana",
+     "giraffe",
+     "emperor",
+     "central"
+    ],
+    "6": [
+     "attempt",
+     "banana",
+     "giraffe",
+     "emperor",
+     "central",
+     "razor"
     ]
    }
   },
@@ -390,29 +486,37 @@
    "lng": -21.9426,
    "words": {
     "1": [
-     "lecture"
+     "latecomer"
     ],
     "2": [
-     "lecture",
-     "city"
+     "latecomer",
+     "balcony"
     ],
     "3": [
-     "lecture",
-     "city",
-     "embrace"
+     "latecomer",
+     "balcony",
+     "solution"
     ],
     "4": [
-     "lecture",
-     "city",
-     "embrace",
-     "jaguar"
+     "latecomer",
+     "balcony",
+     "solution",
+     "mirror"
     ],
     "5": [
-     "lecture",
-     "city",
-     "embrace",
-     "jaguar",
-     "eyebrow"
+     "latecomer",
+     "balcony",
+     "solution",
+     "mirror",
+     "naked"
+    ],
+    "6": [
+     "latecomer",
+     "balcony",
+     "solution",
+     "mirror",
+     "naked",
+     "consensus"
     ]
    }
   },
@@ -421,29 +525,37 @@
    "lng": 0.0,
    "words": {
     "1": [
-     "scale"
+     "research"
     ],
     "2": [
-     "scale",
+     "research",
      "abandon"
     ],
     "3": [
-     "scale",
+     "research",
      "abandon",
      "abandon"
     ],
     "4": [
-     "scale",
+     "research",
      "abandon",
      "abandon",
      "abandon"
     ],
     "5": [
-     "scale",
+     "research",
      "abandon",
      "abandon",
      "abandon",
-     "area"
+     "abandon"
+    ],
+    "6": [
+     "research",
+     "abandon",
+     "abandon",
+     "abandon",
+     "abandon",
+     "decisive"
     ]
    }
   },
@@ -452,29 +564,37 @@
    "lng": -40.0,
    "words": {
     "1": [
-     "harsh"
+     "haunt"
     ],
     "2": [
-     "harsh",
-     "invite"
+     "haunt",
+     "depend"
     ],
     "3": [
-     "harsh",
-     "invite",
-     "lawn"
+     "haunt",
+     "depend",
+     "brush"
     ],
     "4": [
-     "harsh",
-     "invite",
-     "lawn",
-     "resource"
+     "haunt",
+     "depend",
+     "brush",
+     "beauty"
     ],
     "5": [
-     "harsh",
-     "invite",
-     "lawn",
-     "resource",
-     "boss"
+     "haunt",
+     "depend",
+     "brush",
+     "beauty",
+     "risk"
+    ],
+    "6": [
+     "haunt",
+     "depend",
+     "brush",
+     "beauty",
+     "risk",
+     "purposeful"
     ]
    }
   },
@@ -483,29 +603,37 @@
    "lng": 0.0,
    "words": {
     "1": [
-     "length"
+     "laziness"
     ],
     "2": [
-     "length",
+     "laziness",
      "abandon"
     ],
     "3": [
-     "length",
+     "laziness",
      "abandon",
      "abandon"
     ],
     "4": [
-     "length",
+     "laziness",
      "abandon",
      "abandon",
      "abandon"
     ],
     "5": [
-     "length",
+     "laziness",
      "abandon",
      "abandon",
      "abandon",
-     "affair"
+     "abandon"
+    ],
+    "6": [
+     "laziness",
+     "abandon",
+     "abandon",
+     "abandon",
+     "abandon",
+     "bureau"
     ]
    }
   },
@@ -514,29 +642,37 @@
    "lng": 0.0,
    "words": {
     "1": [
-     "stem"
+     "spider"
     ],
     "2": [
-     "stem",
-     "primary"
+     "spider",
+     "faulty"
     ],
     "3": [
-     "stem",
-     "primary",
-     "fetch"
+     "spider",
+     "faulty",
+     "faulty"
     ],
     "4": [
-     "stem",
-     "primary",
-     "fetch",
-     "primary"
+     "spider",
+     "faulty",
+     "faulty",
+     "faulty"
     ],
     "5": [
-     "stem",
-     "primary",
-     "fetch",
-     "primary",
-     "fine"
+     "spider",
+     "faulty",
+     "faulty",
+     "faulty",
+     "faulty"
+    ],
+    "6": [
+     "spider",
+     "faulty",
+     "faulty",
+     "faulty",
+     "faulty",
+     "extra"
     ]
    }
   },
@@ -545,29 +681,37 @@
    "lng": 180.0,
    "words": {
     "1": [
-     "turkey"
+     "tournament"
     ],
     "2": [
-     "turkey",
-     "fetch"
+     "tournament",
+     "picture"
     ],
     "3": [
-     "turkey",
-     "fetch",
-     "primary"
+     "tournament",
+     "picture",
+     "picture"
     ],
     "4": [
-     "turkey",
-     "fetch",
-     "primary",
-     "fetch"
+     "tournament",
+     "picture",
+     "picture",
+     "picture"
     ],
     "5": [
-     "turkey",
-     "fetch",
-     "primary",
-     "fetch",
-     "portion"
+     "tournament",
+     "picture",
+     "picture",
+     "picture",
+     "picture"
+    ],
+    "6": [
+     "tournament",
+     "picture",
+     "picture",
+     "picture",
+     "picture",
+     "literal"
     ]
    }
   },
@@ -576,29 +720,37 @@
    "lng": -180.0,
    "words": {
     "1": [
-     "divorce"
+     "disposal"
     ],
     "2": [
-     "divorce",
+     "disposal",
      "abandon"
     ],
     "3": [
-     "divorce",
+     "disposal",
      "abandon",
      "abandon"
     ],
     "4": [
-     "divorce",
+     "disposal",
      "abandon",
      "abandon",
      "abandon"
     ],
     "5": [
-     "divorce",
+     "disposal",
      "abandon",
      "abandon",
      "abandon",
-     "above"
+     "abandon"
+    ],
+    "6": [
+     "disposal",
+     "abandon",
+     "abandon",
+     "abandon",
+     "abandon",
+     "dishwasher"
     ]
    }
   },
@@ -607,29 +759,37 @@
    "lng": 179.9999,
    "words": {
     "1": [
-     "zoo"
+     "zoom"
     ],
     "2": [
-     "zoo",
-     "zoo"
+     "zoom",
+     "zoom"
     ],
     "3": [
-     "zoo",
-     "zoo",
-     "zoo"
+     "zoom",
+     "zoom",
+     "zoom"
     ],
     "4": [
-     "zoo",
-     "zoo",
-     "zoo",
-     "zero"
+     "zoom",
+     "zoom",
+     "zoom",
+     "zoom"
     ],
     "5": [
-     "zoo",
-     "zoo",
-     "zoo",
-     "zero",
-     "wrist"
+     "zoom",
+     "zoom",
+     "zoom",
+     "zoom",
+     "suitable"
+    ],
+    "6": [
+     "zoom",
+     "zoom",
+     "zoom",
+     "zoom",
+     "suitable",
+     "shampoo"
     ]
    }
   }
@@ -640,16 +800,16 @@
    "lng": -0.12456,
    "n": 2,
    "ref": [
-    51.501,
-    -0.125
+    51.50077,
+    -0.1246
    ],
    "words": [
-    "tomato",
-    "unable"
+    "arm",
+    "acquire"
    ],
    "resolved": [
-    51.50071816876368,
-    -0.12455105781555176
+    51.50071954027699,
+    -0.12455910444259644
    ]
   },
   {
@@ -657,17 +817,17 @@
    "lng": -0.12456,
    "n": 3,
    "ref": [
-    51.51,
-    -0.13
+    51.502,
+    -0.125
    ],
    "words": [
-    "cruel",
-    "tomato",
-    "unable"
+    "obtain",
+    "arm",
+    "acquire"
    ],
    "resolved": [
-    51.50071816876368,
-    -0.12455105781555176
+    51.50071954027699,
+    -0.12455910444259644
    ]
   },
   {
@@ -675,54 +835,76 @@
    "lng": -0.12456,
    "n": 4,
    "ref": [
+    51.52,
+    -0.14
+   ],
+   "words": [
+    "simplify",
+    "obtain",
+    "arm",
+    "acquire"
+   ],
+   "resolved": [
+    51.50071954027699,
+    -0.12455910444259644
+   ]
+  },
+  {
+   "lat": 51.50072,
+   "lng": -0.12456,
+   "n": 5,
+   "ref": [
     52.4862,
     -1.8904
    ],
    "words": [
-    "step",
-    "cruel",
-    "tomato",
-    "unable"
+    "tournament",
+    "simplify",
+    "obtain",
+    "arm",
+    "acquire"
    ],
    "resolved": [
-    51.50071816876368,
-    -0.12455105781555176
+    51.50071954027699,
+    -0.12455910444259644
    ]
   },
   {
    "lat": -16.5,
    "lng": -179.99,
-   "n": 3,
+   "n": 4,
    "ref": [
     -16.49,
     -179.97
    ],
    "words": [
-    "agent",
-    "hire",
-    "setup"
+    "dolphin",
+    "tuition",
+    "appear",
+    "active"
    ],
    "resolved": [
-    -16.500000764312336,
-    -179.98998999595642
+    -16.49999987387004,
+    -179.98999804258347
    ]
   },
   {
    "lat": -16.5,
    "lng": -179.99,
-   "n": 3,
+   "n": 4,
    "ref": [
     -16.49,
     179.99
    ],
    "words": [
-    "agent",
-    "hire",
-    "setup"
+    "dolphin",
+    "tuition",
+    "appear",
+    "active"
    ],
    "resolved": [
-    -16.500000764312336,
-    -179.98998999595642
+    -16.49999987387004,
+    -179.98999804258347
    ]
   }
  ],
@@ -734,9 +916,9 @@
     -74.006
    ],
    "words": [
-    "cruel",
-    "tomato",
-    "unable"
+    "obtain",
+    "arm",
+    "acquire"
    ]
   },
   {
@@ -746,8 +928,8 @@
     2.3522
    ],
    "words": [
-    "tomato",
-    "unable"
+    "arm",
+    "acquire"
    ]
   }
  ],
@@ -764,53 +946,53 @@
     {
      "lat": 51.50072,
      "lng": -0.12456,
-     "said": 4,
+     "said": 5,
      "search": {
       "3": {
-       "hits": 73,
-       "searched": 10580
+       "hits": null,
+       "searched": 2709549
       },
       "4": {
-       "hits": 1,
-       "searched": 6
+       "hits": 5,
+       "searched": 2668
       },
       "5": {
        "hits": 1,
-       "searched": 1
+       "searched": 4
       }
      }
     },
     {
      "lat": 55.94859,
      "lng": -3.19951,
-     "said": 4,
+     "said": 5,
      "search": {
       "3": {
-       "hits": 90,
-       "searched": 10580
+       "hits": null,
+       "searched": 2709549
       },
       "4": {
-       "hits": 1,
-       "searched": 4
+       "hits": 10,
+       "searched": 2622
       },
       "5": {
        "hits": 1,
-       "searched": 1
+       "searched": 2
       }
      }
     },
     {
      "lat": 54.5973,
      "lng": -5.9301,
-     "said": 4,
+     "said": 5,
      "search": {
       "3": {
-       "hits": 91,
-       "searched": 10465
+       "hits": null,
+       "searched": 2707702
       },
       "4": {
-       "hits": 1,
-       "searched": 3
+       "hits": 5,
+       "searched": 2565
       },
       "5": {
        "hits": 1,
@@ -832,15 +1014,15 @@
     {
      "lat": 53.3498,
      "lng": -6.2603,
-     "said": 4,
+     "said": 5,
      "search": {
       "3": {
-       "hits": 12,
-       "searched": 1598
+       "hits": null,
+       "searched": 406832
       },
       "4": {
-       "hits": 1,
-       "searched": 1
+       "hits": 2,
+       "searched": 391
       },
       "5": {
        "hits": 1,
@@ -862,15 +1044,15 @@
     {
      "lat": 46.948,
      "lng": 7.4474,
-     "said": 4,
+     "said": 5,
      "search": {
       "3": {
-       "hits": 3,
-       "searched": 624
+       "hits": null,
+       "searched": 160657
       },
       "4": {
        "hits": 1,
-       "searched": 1
+       "searched": 156
       },
       "5": {
        "hits": 1,
@@ -892,19 +1074,19 @@
     {
      "lat": -33.8688,
      "lng": 151.2093,
-     "said": 5,
+     "said": 6,
      "search": {
       "3": {
        "hits": null,
-       "searched": 142266
+       "searched": 36512015
       },
       "4": {
-       "hits": 1,
-       "searched": 72
+       "hits": null,
+       "searched": 35632
       },
       "5": {
        "hits": 1,
-       "searched": 1
+       "searched": 36
       }
      }
     }
@@ -922,19 +1104,19 @@
     {
      "lat": 51.50072,
      "lng": -0.12456,
-     "said": 5,
+     "said": 6,
      "search": {
       "3": {
-       "hits": 65,
-       "searched": 10406
+       "hits": null,
+       "searched": 2688285
       },
       "4": {
-       "hits": 0,
-       "searched": 2
+       "hits": 17,
+       "searched": 2580
       },
       "5": {
        "hits": 0,
-       "searched": 0
+       "searched": 1
       }
      }
     }
@@ -952,19 +1134,19 @@
     {
      "lat": -18.1416,
      "lng": 178.4419,
-     "said": 5,
+     "said": 6,
      "search": {
       "3": {
        "hits": null,
-       "searched": 282800
+       "searched": 72521592
       },
       "4": {
-       "hits": 2,
-       "searched": 126
+       "hits": null,
+       "searched": 70700
       },
       "5": {
        "hits": 0,
-       "searched": 0
+       "searched": 62
       }
      }
     }
