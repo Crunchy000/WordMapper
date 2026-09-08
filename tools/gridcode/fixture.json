@@ -24,29 +24,29 @@
    "lng": -0.12456,
    "words": {
     "1": [
-     "kangaroo"
+     "kilo"
     ],
     "2": [
-     "kangaroo",
-     "wagon"
+     "kilo",
+     "waitress"
     ],
     "3": [
-     "kangaroo",
-     "wagon",
-     "machine"
+     "kilo",
+     "waitress",
+     "maintain"
     ],
     "4": [
-     "kangaroo",
-     "wagon",
-     "machine",
-     "structure"
+     "kilo",
+     "waitress",
+     "maintain",
+     "studio"
     ],
     "5": [
-     "kangaroo",
-     "wagon",
-     "machine",
-     "structure",
-     "science"
+     "kilo",
+     "waitress",
+     "maintain",
+     "studio",
+     "scribble"
     ]
    }
   },
@@ -55,29 +55,29 @@
    "lng": -3.19951,
    "words": {
     "1": [
-     "kangaroo"
+     "kilo"
     ],
     "2": [
-     "kangaroo",
-     "problem"
+     "kilo",
+     "professor"
     ],
     "3": [
-     "kangaroo",
-     "problem",
-     "kangaroo"
+     "kilo",
+     "professor",
+     "kilo"
     ],
     "4": [
-     "kangaroo",
-     "problem",
-     "kangaroo",
-     "export"
+     "kilo",
+     "professor",
+     "kilo",
+     "extra"
     ],
     "5": [
-     "kangaroo",
-     "problem",
-     "kangaroo",
-     "export",
-     "nutrient"
+     "kilo",
+     "professor",
+     "kilo",
+     "extra",
+     "observe"
     ]
    }
   },
@@ -86,29 +86,29 @@
    "lng": -5.71531,
    "words": {
     "1": [
-     "justify"
+     "keystroke"
     ],
     "2": [
-     "justify",
-     "hospital"
+     "keystroke",
+     "hurry"
     ],
     "3": [
-     "justify",
-     "hospital",
-     "humorous"
+     "keystroke",
+     "hurry",
+     "hyphen"
     ],
     "4": [
-     "justify",
-     "hospital",
-     "humorous",
-     "dwarf"
+     "keystroke",
+     "hurry",
+     "hyphen",
+     "electron"
     ],
     "5": [
-     "justify",
-     "hospital",
-     "humorous",
-     "dwarf",
-     "period"
+     "keystroke",
+     "hurry",
+     "hyphen",
+     "electron",
+     "people"
     ]
    }
   },
@@ -117,29 +117,29 @@
    "lng": -6.2603,
    "words": {
     "1": [
-     "kangaroo"
+     "kilo"
     ],
     "2": [
-     "kangaroo",
-     "forecast"
+     "kilo",
+     "freedom"
     ],
     "3": [
-     "kangaroo",
-     "forecast",
-     "inflation"
+     "kilo",
+     "freedom",
+     "innermost"
     ],
     "4": [
-     "kangaroo",
-     "forecast",
-     "inflation",
-     "platform"
+     "kilo",
+     "freedom",
+     "innermost",
+     "plastic"
     ],
     "5": [
-     "kangaroo",
-     "forecast",
-     "inflation",
-     "platform",
-     "survey"
+     "kilo",
+     "freedom",
+     "innermost",
+     "plastic",
+     "sweat"
     ]
    }
   },
@@ -148,29 +148,29 @@
    "lng": 2.3522,
    "words": {
     "1": [
-     "logic"
+     "loyalty"
     ],
     "2": [
-     "logic",
-     "culture"
+     "loyalty",
+     "decline"
     ],
     "3": [
-     "logic",
-     "culture",
-     "inhabit"
+     "loyalty",
+     "decline",
+     "insert"
     ],
     "4": [
-     "logic",
-     "culture",
-     "inhabit",
-     "stockpile"
+     "loyalty",
+     "decline",
+     "insert",
+     "stove"
     ],
     "5": [
-     "logic",
-     "culture",
-     "inhabit",
-     "stockpile",
-     "fix"
+     "loyalty",
+     "decline",
+     "insert",
+     "stove",
+     "footnote"
     ]
    }
   },
@@ -179,29 +179,29 @@
    "lng": -73.9855,
    "words": {
     "1": [
-     "emperor"
+     "enhance"
     ],
     "2": [
-     "emperor",
-     "nursery"
+     "enhance",
+     "objective"
     ],
     "3": [
-     "emperor",
-     "nursery",
-     "pasta"
+     "enhance",
+     "objective",
+     "patron"
     ],
     "4": [
-     "emperor",
-     "nursery",
-     "pasta",
-     "initial"
+     "enhance",
+     "objective",
+     "patron",
+     "inspire"
     ],
     "5": [
-     "emperor",
-     "nursery",
-     "pasta",
-     "initial",
-     "equal"
+     "enhance",
+     "objective",
+     "patron",
+     "inspire",
+     "ethic"
     ]
    }
   },
@@ -210,28 +210,28 @@
    "lng": -122.4786,
    "words": {
     "1": [
-     "chimney"
+     "clean"
     ],
     "2": [
-     "chimney",
-     "retrospect"
+     "clean",
+     "revolve"
     ],
     "3": [
-     "chimney",
-     "retrospect",
-     "assist"
+     "clean",
+     "revolve",
+     "athlete"
     ],
     "4": [
-     "chimney",
-     "retrospect",
-     "assist",
-     "rocket"
+     "clean",
+     "revolve",
+     "athlete",
+     "routine"
     ],
     "5": [
-     "chimney",
-     "retrospect",
-     "assist",
-     "rocket",
+     "clean",
+     "revolve",
+     "athlete",
+     "routine",
      "undergo"
     ]
    }
@@ -241,29 +241,29 @@
    "lng": 37.6173,
    "words": {
     "1": [
-     "objective"
+     "obvious"
     ],
     "2": [
-     "objective",
-     "scientist"
+     "obvious",
+     "script"
     ],
     "3": [
-     "objective",
-     "scientist",
-     "honeymoon"
+     "obvious",
+     "script",
+     "humane"
     ],
     "4": [
-     "objective",
-     "scientist",
-     "honeymoon",
-     "completion"
+     "obvious",
+     "script",
+     "humane",
+     "confess"
     ],
     "5": [
-     "objective",
-     "scientist",
-     "honeymoon",
-     "completion",
-     "calendar"
+     "obvious",
+     "script",
+     "humane",
+     "confess",
+     "careful"
     ]
    }
   },
@@ -272,29 +272,29 @@
    "lng": 151.2093,
    "words": {
     "1": [
-     "tulip"
+     "truck"
     ],
     "2": [
-     "tulip",
-     "captain"
+     "truck",
+     "cautious"
     ],
     "3": [
-     "tulip",
-     "captain",
-     "ferryboat"
+     "truck",
+     "cautious",
+     "fireplace"
     ],
     "4": [
-     "tulip",
-     "captain",
-     "ferryboat",
-     "reinforce"
+     "truck",
+     "cautious",
+     "fireplace",
+     "regulate"
     ],
     "5": [
-     "tulip",
-     "captain",
-     "ferryboat",
-     "reinforce",
-     "except"
+     "truck",
+     "cautious",
+     "fireplace",
+     "regulate",
+     "exist"
     ]
    }
   },
@@ -303,29 +303,29 @@
    "lng": 103.8501,
    "words": {
     "1": [
-     "shiny"
+     "signpost"
     ],
     "2": [
-     "shiny",
-     "footnote"
+     "signpost",
+     "fragrance"
     ],
     "3": [
-     "shiny",
-     "footnote",
-     "stove"
+     "signpost",
+     "fragrance",
+     "strange"
     ],
     "4": [
-     "shiny",
-     "footnote",
-     "stove",
-     "vowel"
+     "signpost",
+     "fragrance",
+     "strange",
+     "wagon"
     ],
     "5": [
-     "shiny",
-     "footnote",
-     "stove",
-     "vowel",
-     "appearance"
+     "signpost",
+     "fragrance",
+     "strange",
+     "wagon",
+     "approach"
     ]
    }
   },
@@ -334,29 +334,29 @@
    "lng": 178.4419,
    "words": {
     "1": [
-     "wax"
+     "website"
     ],
     "2": [
-     "wax",
-     "statue"
+     "website",
+     "stimulate"
     ],
     "3": [
-     "wax",
-     "statue",
-     "gift"
+     "website",
+     "stimulate",
+     "glint"
     ],
     "4": [
-     "wax",
-     "statue",
-     "gift",
-     "assurance"
+     "website",
+     "stimulate",
+     "glint",
+     "atomic"
     ],
     "5": [
-     "wax",
-     "statue",
-     "gift",
-     "assurance",
-     "plan"
+     "website",
+     "stimulate",
+     "glint",
+     "atomic",
+     "pink"
     ]
    }
   },
@@ -365,29 +365,29 @@
    "lng": -179.9,
    "words": {
     "1": [
-     "accurate"
+     "achieve"
     ],
     "2": [
-     "accurate",
-     "age"
+     "achieve",
+     "agree"
     ],
     "3": [
-     "accurate",
-     "age",
-     "fictional"
+     "achieve",
+     "agree",
+     "flat"
     ],
     "4": [
-     "accurate",
-     "age",
-     "fictional",
-     "vanish"
+     "achieve",
+     "agree",
+     "flat",
+     "various"
     ],
     "5": [
-     "accurate",
-     "age",
-     "fictional",
-     "vanish",
-     "leopard"
+     "achieve",
+     "agree",
+     "flat",
+     "various",
+     "liar"
     ]
    }
   },
@@ -396,29 +396,29 @@
    "lng": -21.9426,
    "words": {
     "1": [
-     "husband"
+     "ignorance"
     ],
     "2": [
-     "husband",
-     "sociable"
+     "ignorance",
+     "song"
     ],
     "3": [
-     "husband",
-     "sociable",
-     "absent"
+     "ignorance",
+     "song",
+     "absolute"
     ],
     "4": [
-     "husband",
-     "sociable",
-     "absent",
-     "crazy"
+     "ignorance",
+     "song",
+     "absolute",
+     "cute"
     ],
     "5": [
-     "husband",
-     "sociable",
-     "absent",
-     "crazy",
-     "noisy"
+     "ignorance",
+     "song",
+     "absolute",
+     "cute",
+     "nonsense"
     ]
    }
   },
@@ -427,29 +427,29 @@
    "lng": 0.0,
    "words": {
     "1": [
-     "liar"
+     "library"
     ],
     "2": [
-     "liar",
+     "library",
      "abandon"
     ],
     "3": [
-     "liar",
+     "library",
      "abandon",
      "abandon"
     ],
     "4": [
-     "liar",
+     "library",
      "abandon",
      "abandon",
      "abandon"
     ],
     "5": [
-     "liar",
+     "library",
      "abandon",
      "abandon",
      "abandon",
-     "amaze"
+     "ambulance"
     ]
    }
   },
@@ -458,29 +458,29 @@
    "lng": -40.0,
    "words": {
     "1": [
-     "fragment"
+     "fume"
     ],
     "2": [
-     "fragment",
+     "fume",
      "work"
     ],
     "3": [
-     "fragment",
+     "fume",
      "work",
      "work"
     ],
     "4": [
-     "fragment",
+     "fume",
      "work",
      "work",
-     "wallet"
+     "wardrobe"
     ],
     "5": [
-     "fragment",
+     "fume",
      "work",
      "work",
-     "wallet",
-     "various"
+     "wardrobe",
+     "venture"
     ]
    }
   },
@@ -489,29 +489,29 @@
    "lng": 0.0,
    "words": {
     "1": [
-     "kitchen"
+     "large"
     ],
     "2": [
-     "kitchen",
+     "large",
      "abandon"
     ],
     "3": [
-     "kitchen",
+     "large",
      "abandon",
      "abandon"
     ],
     "4": [
-     "kitchen",
+     "large",
      "abandon",
      "abandon",
      "abandon"
     ],
     "5": [
-     "kitchen",
+     "large",
      "abandon",
      "abandon",
      "abandon",
-     "bakery"
+     "battery"
     ]
    }
   },
@@ -520,29 +520,29 @@
    "lng": 0.0,
    "words": {
     "1": [
-     "loyalty"
+     "lyric"
     ],
     "2": [
-     "loyalty",
-     "airport"
+     "lyric",
+     "alert"
     ],
     "3": [
-     "loyalty",
-     "airport",
-     "airport"
+     "lyric",
+     "alert",
+     "alert"
     ],
     "4": [
-     "loyalty",
-     "airport",
-     "airport",
-     "airport"
+     "lyric",
+     "alert",
+     "alert",
+     "alert"
     ],
     "5": [
-     "loyalty",
-     "airport",
-     "airport",
-     "airport",
-     "excursion"
+     "lyric",
+     "alert",
+     "alert",
+     "alert",
+     "explain"
     ]
    }
   },
@@ -551,29 +551,29 @@
    "lng": 180.0,
    "words": {
     "1": [
-     "widespread"
+     "width"
     ],
     "2": [
-     "widespread",
-     "volume"
+     "width",
+     "volunteer"
     ],
     "3": [
-     "widespread",
-     "volume",
-     "volume"
+     "width",
+     "volunteer",
+     "volunteer"
     ],
     "4": [
-     "widespread",
-     "volume",
-     "volume",
-     "volume"
+     "width",
+     "volunteer",
+     "volunteer",
+     "volunteer"
     ],
     "5": [
-     "widespread",
-     "volume",
-     "volume",
-     "volume",
-     "purify"
+     "width",
+     "volunteer",
+     "volunteer",
+     "volunteer",
+     "pupil"
     ]
    }
   },
@@ -582,29 +582,29 @@
    "lng": -180.0,
    "words": {
     "1": [
-     "actress"
+     "admire"
     ],
     "2": [
-     "actress",
+     "admire",
      "abandon"
     ],
     "3": [
-     "actress",
+     "admire",
      "abandon",
      "abandon"
     ],
     "4": [
-     "actress",
+     "admire",
      "abandon",
      "abandon",
      "abandon"
     ],
     "5": [
-     "actress",
+     "admire",
      "abandon",
      "abandon",
      "abandon",
-     "agency"
+     "airport"
     ]
    }
   },
@@ -635,7 +635,7 @@
      "zoom",
      "zoom",
      "zoom",
-     "mosquito"
+     "motivate"
     ]
    }
   }
@@ -650,8 +650,8 @@
     -0.1246
    ],
    "words": [
-    "structure",
-    "science"
+    "studio",
+    "scribble"
    ],
    "resolved": [
     51.50072067083656,
@@ -667,9 +667,9 @@
     -0.125
    ],
    "words": [
-    "machine",
-    "structure",
-    "science"
+    "maintain",
+    "studio",
+    "scribble"
    ],
    "resolved": [
     51.50072067083656,
@@ -685,10 +685,10 @@
     -0.14
    ],
    "words": [
-    "wagon",
-    "machine",
-    "structure",
-    "science"
+    "waitress",
+    "maintain",
+    "studio",
+    "scribble"
    ],
    "resolved": [
     51.50072067083656,
@@ -704,9 +704,9 @@
     -179.97
    ],
    "words": [
-    "argue",
-    "dynamic",
-    "merchant"
+    "arrest",
+    "elephant",
+    "microphone"
    ],
    "resolved": [
     -16.50001006095903,
@@ -722,9 +722,9 @@
     179.99
    ],
    "words": [
-    "argue",
-    "dynamic",
-    "merchant"
+    "arrest",
+    "elephant",
+    "microphone"
    ],
    "resolved": [
     -16.50001006095903,
@@ -740,9 +740,9 @@
     -74.006
    ],
    "words": [
-    "machine",
-    "structure",
-    "science"
+    "maintain",
+    "studio",
+    "scribble"
    ]
   },
   {
@@ -752,8 +752,8 @@
     2.3522
    ],
    "words": [
-    "structure",
-    "science"
+    "studio",
+    "scribble"
    ]
   }
  ],

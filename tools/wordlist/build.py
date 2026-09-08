@@ -33,7 +33,11 @@ from distinct import audit
 from isolation import isolation_parallel, CUTOFF
 from pool import (CEFR_ORDER, build as build_pool, build_from_cefr,
                   cased_dictionary, read_cmudict, read_freq)
-from spelling import edit1, parts
+from spelling import edit1, parts, family
+
+# The shortest word that still means something inside a longer one. Below this
+# the fragments are syllables rather than words: `art` inside `start`.
+CONTAIN = 4
 
 # Every pair on the list is at least this far apart. One substitution, insertion
 # or deletion costs 1.0; a confusable substitution (free/three, lamp/ramp,
@@ -171,9 +175,10 @@ def main():
     print(f'\n4.  taking {args.size}: nothing within {args.threshold} by sound '
           f'or one keystroke by spelling, preferring a free {PREFER}-letter prefix')
     taken, prefixes, seen = [], set(), set()
-    claimed = set()                 # word-pieces already spoken for
+    claimed = set()                 # word-pieces and roots already spoken for
     common, _ = cased_dictionary()
-    dropped = {'sound': 0, 'spelling': 0, 'shared piece': 0}
+    dropped = {'sound': 0, 'spelling': 0, 'shared piece': 0, 'shared root': 0,
+               'contained': 0}
 
     def consider(w, ph, rank):
         # One word per piece. Banning compounds outright works and costs too
@@ -184,6 +189,23 @@ def main():
         # boundary between them. One compound alone is harmless.
         if common and (parts(w, common) & claimed):
             dropped['shared piece'] += 1; return False
+        # Same rule, the other way English builds words. parts() only sees
+        # COMPOUNDS, where both halves are words, so help/helpful/unhelpful,
+        # certain/uncertain and classic/classical went straight through it:
+        # `ful` and `un` are not words. A shared root is a shared way to lose
+        # an ending or miss a prefix, which is the failure the piece rule
+        # exists for.
+        if common and (family(w, common) & claimed):
+            dropped['shared root'] += 1; return False
+        # And the blunt version of the same idea, which catches what no affix
+        # table does: no chosen word may sit INSIDE another, either way round.
+        # lady/landlady/ladybird is the case that started this, but so are
+        # rate/celebrate/tolerate/vibrate and scope/telescope -- not a shared
+        # root at all, just the same run of sounds at the end of a longer word,
+        # which is the same thing to a listener.
+        if any(len(v) >= CONTAIN and v in w or len(w) >= CONTAIN and w in v
+               for v, _, _ in taken):
+            dropped['contained'] += 1; return False
         if any(distance(ph, ph2, args.threshold) < args.threshold
                for _, ph2, _ in taken if abs(len(ph2) - len(ph)) <= 2):
             dropped['sound'] += 1; return False
@@ -196,6 +218,7 @@ def main():
         seen.add(w)
         if common:
             claimed.update(parts(w, common))
+            claimed.update(family(w, common))
         return True
 
     # First pass: only words whose short prefix is still free. Second pass:

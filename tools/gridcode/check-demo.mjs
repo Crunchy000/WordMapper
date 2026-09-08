@@ -123,9 +123,9 @@ for (const b of fixture.boxes) {
 
 // The leading separator is the whole notation for a tail, so parsing it back
 // has to survive the round trip in both ports.
-for (const [text, n, tail] of [['machine.structure.science', 3, false],
-                               ['.machine.structure.science', 3, true],
-                               ['  MACHINE structure Science ', 3, false]]) {
+for (const [text, n, tail] of [['maintain.studio.scribble', 3, false],
+                               ['.maintain.studio.scribble', 3, true],
+                               ['  MAINTAIN studio Scribble ', 3, false]]) {
   const [parts, isTail] = mod.parseAddress(text);
   if (parts.length !== n || isTail !== tail)
     fail(`PARSE ${JSON.stringify(text)} -> ${parts.length} words, tail=${isTail}`);

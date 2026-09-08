@@ -44,11 +44,11 @@ address is a prefix of a longer one.
 
 | Words | Big Ben | Cell |
 |---|---|---|
-| 1 | `kangaroo` | 627 km square |
-| 2 | `kangaroo.wagon` | 17.4 km square |
-| 3 | `kangaroo.wagon.machine` | 484 m square |
-| 4 | `kangaroo.wagon.machine.structure` | 13.45 m square |
-| 5 | `kangaroo.wagon.machine.structure.science` | **4.48 m square, verified** |
+| 1 | `kilo` | 627 km square |
+| 2 | `kilo.waitress` | 17.4 km square |
+| 3 | `kilo.waitress.maintain` | 484 m square |
+| 4 | `kilo.waitress.maintain.studio` | 13.45 m square |
+| 5 | `kilo.waitress.maintain.studio.scribble` | **4.48 m square, verified** |
 
 Every cell at every length is exactly square, because both axes get the same
 base-36 split at every word. Nothing arranges that; see *Why cells are square*.
@@ -62,11 +62,11 @@ of exactly one tile, and any accuracy better than half a tile pins it down.
 
 | Words said | Written | Ambiguity | Usable if the listener knows your position within |
 |---|---|---|---|
-| 5 | `kangaroo.wagon.machine.structure.science` | none | nothing at all |
-| 4 | `.wagon.machine.structure.science` | 627 km square | 314 km — which country |
-| 3 | `.machine.structure.science` | 17.4 km square | 8.7 km — which town |
-| 2 | `.structure.science` | 484 m square | 242 m — which street |
-| 1 | `.science` | 13.45 m square | 6.7 m — you can already see them |
+| 5 | `kilo.waitress.maintain.studio.scribble` | none | nothing at all |
+| 4 | `.waitress.maintain.studio.scribble` | 627 km square | 314 km — which country |
+| 3 | `.maintain.studio.scribble` | 17.4 km square | 8.7 km — which town |
+| 2 | `.studio.scribble` | 484 m square | 242 m — which street |
+| 1 | `.scribble` | 13.45 m square | 6.7 m — you can already see them |
 
 The leading separator is the whole notation: it says the coarse words are
 missing and context must supply them. That is the difference between an address
@@ -162,17 +162,17 @@ the planet — a useless window, and a safe one.
 ## How the grid falls over the UK
 
 Luck rather than design, but useful luck: the whole UK bounding box spans only
-**nine** distinct first words, and everywhere below is `kangaroo` except the
+**nine** distinct first words, and everywhere below is `kilo` except the
 south-west corner.
 
 ```
-London      kangaroo.wagon.machine.structure.science
-Manchester  kangaroo.rule.unfold.farthest.virtual
-Cardiff     kangaroo.poetry.lucky.volume.objective
-Plymouth    justify.obey.balloon.bartender.reprint
-Edinburgh   kangaroo.problem.kangaroo.dolphin.music
-Belfast     kangaroo.grateful.peaceful.increase.minimum
-Dublin      kangaroo.forecast.inflation.platform.survey
+London      kilo.waitress.maintain.studio.scribble
+Manchester  kilo.sailor.unfold.fiction.visibly
+Cardiff     kilo.poetry.machine.volunteer.obvious
+Plymouth    keystroke.obtain.beauty.bedside.reproduce
+Edinburgh   kilo.professor.kilo.drink.mutual
+Belfast     kilo.groom.pedantic.inference.mischief
+Dublin      kilo.freedom.innermost.plastic.sweat
 ```
 
 So a British conversation drops the first word almost for free, and four words
@@ -277,7 +277,7 @@ about a phone line.
 **The list does not have to be a power of two**, and dropping that assumption is
 what pays for the resolution. Binary forced 1,024 words and a 10.8 m cell;
 36 × 36 is 1,296 words and 4.48 m, for the same five words said and a stronger
-check than the 8 bits 1,024 could spare. 1,445 is the ceiling on A1–B2 graded
+check than the 8 bits 1,024 could spare. 1,311 is the ceiling on A1–B2 graded
 vocabulary, so 1,296 is close to everything the easy band has to give.
 
 BIP-39's 2,048 would carry more per word, but not from words anyone can say

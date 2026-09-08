@@ -107,6 +107,26 @@ between a good word and a clean one.
    `landlady` and `boyfriend` survive, `ladybug`, `cowboy`, `busboy`,
    `bellboy` and `boyhood` do not.
 
+   **One word per root**, for the way English builds words that `parts()`
+   cannot see. It only splits a word where BOTH halves are words, so `ful` and
+   `un` defeat it and `help`/`helpful`/`unhelpful` all survived it, along with
+   `certain`/`uncertain`, `classic`/`classical` and `fiction`/`fictional`.
+   `family()` strips derivational affixes instead — repeatedly, since English
+   stacks them — and claims the whole family. The endings that collide with
+   ordinary words (`corner` is not `corn`, `number` is not `numb`) are taken at
+   face value here rather than guarded by frequency the way `is_inflection()`
+   guards them: a false positive costs one word out of a pool with slack, and
+   `corn`/`corner` is a pair worth losing anyway.
+
+   **And no word inside another**, which is the blunt version of the same idea
+   and catches what no affix table does. `rate` sat inside `celebrate`,
+   `tolerate`, `vibrate`, `narrate`, `liberate`, `penetrate`, `illustrate` and
+   `accurate`; `scope` inside `telescope`; `sphere` inside `atmosphere`. Not a
+   shared root in any of those — just the same run of sounds at the end of a
+   longer word, which is the same thing to a listener. Four letters is the
+   floor, below which the fragments are syllables rather than words (`art`
+   inside `start`).
+
    Banning compounds outright also works and costs far too much — a fifth of
    the pool, which pushes the selection down into rarer vocabulary than the
    words it was protecting. Measured at a top-20,000 frequency cap: banning all
@@ -238,8 +258,9 @@ and `price`, which are ordinary words that happen to be surnames too.
   -> 1,296 chosen       after removing everything confusable or sound-alike
 ```
 
-The ceiling from this base is **1,445** at A1–B2. The similarity rule is what
-binds: over half the pool goes to it, 1,193 words on sound alone.
+The ceiling from this base is **1,311** at A1–B2. Similarity is what binds:
+over half the pool goes to it — 1,000 words on sound, 675 on a shared piece,
+160 on a shared root and 100 on containment.
 
 **The list does not have to be a power of two.** A list of *s*² words lets each
 word subdivide a cell *s* × *s*, so it is one base-36 digit of x and one of y —
@@ -254,9 +275,9 @@ words said:
 | `spoken-1024-plain.txt` | **5** | 10.8 m | every word CEFR A1–B2 |
 | **`spoken-1296-plain.txt`** | **5** | **4.48 m** | every word CEFR A1–B2 |
 
-The shipped list's mix is 290 A1, 286 A2, 426 B1, 294 B2 — 44 % of it at the two
-easiest levels. With the ceiling at 1,445 there are 149 words of slack, so
-1,296 is close to everything the easy band has to give.
+The shipped list's mix is 281 A1, 262 A2, 390 B1, 363 B2 — 42 % of it at the two
+easiest levels. With the ceiling at 1,311 there are 15 words of slack, so 1,296
+is very nearly everything the easy band has to give.
 
 A vocabulary everyone already has, at no cost in words per address. That is the
 whole trade, and it is a decision about who says these addresses out loud rather

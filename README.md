@@ -19,10 +19,10 @@ click landed in, and the leading words the country can stand in for are shown
 greyed rather than said:
 
 ```
-kangaroo. wagon.machine.structure · science      Big Ben — United Kingdom, 4 said
-kangaroo. forecast.inflation.platform · survey   Dublin — Ireland, 4 said
-logic. overweight.atmosphere.popular · proposal  Luxembourg City — 4 said
-fully.solvent.continue.year · breakfast          mid-Atlantic — no country, all 5
+kilo. waitress.maintain.studio · scribble        Big Ben — United Kingdom, 4 said
+kilo. freedom.innermost.plastic · sweat          Dublin — Ireland, 4 said
+loyalty. papaya.attentive.popular · prospect     Luxembourg City — 4 said
+gallery.sparkle.crazy.year · brush               mid-Atlantic — no country, all 5
 ```
 
 **One grid, one address for a place.** There are no regional boxes and no scope
@@ -142,7 +142,7 @@ about a phone line.
 **The list does not have to be a power of two**, and dropping that assumption is
 what pays for the resolution. Binary forced 1,024 words and a 10.8 m cell;
 36 × 36 is 1,296 words and 4.48 m, for the same five words said and a stronger
-check besides. 1,445 is the ceiling on A1–B2 graded vocabulary, so 1,296 is
+check besides. 1,311 is the ceiling on A1–B2 graded vocabulary, so 1,296 is
 close to everything the easy band has to give — BIP-39's 2,048 would carry more
 per word, but the largest phonetically clean list inside the top 10,000 words of
 English is 976, and 2,048 needs roughly the top 30,000. Four and a half metres

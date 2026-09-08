@@ -3,7 +3,7 @@
 
 FIVE WORDS name any point on earth to 4.48 m:
 
-    kangaroo.wagon.machine.structure.science
+    kilo.waitress.maintain.studio.scribble
 
 There is one grid and one address for a place. No regional boxes, no scope to
 choose, nothing to switch. A box has to be a rectangle and most of the world
@@ -130,7 +130,7 @@ class OutsideBox(ValueError):
 # be TYPED and checksummed, and contains pair/pear, peace/piece, right/write and
 # wear/where, with 53% of it one articulatory feature from another entry.
 WORDLIST = os.path.join(_HERE, '..', 'wordlist', 'spoken-1296-plain.txt')
-WORDLIST_SHA256 = '6737c7c8ea7645cca2fe5534cf63de485d77be68b04a2c1df9e298082b169e37'
+WORDLIST_SHA256 = '2c8879100afeb330d01b91cd86ce89419c7602ad0895d0fdf61ac8cad1842e53'
 
 
 def load_wordlist(path=WORDLIST):

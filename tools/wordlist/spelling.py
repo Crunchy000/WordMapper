@@ -124,6 +124,92 @@ def parts(word, vocab, min_part=3):
     return out
 
 
+# Derivational affixes: the ways English builds one word out of another.
+#
+# parts() catches COMPOUNDS, where both halves are words -- lady/landlady,
+# boy/cowboy -- and misses these entirely, because `ful` and `un` are not words.
+# So help/helpful/unhelpful, certain/uncertain, classic/classical and
+# fiction/fictional all walked straight through it. They are the same failure:
+# a family of words sharing a root, and so sharing a way for a listener to
+# mishear the ending or miss the prefix.
+DERIV_PREFIXES = ('un', 'in', 'im', 'il', 'ir', 'dis', 'mis', 'non', 're',
+                  'over', 'under', 'out', 'pre', 'post', 'anti', 'sub', 'super',
+                  'inter', 'semi', 'co', 'en', 'em', 'fore', 'mid', 'self',
+                  'ab', 'sur', 'micro', 'macro', 'multi', 'trans', 'atmo')
+# (suffix, what the base ends with instead of it). '' strips the suffix; the
+# other forms repair the spelling change the suffix made -- create/creative,
+# happy/happiness, able/ability.
+DERIV_SUFFIXES = [
+    ('ful', ''), ('less', ''), ('ness', ''), ('ness', 'y'),
+    ('ment', ''), ('ship', ''), ('hood', ''), ('dom', ''),
+    ('ism', ''), ('ist', ''), ('ist', 'e'), ('ism', 'e'),
+    ('able', ''), ('able', 'e'), ('ible', ''), ('ability', 'able'),
+    ('ical', ''), ('ical', 'y'),
+    ('ative', 'ate'), ('ive', ''), ('ive', 'e'),
+    ('ious', ''), ('ous', ''), ('ous', 'e'),
+    ('ance', ''), ('ence', ''), ('ancy', ''), ('ency', ''),
+    ('ation', ''), ('ation', 'e'), ('ition', ''), ('sion', ''), ('sion', 'd'),
+    ('tion', ''), ('tion', 'te'), ('ion', ''), ('ion', 'e'),
+    ('ity', ''), ('ity', 'e'), ('ility', 'le'),
+    ('ize', ''), ('ise', ''), ('ify', ''), ('ify', 'y'),
+    ('ty', ''), ('ty', 'e'), ('ery', ''), ('ery', 'e'), ('ry', ''), ('ry', 'e'),
+    # These collide with ordinary words that merely end that way -- corner is
+    # not corn, number is not numb, topic is not top. is_inflection() guards
+    # the same endings by asking whether the base is the COMMONER of the two;
+    # here they are taken at face value on purpose, because the cost of a false
+    # positive is one word out of a pool with slack, and corn/corner is a pair
+    # worth losing anyway: it is exactly the ending a listener drops.
+    ('er', ''), ('er', 'e'), ('or', ''), ('or', 'e'), ('ar', ''),
+    ('al', ''), ('al', 'e'), ('ial', ''), ('ic', ''), ('ic', 'y'),
+    ('ant', ''), ('ent', ''), ('ary', ''), ('ory', ''),
+    ('age', ''), ('age', 'e'), ('ure', ''), ('ish', ''), ('en', ''),
+    ('ly', ''), ('y', ''), ('y', 'e'),
+    ('ician', 'ic'), ('ian', ''), ('ian', 'e'), ('ative', ''), ('le', ''),
+]
+
+
+def _strip_suffix(w):
+    """Every word this could be a derivation of, by one suffix."""
+    out = set()
+    for suffix, repl in DERIV_SUFFIXES:
+        if not w.endswith(suffix):
+            continue
+        stem = w[:len(w) - len(suffix)] + repl
+        if len(stem) < 3:
+            continue
+        out.add(stem)
+        # A doubled final consonant is the spelling repair, not part of the
+        # stem: `runner` is run, `beginner` is begin.
+        if len(stem) > 3 and stem[-1] == stem[-2] and stem[-1] not in 'aeiou':
+            out.add(stem[:-1])
+    out.discard(w)
+    return out
+
+
+def family(word, vocab, depth=3):
+    """The derivational family of a word: itself, and every real word it is
+    built on top of.
+
+    `unhelpful` is {unhelpful, helpful, help}; `water` is just {water}.
+    Stripping repeats, because English stacks affixes -- and every reading
+    counts, since a listener only needs one of them to lose an ending.
+    """
+    out, frontier = {word}, {word}
+    for _ in range(depth):
+        nxt = set()
+        for w in frontier:
+            cand = _strip_suffix(w)
+            for pre in DERIV_PREFIXES:
+                if w.startswith(pre) and len(w) - len(pre) >= 3:
+                    cand.add(w[len(pre):])
+            nxt |= {b for b in cand if b in vocab and b not in out}
+        if not nxt:
+            break
+        out |= nxt
+        frontier = nxt
+    return out
+
+
 def shares_component(word, vocab, claimed, min_part=3):
     """True if this word is built from a piece some chosen word already uses.
 
