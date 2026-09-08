@@ -1,0 +1,55 @@
+# Words to keep OUT of the list regardless of how distinct they sound.
+#
+# A spoken address has to survive being embedded in a sentence: "it is have not
+# know" is not parseable, and a listener writing down four words cannot tell
+# where the address starts. Content words -- things you can picture -- do not
+# have that problem. There is no offline part-of-speech tagger in this build, so
+# this is hand-written and deliberately over-broad: the pool is large enough to
+# afford it.
+#
+# determiners, pronouns, quantifiers
+a an the this that these those each every all any both few many much more most
+some such no not none other another either neither one ones own same
+thing things stuff way ways lot lots kind kinds bit sort part case point
+i me my mine myself you your yours yourself he him his himself she her hers
+herself it its itself we us our ours ourselves they them their theirs themselves
+who whom whose which what whatever whoever whichever someone somebody something
+anyone anybody anything everyone everybody everything nobody nothing
+# auxiliaries and common verbs of being, having, doing, saying
+am is are was were be been being have has had having do does did doing done
+will would shall should can could may might must ought need dare
+get gets got gotten go goes going gone went come comes coming came
+make makes making made take takes taking took let lets letting
+say says saying said tell tells telling told know knows knowing knew
+think thinks thinking thought want wants wanting like likes liking
+put puts putting keep keeps keeping seem seems find finds
+# prepositions, conjunctions, particles
+of in on at by for with from to into onto upon over under above below
+between among through across along around behind beside besides beyond
+during before after since until till within without inside outside
+up down off out away back forth apart aside ahead
+and or but nor yet so because although though unless whereas while
+if then else than as that whether when where why how
+# adverbs and degree words that vanish in speech
+very quite rather really just only even still also too almost nearly hardly
+scarcely always never ever often sometimes usually seldom soon later now
+here there everywhere anywhere somewhere nowhere
+again once twice already yet perhaps maybe probably possibly certainly surely
+indeed however therefore thus hence moreover otherwise instead rather
+well right okay ok yes yeah yep nope sure fine
+# interjections, fillers, colloquial contractions
+oh ah eh uh um hm hmm huh wow ouch oops hey hi hello bye goodbye
+please thanks thank sorry pardon excuse
+gonna wanna gotta gimme lemme dunno kinda sorta ain
+cannot don doesn didn won wouldn couldn shouldn isn aren wasn weren hasn haven
+hadn mustn needn shan mightn
+# numbers and units, which collide with the digits an address is replacing
+zero one two three four five six seven eight nine ten eleven twelve
+thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty
+thirty forty fifty sixty seventy eighty ninety hundred thousand million billion
+first second third fourth fifth sixth seventh eighth ninth tenth
+north south east west left middle
+# calendar words, likely to be read as a date rather than an address
+monday tuesday wednesday thursday friday saturday sunday
+january february march april may june july august september october
+november december today tomorrow yesterday

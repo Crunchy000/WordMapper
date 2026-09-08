@@ -1,0 +1,95 @@
+# Words too grim, alarming or unpleasant to hand someone as an address.
+#
+# The address for a house should not be "cruel.plague.corpse". This matters more
+# than it looks: these words are read aloud in ordinary situations -- a delivery,
+# a taxi, an ambulance -- and one of them landing on a family home is a bad day
+# for whoever has to say it. Broad on purpose; the pool can afford it.
+#
+# death, injury, illness
+death deaths dead dying died deadly fatal fatality mortal mortality
+kill kills killed killer killing murder murdered murderer slaughter massacre
+assassin execute execution behead lynch strangle suffocate drown drowned
+suicide suicidal overdose
+corpse cadaver carcass burial buried bury grave graves graveyard cemetery
+coffin casket funeral morgue mortuary autopsy embalm cremate cremation hearse
+wound wounded injure injured injury bleed bleeding blood bloody bruise
+fracture amputate maim mutilate mangle gash laceration hemorrhage
+disease diseased illness ill sick sickness sickly infected infection infectious
+plague epidemic pandemic cancer tumour tumor leukemia malaria cholera typhoid
+rabies smallpox anthrax ebola virus viral fever nausea vomit vomiting diarrhea
+paralysis paralysed stroke seizure coma comatose terminal incurable
+poison poisoned poisonous toxic toxin venom venomous lethal noxious
+# violence, weapons, war
+war wars warfare battle combat invasion siege bombing bomb bombs blast
+weapon weapons gun guns rifle pistol shotgun bullet bullets ammo grenade
+missile torpedo cannon artillery landmine explosive detonate
+knife dagger blade stab stabbed slash sword machete
+attack attacked assault ambush raid strike violence violent brutal brutality
+torture tortured torment agony anguish suffering suffer misery
+abuse abused abusive beating beaten batter thrash whip flog
+hostage kidnap kidnapped ransom captive imprisoned prisoner
+terror terrorist terrorism bomber hijack
+# disaster, ruin
+disaster catastrophe calamity tragedy tragic crisis emergency
+famine drought starvation starve starving malnourished
+earthquake tsunami hurricane tornado cyclone flood flooding wildfire
+crash crashed collision wreck wreckage derail capsize sink sinking
+collapse collapsed ruin ruined ruins rubble debris destroy destroyed
+destruction devastate devastated demolish annihilate obliterate extinction
+# crime, cruelty, hatred
+crime criminal felon convict burglar thief theft steal stolen robbery
+fraud swindle extortion blackmail bribery corrupt corruption
+cruel cruelty vicious savage ruthless merciless heartless callous sadistic
+hate hatred hateful loathe despise disgust disgusting revolting repulsive
+evil wicked sinister malice malicious spite spiteful vengeance revenge
+betray betrayal traitor treason
+# fear and despair
+fear fearful afraid terrified terrify horror horrible horrific dread
+panic hysteria nightmare trauma traumatic
+despair hopeless helpless worthless useless pathetic miserable wretched
+grief grieve mourning mourn sorrow sorrowful weep sobbing anguish
+depression depressed anxiety anxious dismal bleak grim gloomy dreary
+lonely loneliness abandoned rejected outcast
+# bodily unpleasantness
+rot rotten rotting decay decayed putrid rancid stench stink stinking reek
+filth filthy squalid slime slimy pus mucus phlegm sewage
+maggot vermin parasite leech tapeworm lice flea roach
+
+# clinical and anatomical vocabulary: an address is not a diagnosis
+cardiac vascular thoracic pulmonary neural neurotic psychotic
+glucose insulin dopamine adrenaline cortisol enzyme hormone antibody
+vaccine vaccination antacid antibiotic antiseptic anaesthetic anesthetic
+tetanus rabies measles mumps rubella tuberculosis pneumonia bronchitis
+asthma asthmatic diabetes diabetic epilepsy epileptic migraine
+larynx pharynx trachea oesophagus esophagus abdomen intestine bowel bladder
+kidney liver spleen pancreas colon rectum uterus ovary prostate
+artery vein capillary tendon ligament cartilage marrow
+tumour tumor cyst ulcer abscess lesion hernia
+swollen swelling inflamed inflammation infected bruised
+surgery surgical scalpel syringe catheter stitches sutures amputation
+phobia neurosis trauma psychosis delirium dementia alzheimer parkinson
+urinate urine faeces feces vomit saliva mucus phlegm
+homo queer
+# crime and mishap, the milder end but still not what you want on a house
+burglary robbery mugging vandalism arson trespass
+hangover blackout overdose withdrawal relapse addiction addict
+crybaby brainless bashful pigsty stressful undress
+bazooka quicksand landslide avalanche sinkhole
+bankrupt bankruptcy eviction foreclosure repossess debt owing
+divorce widow widower orphan orphanage
+napalm hellfire thyroid libido chloride celibate oral bimbo
+midget bedridden bloodshed skirmish mournful masochist boredom idol
+# found by reading the generated list: clinical, grim or crude words that no
+# frequency or dictionary rule can spot, only a person
+abortion arsenic asbestos atrocious autism amnesia anemic anaemic aorta
+biopsy bipolar bloodbath castrate cesspool cowardice cripple crippled
+bedpan latrine laxative leprosy lymphoma lactose malignant laudanum morphine
+cocaine cannabis heroin nicotine methadone amphetamine sedative
+gangrene herpes menopause placenta pelvis jugular hypnosis anaesthesia
+arousal amorous booby bosom boudoir burlesque lingerie underwear
+vulgar bigotry bigot lesbian gringo ghetto hillbilly hombre inbred
+caucasian hispanic aryan
+gunman gunshot gunpowder homicide genocide holocaust mayhem onslaught
+inferno mutiny perjury pervert nudist murderous madhouse madman lunatic
+asylum blockade boycott vendetta vengeful warpath wasteland weaponry
+wrongful unlawful felony jailhouse

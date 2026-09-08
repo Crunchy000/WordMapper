@@ -1,0 +1,55 @@
+# Proper nouns CMUdict cannot flag, because it has no capital letters.
+#
+# The names and surnames files catch people. These are the rest: countries,
+# cities, rivers, peoples, languages, brands and the gods and heroes that a
+# common-noun dictionary happily lists in lower case. A place name in an address
+# is worse than useless -- "algiers" in a Manchester address reads as an error.
+# countries, regions, cities, features
+africa african america american asia asian europe european arctic antarctic
+britain british england english scotland scottish wales welsh ireland irish
+france french germany german spain spanish italy italian greece greek
+russia russian china chinese japan japanese korea korean india indian
+canada canadian mexico mexican brazil brazilian argentina egypt egyptian
+turkey turkish poland polish sweden swedish norway norwegian denmark danish
+finland finnish holland dutch belgium austria austrian switzerland swiss
+portugal iceland israel israeli palestine arabia arabic persia persian
+vietnam vietnamese thailand taiwan tibet mongolia siberia ukraine romania
+hungary bulgaria serbia croatia albania cuba cuban jamaica haiti peru chile
+colombia venezuela bolivia ecuador uruguay paraguay panama nigeria kenya
+ethiopia somalia sudan morocco algeria tunisia libya angola zambia uganda
+london paris berlin madrid rome moscow vienna athens dublin lisbon warsaw
+prague budapest brussels amsterdam stockholm helsinki oslo geneva zurich
+chicago boston seattle denver dallas houston atlanta miami vegas phoenix
+detroit portland baltimore memphis nashville austin orlando brooklyn harlem
+tokyo beijing shanghai bangkok jakarta manila sydney melbourne toronto
+montreal vancouver havana cairo nairobi lagos mumbai delhi karachi tehran
+baghdad kabul damascus jerusalem istanbul algiers wichita arlington
+danube thames rhine seine amazon nile ganges volga hudson everest alaska
+texas florida california nevada montana dakota kansas oregon virginia
+georgia carolina indiana kentucky arizona colorado utah idaho ohio iowa
+yorkshire cornwall glasgow belfast cardiff liverpool bristol oxford cambridge
+# peoples, languages, historical
+babylon babylonian roman romans greek viking vikings celtic saxon norman
+aztec inca maya mayan comanche apache cherokee navajo mohawk zulu masai
+yiddish latin sanskrit hebrew swahili creole gaelic irishman
+soviet komsomol nazi fascist bolshevik confederate
+# gods, myths, legends
+zeus apollo athena hermes poseidon hades ares hera artemis dionysus
+odin thor loki freya valkyrie valhalla ragnarok
+osiris anubis horus isis ra sphinx pharaoh
+judas pilate herod goliath samson delilah lazarus jonah moses noah abraham
+merlin arthur camelot excalibur avalon
+titan titans cyclops medusa minotaur centaur pegasus phoenix griffin
+nymph siren cupid venus mars mercury jupiter saturn neptune pluto
+# brands and trademarks
+budweiser youtube google facebook amazon twitter netflix microsoft
+kodak xerox pepsi nike adidas ferrari porsche toyota honda subaru
+boeing airbus zeppelin nintendo playstation
+# stragglers: people and things a gazetteer and a census do not cover
+picasso tolstoy dylan darius emil suresh europa borneo zealand mikado
+doberman polaroid dracula frankenstein hamlet othello macbeth romeo juliet
+tarzan houdini casanova rasputin napoleon caesar cleopatra socrates plato
+aristotle einstein newton darwin galileo mozart beethoven chopin shakespeare
+kremlin pentagon vatican hollywood broadway wimbledon olympic olympics
+sergio eduardo kiki isaiah orestes peugeot jesuit cappella gotham shiva
+stalin yankee brendan johan orson shogun dante caleb allah dynasty

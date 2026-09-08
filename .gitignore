@@ -4,3 +4,4 @@ __pycache__/
 *.pyc
 shot-*.png
 demo-shot.png
+tools/wordlist/.isolation.json
