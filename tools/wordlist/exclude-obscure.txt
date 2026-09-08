@@ -1,0 +1,55 @@
+# Words that are real, clean, distinct -- and that nobody would say.
+#
+# Frequency alone does not catch these. A subtitle corpus ranks `epoxy` and
+# `gaucho` above plenty of words anyone would use, because one film needed them
+# once. What marks them is that a person reading an address aloud would pause,
+# and a person writing it down would ask. That is a judgement, so it lives in a
+# file to be argued with rather than in a rule.
+#
+# read off the generated list, rarest first
+epoxy yucca ritzy twang zany exude pilaf onyx azalea feta idiom tepid cicada
+wadi fibula egress tidbit ornate nonfat demure duplex xenon kahuna yokel jovial
+bogie acumen beset kazoo ocular gaucho bolero levity thorax nobly byline puffin
+bovine easel dorsal sitar alcove bygone sexism reentry usurp bigwig ricotta
+asinine acme hiatus peso aerosol afire nuance vying jalopy tamales acrylic
+kismet arbiter telex tenuous alfalfa skewer exhume angular austere okra almanac
+smarten anagram orifice epsilon isotope wrangle cagey tinsel retrial enamel
+bereft anon unloved solicit ruffle atrium epitaph fjord fistful jaunty frugal
+joust tawdry potency dank augur quinine borscht slouch drywall gelatin requiem
+spandex entropy inertia malware unquote progeny magnify dapper plummet trilogy
+fungi fungus lyrical idyllic fondle sift toenail tactful stipend cameo jetty
+raggedy nostril dutiful hubris gyro upscale lymph bravado fulcrum rerun
+# more of the same, from reading the list end to end
+abacus abject abysmal abyss adjutant adrenal ajar ambrosia animus apropos
+aqueduct archaic arduous artful artistry ascend astute baboon barista baroness
+bayou bebop begat belittle bequeath bespoke bivouac blacken bogey bonsai
+boyish brutish butane cadence calculus calico canasta caveat cesium chaperone
+chariot chivalry cipher clemency clobber comedic commodore concerto concierge
+concoct conjugal copious countess cranium cryptic decedent decorum defunct
+denote derelict despot digress dissuade dowager dynamo edifice elation elixir
+elope eloquent emcee eminence entrap equine equinox escrow esquire etch expiry
+factual feudal filial flamenco fodder forcibly forsaken foundry gambit gavel
+gazebo geisha gerbil gibberish ginseng goulash gourmet grandeur granola grotto
+gunnery gutsy haggle haiku halibut harem harpoon heiress henna hepatic homey
+humanoid hurrah hush idly impala infamy inkling insipid intrepid iota
+labyrinth laden lapel larvae lasso leniency leotard lexicon lucrative lukewarm
+lunacy lupin lurk maudlin magnum mahatma mania manifest maritime masonry
+matron melodic milieu minstrel minuet modicum monsieur monsoon montage
+munchies myriad nippy nomadic notary nuptial oddity odious oldie ooze osprey
+ovation overture pamphlet parody pastrami peddler phalanx phealanx pheasant
+pizzazz plexus pontoon prelude prenatal pretext prodigal punitive putty quasar
+regalia regency regent respite restock ricochet riffraff roomful rowdy rubbery
+rummage rupee saboteur sapling saucy scuffle seismic sesame siesta snafu
+sortie spaniel spatula spoonful squabble squishy stardom stockade strudel
+subvert sumo sunup surety swig taffeta tedious telecast toga tubular tumult
+tundra turban typist unisex unseemly unsound unstuck urchin utensil velour
+viceroy warbler wigwam wimpy zilch
+# third pass
+tinge vapid oust ermine junket undid papacy ramrod gratis myrrh belfry beget
+jaunt guano effigy splurge varmint honcho truant cherub junta monocle powwow
+pulsar obtuse repute inky surmise frigate chiffon recant skillet pensive
+pungent sherbet quibble menial topaz girlish thorny behest echelon swanky
+ladle afresh upstart stepmom zillion killjoy shindig newsreel crackpot gourd
+weakling nerdy manga hooligan tunic soapy exec wiretap inept angst debacle
+sluggish smooch unzip jittery unhook moonlit foxtrot sloth podcast siphon
+kaboom zilch bigwig anime stimuli mildew menthol recheck

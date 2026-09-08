@@ -10,7 +10,7 @@ import csv, os, re, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from phonetics import phonemes, syllables
 from semantic import classify
-from spelling import has_variant, is_compound, is_inflection
+from spelling import has_variant, is_inflection
 from wordnet import WordNet
 
 DATA = os.environ.get('WORDLIST_DATA', '.')
@@ -30,7 +30,19 @@ MIN_SYLL, MAX_SYLL = 1, 3
 MIN_LEN, MAX_LEN = 4, 9
 # Deliberately loose. The pool is not the list: it is the set a person then
 # reads and rejects from, and rejecting needs somewhere to reject TO.
-FREQ_RANK = 32000
+FREQ_RANK = 55000
+
+# A LENGTH BUDGET. Long is not the problem and rare is not the problem --
+# `beautiful` is nine letters and nobody stumbles, `sphincter` is nine letters
+# and everybody does. What grates is a word that is BOTH, so the two are
+# coupled: every extra letter has to be paid for in familiarity. This is what
+# keeps petticoat, mortician, ventricle, gallantry, pantomime and puppeteer out
+# while beautiful, character, apartment and difficult stay.
+LENGTH_BUDGET = {4: 55000, 5: 55000, 6: 45000, 7: 38000, 8: 28000, 9: 19000}
+
+
+def affordable(word, rank):
+    return rank <= LENGTH_BUDGET.get(len(word), 0)
 
 def read_cmudict(path):
     """word -> pronunciations. More than one distinct pronunciation means a
@@ -125,7 +137,7 @@ def excluded():
     out = set()
     for name in ('function-words.txt', 'exclude-religious.txt',
                  'exclude-negative.txt', 'exclude-proper.txt',
-                 'exclude-register.txt'):
+                 'exclude-register.txt', 'exclude-obscure.txt'):
         out |= read_words(os.path.join(HERE, name))
     return out
 
@@ -187,6 +199,8 @@ def build(max_syll=MAX_SYLL, min_syll=MIN_SYLL, min_len=MIN_LEN,
         r = ranked.get(w)
         if r is None or r > freq_rank:
             drop('too rare'); continue
+        if not affordable(w, r):
+            drop(f'too long for how rare it is'); continue
         if w in bad:
             drop('offensive'); continue
         if w in names or w in surnames:
@@ -203,13 +217,6 @@ def build(max_syll=MAX_SYLL, min_syll=MIN_SYLL, min_len=MIN_LEN,
             kind = classify(wn, w)
             if kind:
                 drop(f'what it means: {kind}'); continue
-        # No compounds. landlady / ladybug / boyfriend / cowboy / busboy all
-        # share a component, and a shared component is a shared way to mishear
-        # a word boundary -- which whole-word phonetic distance cannot see.
-        # It costs a few good words to accidental splits (capable is cap+able)
-        # and the pool can afford them.
-        if common and is_compound(w, common):
-            drop('two words stuck together'); continue
         if is_inflection(w, cmu, freq):
             drop('an inflection of a word that exists'); continue
         if has_variant(w, cmu) or has_variant(w, common):

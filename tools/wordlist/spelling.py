@@ -109,6 +109,35 @@ def edit1(a, b):
     return a[i:] == b[i + 1:]
 
 
+def parts(word, vocab, min_part=3):
+    """The words this word is made of, plus itself.
+
+    `landlady` is {land, lady, landlady}; `water` is just {water}. A word can
+    split more than one way, and every reading counts, because a listener only
+    needs one of them to mishear the boundary.
+    """
+    out = {word}
+    for i in range(min_part, len(word) - min_part + 1):
+        if word[:i] in vocab and word[i:] in vocab:
+            out.add(word[:i])
+            out.add(word[i:])
+    return out
+
+
+def shares_component(word, vocab, claimed, min_part=3):
+    """True if this word is built from a piece some chosen word already uses.
+
+    Banning compounds outright works and costs too much: it removes a fifth of
+    the pool, which forces the selection down into rarer vocabulary than the
+    words it was protecting. What actually goes wrong is a FAMILY -- lady,
+    landlady, ladybug; boy, boyfriend, cowboy, busboy, bellboy -- where several
+    words share a piece and so share a way to mishear the boundary between
+    them. One compound alone is harmless. So the rule is one word per piece:
+    whichever gets there first keeps it.
+    """
+    return bool(parts(word, vocab, min_part) & claimed)
+
+
 def is_compound(word, vocab, min_part=3):
     """True if this word is two words stuck together.
 

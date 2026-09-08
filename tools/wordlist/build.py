@@ -31,8 +31,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from phonetics import distance, phonemes, syllables
 from distinct import audit
 from isolation import isolation_parallel, CUTOFF
-from pool import build as build_pool, read_cmudict, read_freq
-from spelling import edit1
+from pool import build as build_pool, cased_dictionary, read_cmudict, read_freq
+from spelling import edit1, parts
 
 # Every pair on the list is at least this far apart. One substitution, insertion
 # or deletion costs 1.0; a confusable substitution (free/three, lamp/ramp,
@@ -142,9 +142,19 @@ def main():
     print(f'\n4.  taking {args.size}: nothing within {args.threshold} by sound '
           f'or one keystroke by spelling, preferring a free {PREFER}-letter prefix')
     taken, prefixes, seen = [], set(), set()
-    dropped = {'sound': 0, 'spelling': 0}
+    claimed = set()                 # word-pieces already spoken for
+    common, _ = cased_dictionary()
+    dropped = {'sound': 0, 'spelling': 0, 'shared piece': 0}
 
     def consider(w, ph, rank):
+        # One word per piece. Banning compounds outright works and costs too
+        # much -- a fifth of the pool, which pushes the selection into rarer
+        # words than the ones it was protecting. What goes wrong is a FAMILY:
+        # lady, landlady, ladybug; boy, boyfriend, cowboy, busboy, bellboy --
+        # several words sharing a piece, and so sharing a way to mishear the
+        # boundary between them. One compound alone is harmless.
+        if common and (parts(w, common) & claimed):
+            dropped['shared piece'] += 1; return False
         if any(distance(ph, ph2, args.threshold) < args.threshold
                for _, ph2, _ in taken if abs(len(ph2) - len(ph)) <= 2):
             dropped['sound'] += 1; return False
@@ -155,6 +165,8 @@ def main():
         taken.append((w, ph, rank))
         prefixes.add(w[:PREFER])
         seen.add(w)
+        if common:
+            claimed.update(parts(w, common))
         return True
 
     # First pass: only words whose short prefix is still free. Second pass:
