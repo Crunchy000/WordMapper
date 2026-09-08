@@ -70,13 +70,13 @@ between a good word and a clean one.
    - **words spelled two ways** — `colour`/`color`, `centre`/`center`,
      `analyse`/`analyze`. Neither form can be dictated without a follow-up
      question, so the word is unusable at all;
-   - **compounds** — `landlady` is land + lady, `ladybug` is lady + bug,
-     `boyfriend`, `cowboy`, `busboy` and `boyhood` are all boy + something.
-     Phonetic distance says these are far apart, and phonetic distance is the
-     wrong ruler: a listener does not compare whole words, they mishear a word
-     boundary, and a shared component is a shared way to do it. It costs a few
-     good words to accidental splits (`capable` is cap + able) and the pool can
-     afford them;
+   - **words that are long AND rare.** Neither alone is the problem —
+     `beautiful` is nine letters and nobody stumbles, `sphincter` is nine
+     letters and everybody does. So the two are coupled by a length budget:
+     every extra letter has to be paid for in familiarity (nine letters need
+     the top 19,000, four letters the top 55,000). That is what keeps
+     `petticoat`, `mortician`, `ventricle`, `gallantry` and `puppeteer` out
+     while `beautiful`, `character` and `difficult` stay;
    - **what a word MEANS**, from WordNet (`semantic.py`) — `lustful`, `cervix`,
      `puberty` and `syphilis` all walked through a hand-written blocklist,
      because a blocklist holds only what someone thought of. WordNet knows each
@@ -92,7 +92,23 @@ between a good word and a clean one.
    in the *rest of the language*, not just from the list.
 
 3. **`build.py`** — takes them in order, skipping any word that a single
-   mishearing or a single keystroke could confuse with one already taken.
+   mishearing, a single keystroke, or a **shared word-piece** could confuse
+   with one already taken.
+
+   **One word per piece.** `landlady` is land + lady, `ladybug` is lady + bug;
+   `boyfriend`, `cowboy`, `busboy`, `bellboy` and `boyhood` are all boy +
+   something. Phonetic distance calls these far apart — adding four phonemes is
+   twice the margin — and phonetic distance is the wrong ruler, because a
+   listener does not compare whole words. They mishear a word BOUNDARY, and a
+   family sharing a piece is a family sharing a way to do it. One compound
+   alone is harmless, so whichever word reaches a piece first keeps it:
+   `landlady` and `boyfriend` survive, `ladybug`, `cowboy`, `busboy`,
+   `bellboy` and `boyhood` do not.
+
+   Banning compounds outright also works and costs far too much — a fifth of
+   the pool, which pushes the selection down into rarer vocabulary than the
+   words it was protecting. Measured at a top-20,000 frequency cap: banning all
+   compounds yields 1,658 words, one-per-piece yields 1,819.
 
    A unique short prefix is a **preference, not a rule**. BIP-39 guarantees
    unique four-letter prefixes so a seed phrase can be typed short; as a hard
@@ -159,4 +175,29 @@ They exist because reading the generated list is the only thing that finds
 `exclude-register.txt` is the clearest case: slang and brand names are *common*,
 so frequency actively argues for keeping them.
 
+`exclude-obscure.txt` is the largest of them and the hardest to justify by
+rule: about 450 words that are real, clean, distinct and that nobody would say
+— `epoxy`, `gaucho`, `ricotta`, `kismet`, `jalopy`, `wigwam`, `tawdry`,
+`monocle`, `varmint`, `powwow`. Frequency argues *for* keeping them, because
+one film needed the word once.
+
 They will not be complete. Read the output before adopting it.
+
+## What 2,048 words costs in familiarity
+
+Not every rule can be satisfied by common words, and it is worth knowing where
+the wall is. Holding everything else fixed, the largest list available if every
+word must fall within the top N of spoken English:
+
+| every word within | largest list |
+|---|---|
+| top 10,000 | 976 |
+| top 15,000 | 1,363 |
+| top 20,000 | 1,658 |
+| top 25,000 | 1,931 |
+| top 30,000 | 2,198 |
+
+So **2,048 words cannot all be common** — around the top 30,000 is the floor.
+The shipped list sits at a median rank near 10,000 with its rarest word around
+45,000. Wanting a list of only everyday words means wanting a list of about
+1,000, which is 10 bits, which is six words to an address instead of five.
