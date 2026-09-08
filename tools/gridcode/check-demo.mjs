@@ -28,8 +28,8 @@ if (JSON.parse(words).join('\n') !== listed.join('\n'))
 const src = `const WORDS = ${words};\n`
   + html.slice(html.indexOf('const INDEX = new Map'), html.indexOf('// --- map ---'))
   + '\nexport { encode, decode, resolveTail, cellSize, tileSize, covers, indices,'
-  + ' parseAddress, formatAddress, candidatesInBox, shortestInBox, decodeInBox,'
-  + ' MAX_CANDIDATES, RADIX, REFINE, CHECK, checkDigits, undigitsCheck, GLOBAL };';
+  + ' parseAddress, formatAddress, RADIX, CHECK, checkDigits, undigitsCheck,'
+  + ' GLOBAL };';
 const tmp = join(tmpdir(), `word-grid-check-${process.pid}.mjs`);
 writeFileSync(tmp, src);
 let mod;
@@ -46,13 +46,15 @@ if (G.div !== fixture.div) fail(`divisions: js ${G.div} vs py ${fixture.div}`);
 if (G.checks.join(',') !== fixture.checks.join(','))
   fail(`checks: js ${G.checks} vs py ${fixture.checks}`);
 if (G.check !== fixture.check) fail(`checksum size: js ${G.check} vs py ${fixture.check}`);
-if (mod.RADIX !== fixture.radix || mod.REFINE !== fixture.refine
-    || mod.CHECK !== fixture.check)
-  fail(`radix/refine/check: js ${[mod.RADIX, mod.REFINE, mod.CHECK]} vs py `
-    + `${[fixture.radix, fixture.refine, fixture.check]}`);
+if (mod.RADIX !== fixture.radix || mod.CHECK !== fixture.check)
+  fail(`radix/check: js ${[mod.RADIX, mod.CHECK]} vs py `
+    + `${[fixture.radix, fixture.check]}`);
 if (G.box.join(',') !== fixture.box.join(',')) fail(`box: js ${G.box} vs py ${fixture.box}`);
-if (mod.MAX_CANDIDATES !== fixture.max_candidates)
-  fail(`cap: js ${mod.MAX_CANDIDATES} vs py ${fixture.max_candidates}`);
+// Nothing may shorten against a region any more: that machinery is gone from
+// both ports, and a stray copy in one of them would be a silent divergence.
+for (const gone of ['candidatesInBox', 'shortestInBox', 'decodeInBox',
+                    'MAX_CANDIDATES', 'countryAt'])
+  if (gone in mod) fail(`${gone} still exists in the demo's codec`);
 if (G.maxWords !== fixture.max_words)
   fail(`length: js ${G.maxWords} vs py ${fixture.max_words}`);
 
@@ -95,37 +97,6 @@ for (const h of fixture.hopeless) {
   if (!refused) fail(`RESOLVED a hopeless tail .${h.words.join('.')} from ${h.ref}`);
 }
 
-// Filling them back in from a REGION instead: the country box. The window is
-// never part of an address, but both ports must search the SAME window, or the
-// same place would shorten by different amounts in each.
-for (const b of fixture.boxes) {
-  for (const p of b.points) {
-    const full = mod.encode(p.lat, p.lng, G.maxWords, G);
-    for (const [n, want] of Object.entries(p.search)) {
-      const { hits, searched } = mod.candidatesInBox(full.slice(-n), b.box, G);
-      if (searched !== want.searched)
-        fail(`${b.name} @${n}: js searched ${searched} vs py ${want.searched}`);
-      const got = hits === null ? null : hits.length;
-      if (got !== want.hits) fail(`${b.name} @${n}: js ${got} hits vs py ${want.hits}`);
-    }
-    const said = mod.shortestInBox(p.lat, p.lng, b.box, G);
-    if (said !== p.said)
-      fail(`${b.name} ${p.lat},${p.lng}: js says ${said} words, py says ${p.said}`);
-    // The cap is the safety property: never shorten against a window too wide
-    // for the check to screen. Both ports must draw that line in one place.
-    if (said < G.maxWords) {
-      const { searched } = mod.candidatesInBox(full.slice(-said), b.box, G);
-      if (searched > mod.MAX_CANDIDATES)
-        fail(`${b.name} ${p.lat},${p.lng}: shortened against ${searched} candidates, `
-          + `over the cap of ${mod.MAX_CANDIDATES}`);
-      const got = mod.decodeInBox(full.slice(-said), b.box, G);
-      const a = mod.indices(got[0], got[1], G), w = mod.indices(p.lat, p.lng, G);
-      if (a[0] !== w[0] || a[1] !== w[1])
-        fail(`${b.name} ${p.lat},${p.lng}: shortened form reads back elsewhere`);
-    }
-  }
-}
-
 // The leading separator is the whole notation for a tail, so parsing it back
 // has to survive the round trip in both ports.
 for (const [text, n, tail] of [['studio.scribble.critical', 3, false],
@@ -137,20 +108,13 @@ for (const [text, n, tail] of [['studio.scribble.critical', 3, false],
 }
 
 console.log(`demo codec vs python reference: ${fixture.points.length} points, `
-  + `${fixture.tails.length} tails, ${fixture.hopeless.length} hopeless, `
-  + `${fixture.boxes.length} country boxes `
-  + `(${fixture.boxes.reduce((n, b) => n + b.points.length, 0)} points)`);
+  + `${fixture.tails.length} tails, ${fixture.hopeless.length} hopeless`);
 if (bad) { console.error(`FAIL: ${bad} problem(s)`); process.exit(1); }
-// The five-word address has to survive the sixth word being added, or every
-// address already in circulation quietly became wrong.
-for (const c of fixture.points) {
-  const six = c.words[String(fixture.max_words)];
-  const five = c.words[String(fixture.max_words - 1)];
-  if (six.slice(0, five.length).join('.') !== five.join('.'))
-    fail(`the sixth word moved the first five at ${c.lat},${c.lng}`);
-  if (mod.checkDigits(mod.CHECK - 1, G.checks).length !== G.checks.length)
-    fail('checkDigits does not produce one digit per word');
-}
+// Check digits: one per word, and they round-trip. The sixth word is nothing
+// but check, so if these disagree the two ports disagree about the whole point
+// of the address.
+if (mod.checkDigits(mod.CHECK - 1, G.checks).length !== G.checks.length)
+  fail('checkDigits does not produce one digit per word');
 for (let i = 0; i < 500; i++) {
   const v = Math.floor(Math.random() * mod.CHECK);
   if (mod.undigitsCheck(mod.checkDigits(v, G.checks), G.checks) !== v)
@@ -158,4 +122,4 @@ for (let i = 0; i < 500; i++) {
 }
 
 console.log('OK: encodings match, truncation holds, checksums verify, '
-  + 'both kinds of shortening agree, the sixth word leaves the first five alone');
+  + 'tails resolve from a reference, and nothing shortens against a region');

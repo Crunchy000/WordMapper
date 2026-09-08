@@ -9,110 +9,57 @@ Experiments in encoding geographic coordinates as short, memorable word sequence
 ### `demos/word-grid.html`
 
 The scheme, live and deliberately bare: click anywhere on earth and the address
-sits on the map, nothing else. **Six everyday words name any point to 4.48 m,
-and catch a misheard one 99.9995 % of the time** — two words to a line, with the
+sits on the map, nothing else. **Six everyday words name any point to 2.99 m,
+and catch a misheard one 99.9988 % of the time** — two words to a line, with the
 last set apart because it does a different job: it moves the position not at all
 and is nothing but checksum.
 
-**The sixth word is additive.** Five words already reach 4.48 m; the sixth only
-takes a misheard word from 1-in-144 undetected to 1-in-186,624. The first five
-are byte-identical to the five-word scheme it replaced, so an address already
-written down is still valid and is upgraded, not replaced, by appending its
-sixth word.
+**One grid, one address for a place, one length.** There are no regional boxes
+and no scope to switch — there used to be, around Britain and Ireland and around
+Australia, and they are gone: a box has to be a rectangle, most of the world
+cannot be boxed without swallowing a neighbour, and each one gave a place a
+*second* address.
 
-Then the address *shortens*. The six words are drawn immediately, with no
-network involved; OpenStreetMap's reverse geocoder is asked which country the
-click landed in, and the leading words the country can stand in for are shown
-greyed rather than said. Two words to a line, because six on one line is a long
-thing to read back to someone and an easy one to lose your place in:
+**And six words, always.** There is nothing to shorten against: no country to
+consult, no region to search, and so no network call at all — the address is
+drawn the instant you click.
 
 ```
-Big Ben, United Kingdom          Luxembourg City
-  kilo.waitress.                   loyalty.papaya.
-  maintain.studio.                 attentive.popular.
-  scribble.critical                prospect.annoy
-  5 said                           4 said - a small box buys two
-
-Dublin, Ireland                  mid-Atlantic, no country
-  kilo.freedom.                    gallery.sparkle.
-  innermost.plastic.               crazy.year.
-  sweat.companion                  brush.juicy
-  4 said                           all 6
+kilo.waitress.
+maintain.table.
+glint.export     <- set apart: pure checksum
 ```
 
-Greyed words are the ones the country supplies. The last word is set apart
-because it does a different job: it moves the position not at all and is nothing
-but checksum.
+There used to be a country search, where a reverse geocoder's bounding box
+bought the leading word. It is gone, for three reasons that stack up.
 
-**One grid, one address for a place.** There are no regional boxes and no scope
-to switch. There used to be — a box around Britain and Ireland, another around
-Australia — and they are gone. A box has to be a rectangle, and most of the
-world cannot be boxed without swallowing a neighbour: Africa and Europe
-interleave across the Mediterranean, since Tunisia reaches further north than
-southern Spain, so no horizontal line separates them. Each box also gave a place
-a *second* address, and was coarser than the global grid it replaced (2.66 m
-over the UK against 4.48 m, and one word shorter). A country supplies the leading word instead, and
-does it without any rectangle being drawn by hand.
+**It cost detection, which is the one thing worth protecting.** A misheard word
+removes the true tile, so every candidate the box left was a fresh lottery
+against the same checksum, and a wrong word was caught `(1 − 1/CHECK)^k` of the
+time rather than `1 − 1/CHECK`. Saying the sixth word costs less than that.
 
-**A region is the other way to fill in a dropped leading word.** `resolve_tail()`
-needs a nearby *point* and takes the nearest tile; `candidates_in_box()` needs
-only a *region* and lets the checksum choose, trying every tile inside it.
+**It made the word count inconsistent** — the same country giving four words in
+one place and five in another, and the largest countries sitting right on the
+cap, shortening most of the time but not always. An address whose length you
+cannot predict is worse than one that is always six words.
 
-**How many words a window buys is one number: how many candidate tiles it
-holds.** Each *position* word is a base-36 digit on each axis, so one fewer word
-is 1,296 times as many tiles, and the check leaves one in 186,624 standing — a
-length works exactly when no *other* candidate survives, a Poisson zero at rate
-`(tiles − 1)/186,624`. Nothing about countries enters into it; a country is just
-a box someone else drew — and at this check strength **every country on earth
-buys a word, and the small ones buy two.**
+**And it needed a network call**, to a rate-limited service with a usage policy,
+for a scheme that otherwise works entirely offline.
 
-| country | box | tiles in the window | said | wrong word caught |
-|---|---|---|---|---|
-| Luxembourg | 4,700 km² | 1.0 | **four** — two words bought | 100 % |
-| Switzerland | 76,000 km² | 1.0 | **four** — two words bought | 99.8 % |
-| Ireland | 193,000 km² | 1.0 | **four** — two words bought | 99.8 % |
-| United Kingdom | 1.3 M km² | 3.6 | **five**, always | 100 % |
-| France | 1.28 M km² | 3.7 | **five**, always | 100 % |
-| Australia | 17.3 M km² | 45 | **five**, always | 100 % |
-| United States | 159 M km² | 404 | **five**, always | 99.7 % |
+Dropping *trailing* words still works and needs no context at all — each word
+narrows the area and the words already said never change. So does filling in
+dropped *leading* words from a nearby reference point, which tests exactly one
+candidate and so costs no detection at all. Only the region search is gone.
 
-**Shortening this way costs detection, and the cap is what bounds the cost.**
-When a word is misheard the true tile no longer matches, so every candidate in
-the window becomes a fresh lottery against the same checksum: a wrong word is
-caught only `(1 − 1/CHECK)^k` of the time.
-
-So the cap is **derived from the checksum** rather than written down — the most
-candidates that still leave `FLOOR` of the detection standing. At `FLOOR = 0.995`
-and a 186,624-value check that is **935 candidates**, against 6 when the check
-was 144. That is why Australia and the United States, refused outright before,
-now buy a word and still catch 99.7 %: under the old check the US window fell to
-6 %, where nearly every mishearing resolved *silently* to somewhere else in the
-country.
-
-`resolve_tail()` has no such loss: it takes the single nearest tile to the
-reference and tests that one candidate — one chance to be fooled rather than k —
-so it stays at 99.9995 %. That asymmetry is the real difference between the two
-ways of filling a dropped word back in.
-
-**The grid never moves.** The country is consulted when the address is *read*,
-as a search window; it is not part of the address, and nothing is bound to it. A
-border can be redrawn or a territory change hands and the words for a place are
-unchanged — a wrong window costs uniqueness, never correctness. Nominatim
-reports an antimeridian country inside out (west > east), which reads as most of
-the planet: a useless window, and a safe one — you get every word.
-
-Cells are square at every length: both axes get the same base-36 split at every
-word, so a cell's aspect is just the frame's, and the projection's standard
-parallel is chosen to make the projected world exactly square (`K = 1/√π`,
-55.654°). Equal-area throughout, so this is shape, not resolution.
-
-The geocoder is called at most once a second and cached by two-decimal-place
-coordinates, per that service's usage policy. The demo works without it: if the
-lookup fails, the five-word address is already on screen and stays there.
+Cells are square at every length: both axes get the same split at every word, so
+a cell's aspect is just the frame's, and the projection's standard parallel is
+chosen to make the projected world exactly square (`K = 1/√π`, 55.654°).
+Equal-area throughout, so this is shape, not resolution.
 
 Open the file directly in a browser: no build step, and no secure-context
 requirement, since SHA-256 is plain JavaScript rather than `crypto.subtle`. It
-loads Leaflet and OpenStreetMap tiles from a CDN, so it needs network access.
+loads Leaflet and map tiles from a CDN, but the address itself is computed
+entirely offline — nothing about it depends on the network.
 
 [bip39]: https://github.com/bitcoin/bips/blob/master/bip-0039/bip-0039-wordlists.md
 
@@ -133,8 +80,9 @@ re-run the workflow and it will publish.
 
 - [`docs/grid-scheme.md`](docs/grid-scheme.md) — the scheme: both directions of
   shortening, why the checksum makes shortening safe, how many words a search
-  window buys, why the prefix property is free in base-36 and was not in
-  binary, and why a checksum cannot live at every length.
+  why the prefix property is free in base-36 and was not in binary, why every
+  word can carry check and the checks multiply, and why a checksum cannot be
+  verified until the whole position is known.
 - [`docs/coverage.md`](docs/coverage.md) — the square-root law relating area to
   resolution, and the word-list vs address-length trade. Written for an earlier,
   UK-only version of the scheme; the arithmetic still holds.
@@ -160,8 +108,8 @@ about a phone line.
 
 **The list does not have to be a power of two**, and dropping that assumption is
 what pays for the resolution. Binary forced 1,024 words and a 10.8 m cell;
-36 × 36 is 1,296 words and 4.48 m, for the same five words said and a stronger
-check besides. 1,311 is the ceiling on A1–B2 graded vocabulary, so 1,296 is
+36 × 36 is 1,296 words and 2.99 m at six words, checked to one part in 82,944.
+1,311 is the ceiling on A1–B2 graded vocabulary, so 1,296 is
 close to everything the easy band has to give — BIP-39's 2,048 would carry more
 per word, but the largest phonetically clean list inside the top 10,000 words of
 English is 976, and 2,048 needs roughly the top 30,000. Four and a half metres

@@ -6,16 +6,17 @@ Setup: `npm install --prefix tools/gridcode`.
 
 ## One grid
 
-**Six everyday words name any point on earth to 4.48 m**, and a wrong one is caught 99.9995 % of the time, and that is the whole scheme.
-There is one grid, one address for a place, no scope to choose and nothing to
-switch.
+**Six everyday words name any point on earth to 2.99 m**, and a wrong one is
+caught 99.9988 % of the time. That is the whole scheme: one grid, one address
+for a place, one length, no scope to choose and nothing to switch.
 
 **The sixth word is pure checksum.** It moves the position not at all: five
-words already reach 4.48 m, and the sixth exists only to take a misheard word
-from 1-in-144 undetected to 1-in-186,624. It is therefore *additive* — the first
-five words are byte-identical to the five-word scheme this replaced, so an
-address already written down is still valid, still checked at 1 in 144, and is
-upgraded rather than replaced by appending its sixth word.
+words already reach 2.99 m, and the sixth exists only to take a misheard word
+from 1-in-64 undetected to 1-in-82,944.
+
+**And six words is what you always say.** There is no country to consult, no
+region to search, nothing to shorten against — see *There is nothing to shorten
+against*, below.
 
 There used to be regional boxes — the same grid mechanism over a smaller
 rectangle, reaching four words over Britain and Ireland, and four over
@@ -32,7 +33,7 @@ the Tiwi Islands and the Torres Strait — because Papua New Guinea reaches
 tip at 10.05° S.
 
 **A box was coarser than the grid it stood in for.** Four words over Britain was
-2.66 m; five words anywhere is 4.48 m, one word shorter. The continental boxes
+2.66 m; six words anywhere is 2.99 m and checked. The continental boxes
 were worse still — Asia came out at 31.6 m.
 
 **And a box gave a place a second address.** Two addresses for one spot is a
@@ -54,12 +55,19 @@ address is a prefix of a longer one.
 | 1 | `kilo` | 627 km square | — |
 | 2 | `kilo.waitress` | 17.4 km square | — |
 | 3 | `kilo.waitress.maintain` | 484 m square | — |
-| 4 | `kilo.waitress.maintain.studio` | 13.45 m square | — |
-| 5 | `kilo.waitress.maintain.studio.scribble` | **4.48 m square** | 1 in 144 |
-| 6 | `kilo.waitress.maintain.studio.scribble.critical` | **4.48 m square** | **1 in 186,624** |
+| 4 | `kilo.waitress.maintain.table` | 26.89 m square | — |
+| 5 | `kilo.waitress.maintain.table.glint` | **2.99 m square** | 1 in 64 |
+| 6 | `kilo.waitress.maintain.table.glint.export` | **2.99 m square** | **1 in 82,944** |
 
 The sixth word adds no precision, only certainty. Five words is the finest the
-grid goes; the sixth is whether you want the strong check with it.
+grid goes; the sixth is whether you want the strong check with it — and the
+answer is yes, which is why six is the address.
+
+Verification starts at five and not before, because **the checksum is over the
+whole position**: no part of it is determined until the whole position is, and
+four words stop one split short of full depth. Word four's spare values are dead
+weight at that length. That is the price of landing on 2.99 m rather than 3.36 m
+— see *Exactly three metres*, below.
 
 Every cell at every length is exactly square, because both axes get the same
 base-36 split at every word. Nothing arranges that; see *Why cells are square*.
@@ -73,11 +81,11 @@ of exactly one tile, and any accuracy better than half a tile pins it down.
 
 | Words said | Written | Ambiguity | Usable if the listener knows your position within |
 |---|---|---|---|
-| 6 | `kilo.waitress.maintain.studio.scribble.critical` | none | nothing at all |
-| 5 | `.waitress.maintain.studio.scribble.critical` | 627 km square | 314 km — which country |
-| 4 | `.maintain.studio.scribble.critical` | 17.4 km square | 8.7 km — which town |
-| 3 | `.studio.scribble.critical` | 484 m square | 242 m — which street |
-| 2 | `.scribble.critical` | 13.45 m square | 6.7 m — you can already see them |
+| 6 | `kilo.waitress.maintain.table.glint.export` | none | nothing at all |
+| 5 | `.waitress.maintain.table.glint.export` | 627 km square | 314 km — which country |
+| 4 | `.maintain.table.glint.export` | 17.4 km square | 8.7 km — which town |
+| 3 | `.table.glint.export` | 484 m square | 242 m — which street |
+| 2 | `.glint.export` | 26.89 m square | 13 m — you can already see them |
 
 One word said is not on the table: the last word carries no position at all, so
 on its own it leaves every cell on earth a candidate and there is nothing for a
@@ -93,102 +101,39 @@ same words become a global address the moment the context is written down.
 ### The checksum verifies the reconstruction
 
 This is what makes shortening safe rather than a leap of faith. The checksum —
-one of 186,624 values — covers the *whole* position, so when the missing coarse
+one of 82,944 values — covers the *whole* position, so when the missing coarse
 words are filled in from a reference point, guessing the wrong tile fails the
-check **99.9995 %** of the time. Measured at 99.2 % against references chosen at
-random from anywhere on earth.
+check **99.9988 %** of the time, measured against references chosen at random
+from anywhere on earth.
 
 So a tail that resolves is almost certainly the place meant, and a reference
 too far away to fill in the gap says so rather than answering confidently with
 the wrong place.
 
-### A region will do instead of a point
+### There is nothing to shorten against
 
 `resolve_tail()` needs a nearby *point*, and takes the nearest tile that fits.
-`candidates_in_box()` needs only a *region*, and lets the checksum choose: it
-tries every tile in the region and keeps the ones that pass. A country is such a
-region, and a reverse geocoder will hand you its bounding box along with its
-name — so "in the UK" can stand in for a word the way "near here" does.
+It tests exactly **one** candidate, so it costs no detection at all: one chance
+to be fooled, the same as reading the whole address.
 
-The two are the same information in different shapes. Both are a search window;
-one is centred on a point, the other is a rectangle someone else drew.
+There used to be a second way — a *region*, usually a country, whose bounding box
+a reverse geocoder would supply. It is gone, for reasons that stack up.
 
-**How many words a window buys is one number: how many candidate tiles it
-holds.** Each *position* word is a base-36 digit on each axis, so one word fewer
-is 1,296 times as many tiles, and the check leaves one in 186,624 standing. A
-length works exactly when no *other* candidate survives — a Poisson zero at rate
-`(tiles − 1)/186,624`. Over Britain:
+**It cost detection, which is the one thing worth protecting.** A misheard word
+removes the true tile, so every candidate the box leaves is a fresh lottery
+against the same checksum, and a wrong word was caught only `(1 − 1/CHECK)^k` of
+the time rather than `1 − 1/CHECK`. Saying the sixth word costs less than that.
 
-| Said | Tiles in the box | Survive the check |
-|---|---|---|
-| 4 | 4,234 | 1 |
-| 5 | 4 | 1 |
-| 6 | 1 | 1 |
+**It made the word count inconsistent.** The same country gave four words in one
+place and five in another, depending on where the box edges fell against the
+tile lattice — and the largest countries sat right on the cap, shortening most
+of the time but not always. An address whose length you cannot predict is worse
+than one that is always six words.
 
-The middle row is where the sixth word pays for itself. Under a 144-value check
-those same 4,234 tiles left about 30 survivors, so four words could not be read
-back at all; now the true point is the only one standing.
+**And it needed a network call**, to a service with a rate limit and a usage
+policy, for a scheme that otherwise works entirely offline.
 
-Nothing about countries enters into it; a country is just a box someone else
-drew, and its size is the whole story. Measured against the boxes Nominatim
-returns:
-
-| country | box | tiles in the window | said | wrong word caught |
-|---|---|---|---|---|
-| Luxembourg | 4,700 km² | 1.0 | **four** — two words bought | 100 % |
-| Switzerland | 76,000 km² | 1.0 | **four** — two words bought | 99.8 % |
-| Ireland | 193,000 km² | 1.0 | **four** — two words bought | 99.8 % |
-| United Kingdom | 1.3 M km² | 3.6 | **five**, always | 100 % |
-| France | 1.28 M km² | 3.7 | **five**, always | 100 % |
-| Australia | 17.3 M km² | 45 | **five**, always | 100 % |
-| United States | 159 M km² | 404 | **five**, always | 99.7 % |
-
-**Every country on earth now buys a word, and the small ones buy two.** Under a
-144-value check the cap was six candidates, which refused Australia and the
-United States outright and left Britain shortening only 97 % of the time. The
-sixth word moved the check three orders of magnitude and the cap with it, so a
-country-sized window stopped being a hard problem.
-
-**Shortening this way costs detection, and the cap is what bounds the cost.**
-When a word is misheard the true tile no longer matches, so every candidate in
-the window becomes a fresh lottery against the same checksum: a wrong word is
-caught only `(1 − 1/CHECK)^k` of the time.
-
-So the cap is **derived from the checksum** rather than written down — the most
-candidates that still leave `FLOOR` of the detection standing. At `FLOOR = 0.995`
-and a 186,624-value check that is **935 candidates**, against 6 when the check
-was 144. The United States, at 404, sits comfortably inside it and still catches
-99.7 %; under the old check the same window fell to 6 %, where nearly every
-mishearing resolved *silently* to somewhere else in the country.
-
-`shortest_in_box()` still refuses to buy a word above `MAX_CANDIDATES`, and
-`decode_in_box()` still refuses to read one — but at this check strength no
-country reaches it. What the cap now stops is the genuinely reckless case: a
-window two words further back, where the same box holds tens of millions.
-
-`resolve_tail()` has no such loss: it takes the single nearest tile to the
-reference and tests that one candidate — one chance to be fooled rather than k —
-so it stays at 99.9995 %. That asymmetry is the real difference between the two
-ways of filling a dropped word back in, and it now costs far less than it did.
-
-The tests assert the measured uniqueness against that Poisson prediction for
-each box, and measure the false-survivor rate directly by searching with a
-checksum that is deliberately *wrong* — counting the survivors of a real address
-no longer measures anything, because at 186,624 the only thing that passes is
-the true point.
-
-**The grid does not depend on the country.** The window is used when an address
-is *read*; it is not part of the address and nothing is bound to it. So a border
-can move, a territory can change hands, and the words for a place are unchanged
-— which is the property that makes this usable at all, since the alternative
-(binding a country code into the address) would make every disputed border a
-correctness problem for its neighbours too.
-
-A wrong window therefore costs uniqueness, never correctness: the point simply
-is not the only survivor, and the full address is said instead. Nominatim
-reports an antimeridian country inside out (west > east), which reads as most of
-the planet — a useless window, and a safe one.
-
+What it bought was a single word. Six words, always, is the trade.
 ## How the grid falls over the UK
 
 Luck rather than design, but useful luck: the whole UK bounding box spans only
@@ -196,23 +141,20 @@ Luck rather than design, but useful luck: the whole UK bounding box spans only
 south-west corner.
 
 ```
-London      kilo.waitress.maintain.studio.scribble.critical
-Manchester  kilo.sailor.unfold.fiction.visibly
-Cardiff     kilo.poetry.machine.volunteer.obvious
-Plymouth    keystroke.obtain.beauty.bedside.reproduce
-Edinburgh   kilo.professor.kilo.drink.mutual
-Belfast     kilo.groom.pedantic.inference.mischief
-Dublin      kilo.freedom.innermost.plastic.sweat
+London      kilo.waitress.maintain.table.glint.export
+Manchester  kilo.sailor.unfold.fragment.microwave.astonish
+Cardiff     kilo.poetry.machine.unpack.speculate.persuade
+Plymouth    keystroke.obtain.beauty.athletic.tiptoe.courtesy
+Edinburgh   kilo.professor.kilo.duration.dinosaur.gesture
+Belfast     kilo.groom.pedantic.interval.expand.statistic
+Dublin      kilo.freedom.innermost.picture.waterproof.historic
 ```
 
-So a British conversation drops the first word almost for free, and five words
-reach anywhere in the country. It also shows the catch: Plymouth falls on the
-other side of a seam, and near a seam the dropped word is not
-predictable from "we are both in Britain". That is precisely the case the
-checksum catches, rather than resolving quietly to the wrong place — and
-precisely why the country box search is the more reliable of the two ways to
-fill a dropped word back in, since it tries every candidate rather than
-assuming the nearest.
+This is a curiosity rather than a feature: nothing shortens against it. It also
+shows why it could not have been one. Plymouth falls on the other side of a
+seam, so "we are both in Britain" does not predict the first word — the case the
+checksum would have had to catch, and the reason a region search was never as
+safe as it looked.
 
 ## Why the prefix property is free
 
@@ -244,8 +186,8 @@ aspect is `πK²`, so `K = 1/√π` gives 1 — a standard parallel of 55.654°.
 | | 30° (before) | 55.654° (now) |
 |---|---|---|
 | frame | 34,667 × 14,713 km | 22,585 × 22,585 km |
-| 5-word cell | 3.43 × 5.83 m — 1.70 : 1 | **4.48 m square** |
-| 4-word cell | 10.3 × 17.5 m — 1.70 : 1 | **13.45 m square** |
+| 6-word cell | 2.29 × 3.89 m — 1.70 : 1 | **2.99 m square** |
+| 4-word cell | 20.6 × 35.1 m — 1.70 : 1 | **26.89 m square** |
 
 Cell *area* is untouched — the projection is equal-area, so only the shape
 changes and the resolution figures are the same.
@@ -267,42 +209,55 @@ of the checksum together:
 
 ```
 SPLITS = [36, 36, 36, 36, 3, 1]
-CHECKS = [ 1,  1,  1,  1, 144, 1296]      CHECK = 186,624
+CHECKS = [ 1,  1,  1,  4,  16, 1296]      CHECK = 82,944
 ```
 
-Words one to four split 36 × 36 and have nothing to spare. Word five refines
-3 × 3 and spends the other 144 values on check. **Word six splits 1 × 1: it
-moves the position not at all and is nothing but check.**
+Words one to three split 36 × 36 and have nothing to spare. Word four splits
+18 × 18 and word five 9 × 9, each keeping a little back. **Word six splits
+1 × 1: it moves the position not at all and is nothing but check.**
 
 That is why the sixth word is free of any cost in resolution, and why it is
 worth 1,296× rather than merely more. Only the *product* of the splits sets the
 cell size, so where the check lives across the words does not matter — but the
 checks multiply, so spreading them is how the check gets bigger than one word.
 
-The check digits are assigned **least significant first**, which is the whole of
-the backwards compatibility: word five gets `checksum % 144`, exactly what it
-carried when it was the last word. Big-endian would have moved word five and
-invalidated every address in circulation. And 144 divides 186,624, so the
-five-word check is a genuine *prefix* of the six-word one rather than a
-different function that happens to sit near it.
+The check digits are assigned **least significant first**, so each length's
+check modulus divides the next one's: a shorter address is verified more weakly
+rather than *differently*, and a longer one only ever strengthens it. Five words
+are checked at 1 in 64, six at the whole 82,944.
+
+### Exactly three metres
+
+Word five's refinement has to divide 36, so on its own it jumps 3 → 4 → 6 and
+the cell jumps 4.48 → 3.36 → 2.24 m, stepping over 3 m entirely. Landing on it
+means taking the last factor of two out of word **four** as well:
+36 × 36 × 36 × 18 × 9 = 7,558,272 divisions per axis, or 2.99 m.
+
+That is what costs the four-word length, which coarsens from 13.45 m to 26.89 m
+— and word four's spare values go to the checksum, which a four-word address
+cannot verify, because the checksum is over the whole position. Dead weight at
+that length, and the honest price of the round number.
 
 ### What the fifth word could have spent instead
 
-A whole fifth word of position would reach 37 cm, finer than anyone needs, so it
-splits only 3 × 3. The two multiply out to 1,296, and any square factorisation
-is available:
+Holding words one to four fixed, word five's split is the whole dial: it sets
+the cell size and, because the checks multiply out to `1296⁶ / divisions²`, the
+strength of the check at the same time. Every divisor of 36 is available:
 
-| Refine | Check values | Cell | Wrong word caught |
+| Word 5 splits | Cell | CHECK | Wrong word caught |
 |---|---|---|---|
-| 1 | 1,296 | 13.45 m | 99.92 % |
-| 2 | 324 | 6.72 m | 99.69 % |
-| **3** | **144** | **4.48 m** | **99.9995 %** |
-| 4 | 81 | 3.36 m | 98.77 % |
-| 6 | 36 | 2.24 m | 97.22 % |
+| 1 × 1 | 26.89 m | 6,718,464 | 99.999985 % |
+| 2 × 2 | 13.45 m | 1,679,616 | 99.99994 % |
+| 4 × 4 | 6.72 m | 419,904 | 99.99976 % |
+| 6 × 6 | 4.48 m | 186,624 | 99.99946 % |
+| **9 × 9** | **2.99 m** | **82,944** | **99.99879 %** |
+| 12 × 12 | 2.24 m | 46,656 | 99.99786 % |
+| 36 × 36 | 0.75 m | 5,184 | 99.98071 % |
 
-Shipped at **3 refine + 144 check**, which the sixth word then multiplies by
-1,296. For comparison, what3words is 3 m with no checksum at all — this is
-comparable *and* verified to one part in 186,624.
+Shipped at **9 × 9**, for 2.99 m. Every row is a straight trade of metres
+against certainty, and there is no free lunch anywhere on it: halving the cell
+quarters the check. For comparison, what3words is 3 m with no checksum at all —
+this is the same resolution *and* verified to one part in 82,944.
 
 A checksum genuinely cannot live at *every* length: it would have to occupy the
 values the next word needs for position. Reserving 144 of a word's 1,296 values
@@ -338,7 +293,7 @@ about a phone line.
 
 **The list does not have to be a power of two**, and dropping that assumption is
 what pays for the resolution. Binary forced 1,024 words and a 10.8 m cell;
-36 × 36 is 1,296 words and 4.48 m, for the same five words said and a stronger
+36 × 36 is 1,296 words and 2.99 m at six, for a stronger
 check than the 8 bits 1,024 could spare. 1,311 is the ceiling on A1–B2 graded
 vocabulary, so 1,296 is close to everything the easy band has to give.
 
@@ -352,7 +307,7 @@ Lambert cylindrical equal-area, standard parallel 55.654°. Area-true, so every
 cell at a given length has the same area anywhere on earth.
 
 Shape is not preserved. Cells stretch with latitude, so a five-word cell that is
-4.48 m square in the projection is the same area but much taller on the ground
+2.99 m square in the projection is the same area but much taller on the ground
 near the poles — up to about 100 m at extreme latitude. The tests measure
 round-trip error in the projection for that reason: ground distance is the wrong
 ruler for a claim about cells.
@@ -365,28 +320,26 @@ Every point on earth encodes, poles and both sides of the antimeridian
 included; every address is a prefix of the next longer one; round trip inside
 one cell diagonal at every length; no repeats at 2 and 3 words; dropping
 leading words and filling them back in from a reference inside the tile
-reconstructs exactly; a reference too far away is caught 99.2 %; a wrong word
-is rejected 99.2 % against a theoretical 99.9995 %; every cell exactly square at
-every length. An index is never negative and never past the end — the clamp is
-at both ends, since an unclamped negative would mint a plausible address for the
-wrong place.
+reconstructs exactly; a reference too far away is caught 99.9988 %; a wrong word
+is rejected 99.9988 %; every cell exactly square at every length. An index is
+never negative and never past the end — the clamp is at both ends, since an
+unclamped negative would mint a plausible address for the wrong place.
 
-**Shortening against a country box** — the true point is never lost from the
-search; uniqueness matches the Poisson law box by box; **no address is ever
-shortened against a window over the cap**, and a window over it is refused
-rather than answered from; a misheard word in a shortened address is still
-caught over 93 % of the time, measured per country; the shortened form reads
-back to the same cell; a box that excludes the point falls back to the full
-address; an inside-out box costs words, not correctness; the address itself does
-not depend on the box; a search too big to be worth running is refused rather
-than run.
+**The check at every length** — verification starts exactly where the position
+reaches full depth and not before, the full address is checked to one in
+`CHECK`, each length's check modulus divides the next one's, and check digits
+round-trip. And **no box search survives**: the test asserts that no function
+with `box` in its name, and neither `MAX_CANDIDATES` nor `FLOOR`, is left in the
+module at all.
 
 `node tools/gridcode/check-demo.mjs` runs the demo's own JavaScript port against
-a fixture generated from the Python reference, so the two cannot drift: the bit
-order, the axis split, the box, encodings at every length, truncation,
-checksums, tail resolution across the antimeridian, hopeless references, address
-parsing, and the box search — which cells it looks at, how many survive the
-check, and how short the address ends up.
+a fixture generated from the Python reference, so the two cannot drift: the
+splits, the per-word check budget, the box, encodings at every length,
+truncation, checksums, tail resolution across the antimeridian, hopeless
+references, check-digit round-trips, and address parsing. It also asserts that
+the demo carries no `candidatesInBox`, `shortestInBox`, `decodeInBox`,
+`MAX_CANDIDATES` or `countryAt` — a stray copy in one port would be a silent
+divergence.
 
 Both run in CI on every push.
 

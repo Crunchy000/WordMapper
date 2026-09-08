@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>WordMapper — locations as memorable words</title>
-<meta name="description" content="Encoding geographic coordinates as six everyday words on one global grid, with a misheard word caught 999,999 times in a million.">
+<meta name="description" content="Encoding geographic coordinates as six everyday words on one global grid, three metres square, with a misheard word caught 999,988 times in a million.">
 <style>
   :root {
     --bg: #fbfbf9; --fg: #1c1c1a; --muted: #5c5c56; --rule: #e2e2dc;
@@ -69,11 +69,11 @@
 <header>
   <div class="wrap">
     <h1>WordMapper</h1>
-    <p class="tagline">Six everyday words name any point on earth to four and a half metres, and catch a misheard one 99.9995&nbsp;% of the time. Say fewer for a coarser place &mdash; or, if whoever is listening already knows which country you are in, drop the leading word and keep every metre.</p>
-    <div class="addr">kilo<span>.</span>waitress<span>.</span>maintain<span>.</span>studio<span>.</span>scribble<span>.</span>critical</div>
-    <p class="note">Big Ben, to 4.48&nbsp;m, with a misheard word caught 999,999 times in a
-    million. The sixth word is pure checksum &mdash; it moves the position not at all, so the
-    first five are unchanged from when there were only five. Every word is graded
+    <p class="tagline">Six everyday words name any point on earth to three metres, and catch a misheard one 99.9988&nbsp;% of the time. Say fewer for a coarser place, or drop the leading ones if whoever is listening already knows roughly where you are &mdash; but six is the address.</p>
+    <div class="addr">kilo<span>.</span>waitress<span>.</span>maintain<span>.</span>table<span>.</span>glint<span>.</span>export</div>
+    <p class="note">Big Ben, to 2.99&nbsp;m, with a misheard word caught 999,988 times in a
+    million. The sixth word is pure checksum &mdash; it moves the position not at all, and
+    it is always said, because there is nothing to shorten against. Every word is graded
     CEFR&nbsp;A1&ndash;B2 &mdash; everyday English, nothing you would have to spell out.
     One grid over the whole earth, so this is <em>the</em> address for that spot; in the
     UK the first word can go unsaid.</p>
@@ -85,8 +85,8 @@
   <h2>Try it</h2>
   <p><a href="demos/word-grid.html">Open the grid</a> &mdash; click anywhere on earth and
   the address sits on the map, nothing else. The five words appear straight away with no
-  network involved; OpenStreetMap is then asked which country the click landed in, and
-  the words that country can stand in for go grey.</p>
+  network involved, and nothing is asked of anything: there is no country to consult and
+  no word to drop, so all six are always there.</p>
 
   <h2>There is one grid</h2>
   <p>No regional boxes, no scope to choose, nothing to switch. There used to be
@@ -103,9 +103,8 @@
 
   <p><strong>And every box gave a place a second address.</strong> A box was also
   <em>coarser</em> than the global grid it stood in for: four words over Britain was
-  2.66&nbsp;m, against 4.48&nbsp;m for five words anywhere &mdash; and it bought that with an unchecked address. What the box was really
-  selling was the leading word &mdash; and a country supplies that just as well,
-  without a rectangle drawn by hand. That is further down.</p>
+  2.66&nbsp;m, against 2.99&nbsp;m for six words anywhere &mdash; and it bought that with an
+  unchecked address.</p>
 
   <h2>Drop trailing words: coarser, needs no context</h2>
   <p>Each word narrows the area, and the words already said never change &mdash; every
@@ -118,9 +117,9 @@
       <tr><td class="num">1</td><td class="num">kilo</td><td class="num">627 &times; 627 km</td></tr>
       <tr><td class="num">2</td><td class="num">kilo.waitress</td><td class="num">17.4 &times; 17.4 km</td></tr>
       <tr><td class="num">3</td><td class="num">kilo.waitress.maintain</td><td class="num">484 &times; 484 m</td></tr>
-      <tr><td class="num">4</td><td class="num">kilo.waitress.maintain.studio</td><td class="num">13.45 &times; 13.45 m</td></tr>
-      <tr><td class="num">5</td><td class="num">kilo.waitress.maintain.studio.scribble</td><td class="num">4.48 &times; 4.48 m &mdash; checked 1 in 144</td></tr>
-      <tr><td class="num">6</td><td class="num">kilo.waitress.maintain.studio.scribble.critical</td><td class="num">4.48 &times; 4.48 m &mdash; <strong>checked 1 in 186,624</strong></td></tr>
+      <tr><td class="num">4</td><td class="num">kilo.waitress.maintain.table</td><td class="num">26.89 &times; 26.89 m</td></tr>
+      <tr><td class="num">5</td><td class="num">kilo.waitress.maintain.table.glint</td><td class="num">2.99 &times; 2.99 m &mdash; checked 1 in 64</td></tr>
+      <tr><td class="num">6</td><td class="num">kilo.waitress.maintain.table.glint.export</td><td class="num">2.99 &times; 2.99 m &mdash; <strong>checked 1 in 82,944</strong></td></tr>
     </tbody>
   </table>
   </div>
@@ -136,76 +135,50 @@
   <table>
     <thead><tr><th>Said</th><th>Written</th><th>Ambiguity</th><th>Needs the listener to know</th></tr></thead>
     <tbody>
-      <tr><td class="num">5</td><td class="num">.waitress.maintain.studio.scribble.critical</td><td class="num">627 &times; 627 km</td><td class="num">314 km &mdash; which country</td></tr>
-      <tr><td class="num">4</td><td class="num">.maintain.studio.scribble.critical</td><td class="num">17.4 &times; 17.4 km</td><td class="num">8.7 km &mdash; which town</td></tr>
-      <tr><td class="num">3</td><td class="num">.studio.scribble.critical</td><td class="num">484 &times; 484 m</td><td class="num">242 m &mdash; which street</td></tr>
-      <tr><td class="num">2</td><td class="num">.scribble.critical</td><td class="num">13.45 &times; 13.45 m</td><td class="num">6.7 m &mdash; which building</td></tr>
+      <tr><td class="num">5</td><td class="num">.waitress.maintain.table.glint.export</td><td class="num">627 &times; 627 km</td><td class="num">314 km &mdash; which country</td></tr>
+      <tr><td class="num">4</td><td class="num">.maintain.table.glint.export</td><td class="num">17.4 &times; 17.4 km</td><td class="num">8.7 km &mdash; which town</td></tr>
+      <tr><td class="num">3</td><td class="num">.table.glint.export</td><td class="num">484 &times; 484 m</td><td class="num">242 m &mdash; which street</td></tr>
+      <tr><td class="num">2</td><td class="num">.glint.export</td><td class="num">26.89 &times; 26.89 m</td><td class="num">13 m &mdash; which building</td></tr>
     </tbody>
   </table>
   </div>
 
   <p>The checksum is what makes this safe rather than a leap of faith. It is one of
-  186,624 values over the <em>whole</em> position, so when the missing coarse words are
+  82,944 values over the <em>whole</em> position, so when the missing coarse words are
   filled in from a reference point, guessing the wrong tile fails the check
-  <strong>99.9995&nbsp;%</strong> of the time. A reference too far away says so, rather than answering confidently with
+  <strong>99.9988&nbsp;%</strong> of the time. A reference too far away says so, rather than answering confidently with
   the wrong place.</p>
 
-  <p>It falls conveniently over the UK. The whole country spans only a handful of
-  distinct first words, so a British conversation drops the first word almost for free.
-  Not quite free near a seam, where two neighbouring towns start with different words
-  &mdash; which is precisely the case the checksum catches.</p>
+  <p>It falls conveniently over the UK: the whole country spans only nine distinct first
+  words. A curiosity rather than a feature &mdash; and it shows why it could never have been
+  one, since near a seam two neighbouring towns start with different words, so "we are both
+  in Britain" does not predict it.</p>
 
   <p class="note">Click anywhere to watch the address grow a word at a time.</p>
 
-  <h2>A country can supply them instead</h2>
-  <p>Filling a dropped word back in needs either a nearby <em>point</em> or a
-  <em>region</em>. A point takes the nearest tile that fits. A region hands the choice to
-  the checksum: every tile inside it is tried, and a wrong one survives only one time in
-  186,624. A country is such a region, and OpenStreetMap&rsquo;s reverse geocoder will hand you
-  its bounding box along with its name.</p>
+  <h2>There is nothing to shorten against</h2>
+  <p>Filling a dropped <em>leading</em> word back in needs a nearby <em>point</em>: take the
+  candidate nearest it. That tests exactly <strong>one</strong> candidate, so it costs no
+  detection at all &mdash; one chance to be fooled, the same as reading the whole address.</p>
 
-  <p><strong>How many words a window buys is one number: how many candidate tiles it
-  holds.</strong> Each word is a base-36 digit on each axis, so one word fewer is 1,296
-  times as many tiles. A length works exactly when no <em>other</em> candidate survives
-  the check &mdash; a Poisson zero at rate (tiles&nbsp;&minus;&nbsp;1)/186,624. Nothing about countries enters
-  into it; a country is just a box someone else drew.</p>
+  <p>There used to be a second way: a <em>region</em>, usually a country, whose bounding box
+  a reverse geocoder would supply. It is gone, for three reasons that stack up.</p>
 
-  <div class="scroll">
-  <table>
-    <thead><tr><th>Country</th><th>Box</th><th>Tiles</th><th>Said</th><th>Wrong word caught</th></tr></thead>
-    <tbody>
-      <tr><td>Luxembourg</td><td class="num">4,700 km&sup2;</td><td class="num">1.0</td><td><strong>four</strong> &mdash; two words bought</td><td class="num">100 %</td></tr>
-      <tr><td>Switzerland</td><td class="num">76,000 km&sup2;</td><td class="num">1.0</td><td><strong>four</strong> &mdash; two words bought</td><td class="num">99.8 %</td></tr>
-      <tr><td>Ireland</td><td class="num">193,000 km&sup2;</td><td class="num">1.0</td><td><strong>four</strong> &mdash; two words bought</td><td class="num">99.8 %</td></tr>
-      <tr><td>United Kingdom</td><td class="num">1.3 M km&sup2;</td><td class="num">3.6</td><td><strong>five</strong>, always</td><td class="num">100 %</td></tr>
-      <tr><td>France</td><td class="num">1.28 M km&sup2;</td><td class="num">3.7</td><td><strong>five</strong>, always</td><td class="num">100 %</td></tr>
-      <tr><td>Australia</td><td class="num">17.3 M km&sup2;</td><td class="num">45</td><td><strong>five</strong>, always</td><td class="num">100 %</td></tr>
-      <tr><td>United States</td><td class="num">159 M km&sup2;</td><td class="num">404</td><td><strong>five</strong>, always</td><td class="num">99.7 %</td></tr>
-    </tbody>
-  </table>
-  </div>
+  <p><strong>It cost detection, which is the one thing worth protecting.</strong> A misheard
+  word removes the true tile, so every candidate the box left was a fresh lottery against the
+  same checksum, and a wrong word was caught
+  (1&nbsp;&minus;&nbsp;1/82,944)<sup>k</sup> of the time rather than
+  1&nbsp;&minus;&nbsp;1/82,944. Saying the sixth word costs less than that.</p>
 
-  <p><strong>Shortening this way costs detection, and the cap is what bounds the
-  cost.</strong> When a word is misheard the true tile no longer matches, so every
-  candidate in the window becomes a fresh lottery against the same checksum: a
-  wrong word is caught only (1&nbsp;&minus;&nbsp;1/186,624)<sup>k</sup> of the time.</p>
+  <p><strong>It made the word count inconsistent.</strong> The same country gave four words
+  in one place and five in another, depending on where the box edges fell against the tile
+  lattice &mdash; and the largest countries sat right on the cap, shortening most of the time
+  but not always. An address whose length you cannot predict is worse than one that is always
+  six words.</p>
 
-  <p><strong>So the cap is derived from the checksum, not written down</strong> &mdash; the
-  most candidates that still leave 99.5&nbsp;% of the detection standing. At a 186,624-value
-  check that is <strong>935</strong>, where a 144-value check allowed only six. That is the
-  whole reason every country now buys a word: the United States window holds 404 candidates
-  and still catches 99.7&nbsp;%, where under the old check it fell to 6&nbsp;% and nearly
-  every mishearing resolved <em>silently</em> to somewhere else in the country.</p>
-
-  <p>Filling the word in from a nearby <em>point</em> has no such loss: it tests the single
-  nearest tile &mdash; one chance to be fooled rather than <em>k</em> &mdash; and stays at
-  99.9995&nbsp;%. That asymmetry is the real difference between the two ways of doing it.</p>
-
-  <p><strong>The grid never moves.</strong> The country is consulted when the address is
-  read, as a search window; it is not part of the address and nothing is bound to it. A
-  border can be redrawn, a territory can change hands, and the words for a place are
-  unchanged. The worst a wrong window can do is cost a word &mdash; the full five are
-  always correct, and are shown straight away, before any network call.</p>
+  <p><strong>And it needed a network call</strong>, to a rate-limited service with a usage
+  policy, for a scheme that otherwise works entirely offline. What it bought was a single
+  word. Six words, always, is the trade.</p>
 
   <h2>Cells are square</h2>
   <p>Both axes get the same base-36 split at every word, so a cell&rsquo;s aspect is just
@@ -213,7 +186,7 @@
   parallel is therefore chosen to make the projected world <strong>exactly square</strong>:
   its aspect is &pi;K&sup2;, so K&nbsp;=&nbsp;1/&radic;&pi; gives 1, at 55.654&deg;.</p>
   <p>So every length lands exactly square &mdash; 627&nbsp;km, 17.4&nbsp;km, 484&nbsp;m,
-  13.45&nbsp;m and 4.48&nbsp;m, all of them 1:1. The projection is equal-area, so this
+  26.89&nbsp;m and 2.99&nbsp;m, all of them 1:1. The projection is equal-area, so this
   changes the shape and not the resolution. Under the old binary layout this needed a
   greedy bit order and <em>still</em> left the odd lengths at 2:1; that penalty is simply
   gone.</p>
@@ -235,43 +208,51 @@
   <em>r</em>&sup2; of its 1,296 values for position and has 1296/<em>r</em>&sup2; left over.
   So the splits fix the resolution and the strength of the checksum together:</p>
 
-  <pre style="font-size:13px;overflow-x:auto">SPLITS = [36, 36, 36, 36,   3,    1]
-CHECKS = [ 1,  1,  1,  1, 144, 1296]   &rarr;  CHECK = 186,624</pre>
+  <pre style="font-size:13px;overflow-x:auto">SPLITS = [36, 36, 36, 18,   9,    1]
+CHECKS = [ 1,  1,  1,  4,  16, 1296]   &rarr;  CHECK = 82,944</pre>
 
-  <p>Words one to four split 36&nbsp;&times;&nbsp;36 and have nothing to spare. Word five
-  refines 3&nbsp;&times;&nbsp;3 and spends its other 144 values on check. <strong>Word six
-  splits 1&nbsp;&times;&nbsp;1: it moves the position not at all and is nothing but
-  check.</strong> That is why it costs no resolution, and why it is worth 1,296&times;
-  rather than merely more &mdash; only the <em>product</em> of the splits sets the cell size,
-  but the checks <em>multiply</em>.</p>
+  <p>Words one to three split 36&nbsp;&times;&nbsp;36 and have nothing to spare. Word four
+  splits 18&nbsp;&times;&nbsp;18 and word five 9&nbsp;&times;&nbsp;9, each keeping a little
+  back. <strong>Word six splits 1&nbsp;&times;&nbsp;1: it moves the position not at all and
+  is nothing but check.</strong> Only the <em>product</em> of the splits sets the cell size,
+  but the checks <em>multiply</em> &mdash; which is how the check gets far bigger than any one
+  word could hold.</p>
 
-  <p>The check digits are assigned least-significant-first, which is the whole of the
-  backwards compatibility: word five gets <code>checksum&nbsp;%&nbsp;144</code>, exactly
-  what it carried when it was the last word. And 144 divides 186,624, so the five-word
-  check is a genuine <em>prefix</em> of the six-word one rather than a different function
-  that happens to sit near it. Every address already written down is still valid.</p>
+  <p>Check digits are assigned least-significant-first, so each length's check modulus
+  divides the next one's: a shorter address is verified more weakly rather than
+  <em>differently</em>. Five words are checked at 1 in 64, six at the whole 82,944 &mdash;
+  and verification starts at five, not before, because <strong>the checksum is over the whole
+  position</strong> and four words stop one split short of full depth.</p>
 
-  <h3>What the fifth word could have spent instead</h3>
-  <p>A whole fifth word of position would reach 37 cm, finer than anyone needs, so it splits
-  only 3&nbsp;&times;&nbsp;3. The two multiply out to 1,296, and any square factorisation is
-  available:</p>
+  <h3>Exactly three metres</h3>
+  <p>Word five's split has to divide 36, so on its own it steps 3&nbsp;&rarr;&nbsp;4&nbsp;&rarr;&nbsp;6
+  and the cell steps 4.48&nbsp;&rarr;&nbsp;3.36&nbsp;&rarr;&nbsp;2.24&nbsp;m, straight over
+  3&nbsp;m. Landing on it means taking the last factor of two out of word <em>four</em> as
+  well &mdash; which is what costs the four-word length, coarsening it from 13.45&nbsp;m to
+  26.89&nbsp;m. That is the honest price of the round number.</p>
+
+  <p>Holding words one to four fixed, word five's split is the whole dial &mdash; it sets the
+  cell and the check together, and there is no free lunch anywhere on it: halving the cell
+  quarters the check.</p>
 
   <div class="scroll">
   <table>
-    <thead><tr><th>Refine</th><th>Check values</th><th>Cell</th><th>Wrong word caught</th></tr></thead>
+    <thead><tr><th>Word 5 splits</th><th>CHECK</th><th>Cell</th><th>Wrong word caught</th></tr></thead>
     <tbody>
-      <tr><td class="num">1</td><td class="num">1,296</td><td class="num">13.45 m</td><td class="num">99.92 %</td></tr>
-      <tr><td class="num">2</td><td class="num">324</td><td class="num">6.72 m</td><td class="num">99.69 %</td></tr>
-      <tr><td class="num">3</td><td class="num">144</td><td class="num"><strong>4.48 m</strong></td><td class="num"><strong>99.9995 %</strong></td></tr>
-      <tr><td class="num">4</td><td class="num">81</td><td class="num">3.36 m</td><td class="num">98.77 %</td></tr>
-      <tr><td class="num">6</td><td class="num">36</td><td class="num">2.24 m</td><td class="num">97.22 %</td></tr>
+      <tr><td class="num">1 &times; 1</td><td class="num">6,718,464</td><td class="num">26.89 m</td><td class="num">99.999985 %</td></tr>
+      <tr><td class="num">2 &times; 2</td><td class="num">1,679,616</td><td class="num">13.45 m</td><td class="num">99.99994 %</td></tr>
+      <tr><td class="num">4 &times; 4</td><td class="num">419,904</td><td class="num">6.72 m</td><td class="num">99.99976 %</td></tr>
+      <tr><td class="num">6 &times; 6</td><td class="num">186,624</td><td class="num">4.48 m</td><td class="num">99.99946 %</td></tr>
+      <tr><td class="num"><strong>9 &times; 9</strong></td><td class="num"><strong>82,944</strong></td><td class="num"><strong>2.99 m</strong></td><td class="num"><strong>99.99879 %</strong></td></tr>
+      <tr><td class="num">12 &times; 12</td><td class="num">46,656</td><td class="num">2.24 m</td><td class="num">99.99786 %</td></tr>
+      <tr><td class="num">36 &times; 36</td><td class="num">5,184</td><td class="num">0.75 m</td><td class="num">99.98071 %</td></tr>
     </tbody>
   </table>
   </div>
 
-  <p>Shipped at three refine plus a 144-value check, which the sixth word then multiplies
-  by 1,296. For comparison, what3words is 3 m with no checksum at all &mdash; this is
-  comparable <em>and</em> verified to one part in 186,624.</p>
+  <p>Shipped at 9&nbsp;&times;&nbsp;9, for 2.99&nbsp;m. For comparison, what3words is 3 m
+  with no checksum at all &mdash; this is the same resolution <em>and</em> verified to one
+  part in 82,944.</p>
   <p>A checksum genuinely cannot live at <em>every</em> length: it would have to occupy
   the values the next word needs for position, and reserving 144 of a word&rsquo;s 1,296
   at every length would take two words from 17&nbsp;km to 209&nbsp;km. Putting it in the
@@ -305,8 +286,8 @@ CHECKS = [ 1,  1,  1,  1, 144, 1296]   &rarr;  CHECK = 186,624</pre>
 
   <p><strong>The list does not have to be a power of two</strong>, and dropping that
   assumption is what pays for the resolution. Binary forced 1,024 words and a 10.8&nbsp;m
-  cell; 36&nbsp;&times;&nbsp;36 is 1,296 words and 4.48&nbsp;m, for the same five words
-  said and a stronger check besides. 1,311 is the ceiling on A1&ndash;B2 graded
+  cell; 36&nbsp;&times;&nbsp;36 is 1,296 words and 2.99&nbsp;m at six words, checked to one
+  part in 82,944. 1,311 is the ceiling on A1&ndash;B2 graded
   vocabulary, so 1,296 is close to everything the easy band has to give &mdash;
   BIP-39&rsquo;s 2,048 would carry more per word, but the largest phonetically clean list
   inside the top 10,000 words of English is 976. Four and a half metres is a parking

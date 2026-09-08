@@ -1,76 +1,60 @@
 #!/usr/bin/env python3
 """Word addresses from an easy-English word list, on one global grid.
 
-FIVE WORDS name any point on earth to 4.48 m:
+SIX WORDS name any point on earth to 2.99 m, and a misheard word is caught
+999,988 times in a million:
 
-    kilo.waitress.maintain.studio.scribble.critical
+    kilo.waitress.maintain.table.glint.export
 
 There is one grid and one address for a place. No regional boxes, no scope to
-choose, nothing to switch. A box has to be a rectangle and most of the world
-cannot be boxed without swallowing a neighbour, so the boxes that used to exist
-here bought a word at the cost of a hand-drawn edge and a second address for the
-same place. What replaced them is below.
+choose, nothing to switch, and NOTHING TO SHORTEN AGAINST. Six words is the
+address, everywhere, always.
 
-FOUR WORDS, WHERE SOMETHING ELSE SUPPLIES THE FIFTH. The leading words are the
-coarse ones, so they can go unsaid when whoever is listening can supply them.
-Two ways to do that:
+That last part used to be otherwise. A country could supply the leading word,
+which bought a word at the cost of a network call, an inconsistent word count
+(the same country giving four words here and five there), and -- the real
+objection -- DETECTION. A misheard word removes the true tile, so every
+candidate the country box leaves is a fresh lottery against the same checksum,
+and a wrong word was caught only ((CHECK-1)/CHECK)**k of the time instead of
+(CHECK-1)/CHECK. Saying the sixth word costs less than that and is the same
+every time.
 
-  - resolve_tail() takes a nearby POINT and picks the nearest tile that fits.
-  - candidates_in_box() takes a REGION and lets the checksum pick, trying every
-    tile inside it. A country is such a region, and a reverse geocoder will
-    hand you its bounding box along with its name.
+THE ADDRESS IS BASE-36. Each word subdivides a cell by its split, so a word is
+one digit of x, one of y and one of the checksum: value = (xd*split + yd)*check
++ chk. The list is RADIX**2 = 1296 words, and a power of two is not required --
+which is the whole point. Binary forced the list to 1024 and the cell to 10.8 m.
 
-The second is what turns five words into four in ordinary use: "in the UK" is
-worth a word.
+EVERY WORD CAN CARRY CHECK, AND THE CHECKS MULTIPLY. A word that splits its cell
+r x r keeps r**2 of its 1296 values for position and has 1296/r**2 left over, so
+SPLITS fixes the resolution and the strength of the checksum together:
 
-HOW MANY WORDS A WINDOW BUYS is one number: how many candidate tiles it holds.
-Each word is a base-36 digit on each axis, so one fewer word is 1296 times as
-many tiles, and the check leaves one in CHECK standing -- so a length works
-exactly when no OTHER candidate survives, a Poisson zero at rate
-(tiles - 1)/CHECK. Nothing about
-countries enters into it; a country is just a box someone else drew. Measured
-against the boxes Nominatim returns:
+    SPLITS = [36, 36, 36, 18,  9,    1]
+    CHECKS = [ 1,  1,  1,  4, 16, 1296]   ->  CHECK = 82,944
 
-    Luxembourg      4,700 km2     1.0 tiles   four, always
-    Switzerland    76,000 km2     1.0         four, always
-    Ireland       193,000 km2     1.0         four, always
-    United Kingdom  1.3 M km2     3.6         four, 97% of the time
-    France         1.28 M km2     3.5         four, 98% of the time
-    Australia      17.3 M km2      45         five -- over the cap
-    United States   159 M km2     405         five -- over the cap
+Words one to three have nothing to spare. Word four splits 18 x 18 and word five
+9 x 9, each keeping a little back. WORD SIX SPLITS 1 x 1: it moves the position
+not at all and is nothing but check. Only the PRODUCT of the splits sets the
+cell size, so where the check lives across the words does not matter -- but the
+checks MULTIPLY, which is how the check gets far bigger than any one word.
 
-AND IT COSTS DETECTION, which MAX_CANDIDATES is there to bound. A misheard word
-removes the true tile, so every candidate in the window is a fresh lottery
-against the same checksum and a wrong word is caught only ((CHECK-1)/CHECK)**k
-of the time -- 95.9% at the cap of 6, against 99.9995% for the full address.
-Uncapped, a window the size of Australia holds ~45 and falls to 73%, where a
-quarter of mishearings resolve SILENTLY to somewhere else in the country.
-resolve_tail() has no such loss: it tests the single nearest tile, one chance to
-be fooled rather than k.
+THE CHECKSUM IS OVER THE WHOLE POSITION, so no part of it can be verified until
+the whole position is known. Five words reach full depth (word six adds no
+position), so five words are checked at 1 in 64 and six at the whole 82,944.
+Below five the check digits are dead weight -- the price of 2.99 m.
 
-THE GRID DOES NOT DEPEND ON THE REGION. The window is used when an address is
-READ. It is not part of the address and nothing is bound to it, so a border can
-move or a territory change hands and the words for a place are unchanged. A
-wrong window costs uniqueness, never correctness: the point is simply not the
-only survivor, and the full five words are said instead.
+SHORTEN BY DROPPING TRAILING WORDS, for a coarser address that needs no context
+at all. Each word narrows the area and the words already said never change,
+because every address is a prefix of a longer one -- which in base-36 is free,
+since the leading digits do not depend on the trailing ones.
 
-SHORTEN THE OTHER WAY BY DROPPING TRAILING WORDS, for a coarser address that
-needs no context at all. Each word narrows the area and the words already said
-never change, because every address is a prefix of a longer one.
+    1 word   627 km      4 words   26.89 m
+    2 words   17.4 km    5 words    2.99 m   checked 1 in 64
+    3 words  484 m       6 words    2.99 m   checked 1 in 82,944
 
-THE LAST WORD DOES TWO JOBS. A whole final word of position would be finer than
-anyone needs, so the last word splits a cell only REFINE x REFINE and spends the
-rest of its LIST_SIZE values on a checksum over the whole position. Five words
-is terminal because a sixth would have to reinterpret the check.
-
-WHY THE PREFIX PROPERTY IS FREE. Each word is one base-36 digit of x and one of
-y, so a shorter address is literally the leading digits of a longer one and the
-leading digits do not depend on the trailing ones. The binary layout this
-replaced had to interleave the coordinates ONCE at full precision and truncate
-the bit string: deriving the interleave order per length does not work, because
-11 bits per word is odd, so 33 bits splits the axes 17/16 while 22 and 44 split
-evenly, and the three orders are unrelated sequences rather than prefixes of one
-another.
+DROPPING LEADING WORDS still works, given a reference POINT: resolve_tail()
+takes the candidate nearest the reference and tests that ONE candidate, so it
+costs no detection at all. That is what distinguishes it from the country search
+that used to be here, and why it survived the cull.
 """
 import collections, hashlib, math, os, sys
 
@@ -87,7 +71,6 @@ R = 6371008.8               # mean earth radius, metres
 # free. The frame is square and both axes get the same splits, so every cell at
 # every length is exactly square without anyone arranging it.
 RADIX = 36                  # a word that splits a cell RADIX x RADIX
-REFINE = 3                  # ...one that only refines it this far...
 LIST_SIZE = RADIX * RADIX                       # 1296 words
 # EVERY WORD CAN CARRY CHECK, AND THE CHECKS MULTIPLY. A word that splits its
 # cell r x r spends r**2 of its LIST_SIZE values on position and has
@@ -96,38 +79,27 @@ LIST_SIZE = RADIX * RADIX                       # 1296 words
 #
 # The last word splits 1 x 1: it moves the position not at all and is pure
 # check. That is the whole of what the sixth word is. It costs no resolution
-# and multiplies the check by 1296, taking a misheard word from 1-in-144
-# undetected to 1-in-186,624.
+# and multiplies the check by 1296.
 #
-# The first five entries are unchanged from when there were only five, and the
-# check digits are assigned least-significant-first, so word five still carries
-# exactly `checksum % 144` and THE FIRST FIVE WORDS OF AN ADDRESS ARE
-# BYTE-IDENTICAL to the five-word scheme this replaces. A five-word address
-# already in circulation is still valid, still checked at 1 in 186,624, and is
-# upgraded rather than replaced by appending its sixth word.
-SPLITS = [RADIX, RADIX, RADIX, RADIX, REFINE, 1]
+# Check digits are assigned least-significant-first, so each length's check
+# modulus divides the next one's: a shorter address is verified more weakly
+# rather than differently, and a longer one only ever strengthens it.
+# EXACTLY THREE METRES. Word five's refinement has to divide 36, so on its own
+# it jumps 3 -> 4 -> 6 and the cell jumps 4.48 -> 3.36 -> 2.24 m, stepping over
+# 3 m entirely. Getting there means taking the last factor of 2 out of word
+# FOUR as well: 36 x 36 x 36 x 18 x 9 = 7,558,272 divisions, or 2.99 m.
+#
+# That costs a four-word address, which coarsens from 13.45 m to 26.9 m -- and
+# it is the reason to think twice. Word four's spare values go to the checksum,
+# but the checksum is over the WHOLE position, so a four-word address cannot
+# verify them -- they are dead weight at that length and pay off only at five
+# words and six.
+SPLITS = [RADIX, RADIX, RADIX, RADIX // 2, RADIX // 4, 1]
 CHECKS = [LIST_SIZE // (r * r) for r in SPLITS]  # [1, 1, 1, 1, 144, 1296]
 CHECK = math.prod(CHECKS)                        # 186,624 values of checksum
 SEP = '.'
 TAIL_MARK = SEP             # a leading separator marks a context-dependent tail
 EPS = 1e-9                  # degrees of slack on a box edge, for float error
-# Searching a region trades DETECTION for a word, and this is the cap on that
-# trade. When a word is wrong the true tile is gone, so every candidate in the
-# window is a fresh lottery against the same checksum and a wrong word is caught
-# only ((CHECK-1)/CHECK)**k of the time.
-#
-# So the cap is DERIVED from the checksum rather than written down, as the most
-# candidates that still leave FLOOR of the detection standing. That matters
-# because the sixth word moved the checksum by three orders of magnitude: at a
-# 144-value check the honest cap was 6 candidates, which refused Australia and
-# the United States outright. At 186,624 it is over nine hundred, and every
-# country on earth can buy a word while giving up half a percent.
-#
-# resolve_tail() has no such loss either way: it tests the single nearest tile,
-# one chance to be fooled rather than k.
-FLOOR = 0.995               # never give up more than this much to buy a word
-MAX_CANDIDATES = int(math.log(FLOOR) / math.log(1 - 1 / CHECK))
-
 _HERE = os.path.dirname(os.path.abspath(__file__))
 
 # Lambert equal-area, with the standard parallel chosen so the PROJECTED WORLD
@@ -406,10 +378,14 @@ def decode(spoken, words, s=GLOBAL):
         xd.append(pos // s.splits[k]); yd.append(pos % s.splits[k]); cd.append(chk)
     splits = s.splits[:n]
     xi, yi = _undigits(xd, splits), _undigits(yd, splits)
-    # Only as much of the checksum as the words said actually carry. Below five
-    # words that is none of it, so a short address is unverified; at five it is
-    # one digit in 144; at six the whole 186,624.
-    modulus = math.prod(s.checks[:n])
+    # THE CHECKSUM IS OVER THE WHOLE POSITION, so no prefix of it is determined
+    # until the whole position is. A four-word address stops one split short of
+    # full depth, so word four's check digit -- which is a digit of a hash of
+    # digits it has not said yet -- cannot be verified from it, and is simply
+    # dead weight at that length. Five words reach full depth (word six splits
+    # 1 x 1 and adds no position), so five is where verification starts: 1 in
+    # 64 there, and the whole 82,944 at six.
+    modulus = math.prod(s.checks[:n]) if s.divisions(n) == s.div else 1
     if modulus > 1 and _checksum(xi, yi, s) % modulus != _undigits_check(cd, s.checks[:n]):
         raise ValueError('checksum failed - a word is wrong')
     return _from_indices(xi, yi, n, s)
@@ -493,89 +469,6 @@ def _clamp_lattice(known, period, ref, div):
     """The lattice point nearest the reference, kept inside [0, div)."""
     v = known + round((ref - known) / period) * period
     return min(max(v, known), known + (div - 1 - known) // period * period)
-
-
-def candidates_in_box(spoken, words, box, s=GLOBAL, limit=20000):
-    """Every point inside `box` whose address ends with these words and whose
-    checksum passes.
-
-    This is the other way to fill in dropped leading words. resolve_tail() needs
-    a reference POINT and takes the nearest candidate; this needs only a REGION
-    and lets the checksum choose, which is what a country name gives you. The
-    region is never part of the address -- it is a search window -- so getting it
-    slightly wrong costs uniqueness, never correctness.
-
-    Returns (candidates, searched). More than one candidate means the region is
-    too big to pin these words down; none means the words do not belong in it.
-    """
-    s = scope(s)
-    t = _tail_position(spoken, words, s)
-    known_x, known_y, period = t.known_x, t.known_y, t.period
-    if t.modulus == 1:
-        return [], 0
-    # The window, clipped to the scope's own box.
-    latMin, latMax, lngMin, lngMax = box
-    x0, y0 = project(latMin, normalise_lng(lngMin, s))
-    x1, y1 = project(latMax, normalise_lng(lngMax, s))
-    to_i = lambda v, lo, span: int((v - lo) / span * s.div)
-    lo_x = max(0, to_i(min(x0, x1), s.x0, s.xr))
-    hi_x = min(s.div - 1, to_i(max(x0, x1), s.x0, s.xr))
-    lo_y = max(0, to_i(min(y0, y1), s.y0, s.yr))
-    hi_y = min(s.div - 1, to_i(max(y0, y1), s.y0, s.yr))
-    xs = range(known_x + -(-(lo_x - known_x) // period) * period, hi_x + 1, period)
-    ys = range(known_y + -(-(lo_y - known_y) // period) * period, hi_y + 1, period)
-    count = len(xs) * len(ys)
-    if count > limit:
-        return None, count                  # too many to be worth enumerating
-    out = [_from_indices(xi, yi, s.max_words, s) for xi in xs for yi in ys
-           if (_checksum(xi, yi, s) // t.divisor) % t.modulus == t.check]
-    return out, count
-
-
-def shortest_in_box(lat, lng, words, box, s=GLOBAL):
-    """The fewest trailing words that identify this point uniquely inside `box`,
-    WITHOUT weakening the checksum past MAX_CANDIDATES.
-
-    Falls back to the full address when the region is too big -- either because
-    nothing shorter is unique, or because pinning it down would have cost more
-    detection than a word is worth. The second is what stops a country the size
-    of Australia from shortening: a window that big is unique often enough to be
-    tempting and weak enough to be wrong.
-    """
-    s = scope(s)
-    full = encode(lat, lng, words, s.max_words, s)
-    want = _indices(lat, lng, s)
-    for n in range(1, s.max_words):
-        # The cap doubles as the enumeration limit: a window it would reject is
-        # counted and dropped rather than searched, which is what keeps this
-        # cheap at the lengths that were never going to work.
-        got, searched = candidates_in_box(full[-n:], words, box, s, MAX_CANDIDATES)
-        if searched > MAX_CANDIDATES:
-            continue
-        if got and len(got) == 1 and _indices(got[0][0], got[0][1], s) == want:
-            return n, full[-n:]
-    return s.max_words, full
-
-
-def decode_in_box(spoken, words, box, s=GLOBAL):
-    """Resolve a shortened address inside a region, or refuse.
-
-    The reader's half of shortest_in_box(), and where the MAX_CANDIDATES cap
-    actually protects anyone: a window too big to search safely is refused
-    rather than answered from, so an address that should never have been
-    shortened cannot be read as though it had been.
-    """
-    got, searched = candidates_in_box(spoken, words, box, s, MAX_CANDIDATES)
-    if searched > MAX_CANDIDATES:
-        raise ValueError(
-            f'{searched} candidates in this region, more than the {MAX_CANDIDATES} '
-            f'a {CHECK}-value check can screen - say the whole address')
-    if not got:
-        raise ValueError('checksum failed - a word is wrong, or this address '
-                         'does not belong in this region')
-    if len(got) > 1:
-        raise ValueError(f'{len(got)} places here match - say one more word')
-    return got[0]
 
 
 def words_needed(lat, lng, near_lat, near_lng, words, s=GLOBAL):

@@ -1,26 +1,24 @@
 {
  "max_words": 6,
- "max_candidates": 935,
  "radix": 36,
- "refine": 3,
- "check": 186624,
+ "check": 82944,
  "splits": [
   36,
   36,
   36,
-  36,
-  3,
+  18,
+  9,
   1
  ],
  "checks": [
   1,
   1,
   1,
-  1,
-  144,
+  4,
+  16,
   1296
  ],
- "div": 5038848,
+ "div": 7558272,
  "box": [
   -90.0,
   90.0,
@@ -48,22 +46,22 @@
      "kilo",
      "waitress",
      "maintain",
-     "studio"
+     "table"
     ],
     "5": [
      "kilo",
      "waitress",
      "maintain",
-     "studio",
-     "scribble"
+     "table",
+     "glint"
     ],
     "6": [
      "kilo",
      "waitress",
      "maintain",
-     "studio",
-     "scribble",
-     "critical"
+     "table",
+     "glint",
+     "export"
     ]
    }
   },
@@ -87,22 +85,22 @@
      "kilo",
      "professor",
      "kilo",
-     "extra"
+     "fabulous"
     ],
     "5": [
      "kilo",
      "professor",
      "kilo",
-     "extra",
-     "observe"
+     "fabulous",
+     "chunk"
     ],
     "6": [
      "kilo",
      "professor",
      "kilo",
-     "extra",
-     "observe",
-     "bone"
+     "fabulous",
+     "chunk",
+     "change"
     ]
    }
   },
@@ -126,22 +124,22 @@
      "keystroke",
      "hurry",
      "hyphen",
-     "electron"
+     "equip"
     ],
     "5": [
      "keystroke",
      "hurry",
      "hyphen",
-     "electron",
-     "people"
+     "equip",
+     "dinosaur"
     ],
     "6": [
      "keystroke",
      "hurry",
      "hyphen",
-     "electron",
-     "people",
-     "spicy"
+     "equip",
+     "dinosaur",
+     "bicycle"
     ]
    }
   },
@@ -165,22 +163,22 @@
      "kilo",
      "freedom",
      "innermost",
-     "plastic"
+     "picture"
     ],
     "5": [
      "kilo",
      "freedom",
      "innermost",
-     "plastic",
-     "sweat"
+     "picture",
+     "waterproof"
     ],
     "6": [
      "kilo",
      "freedom",
      "innermost",
-     "plastic",
-     "sweat",
-     "companion"
+     "picture",
+     "waterproof",
+     "historic"
     ]
    }
   },
@@ -204,22 +202,22 @@
      "loyalty",
      "decline",
      "insert",
-     "stove"
+     "success"
     ],
     "5": [
      "loyalty",
      "decline",
      "insert",
-     "stove",
-     "footnote"
+     "success",
+     "bronze"
     ],
     "6": [
      "loyalty",
      "decline",
      "insert",
-     "stove",
-     "footnote",
-     "blackboard"
+     "success",
+     "bronze",
+     "prestige"
     ]
    }
   },
@@ -243,22 +241,22 @@
      "enhance",
      "objective",
      "patron",
-     "inspire"
+     "immigrant"
     ],
     "5": [
      "enhance",
      "objective",
      "patron",
-     "inspire",
-     "ethic"
+     "immigrant",
+     "people"
     ],
     "6": [
      "enhance",
      "objective",
      "patron",
-     "inspire",
-     "ethic",
-     "chair"
+     "immigrant",
+     "people",
+     "logo"
     ]
    }
   },
@@ -282,22 +280,22 @@
      "clean",
      "revolve",
      "athlete",
-     "routine"
+     "repay"
     ],
     "5": [
      "clean",
      "revolve",
      "athlete",
-     "routine",
-     "undergo"
+     "repay",
+     "underline"
     ],
     "6": [
      "clean",
      "revolve",
      "athlete",
-     "routine",
-     "undergo",
-     "commute"
+     "repay",
+     "underline",
+     "reprint"
     ]
    }
   },
@@ -321,22 +319,22 @@
      "obvious",
      "script",
      "humane",
-     "confess"
+     "coastal"
     ],
     "5": [
      "obvious",
      "script",
      "humane",
-     "confess",
-     "careful"
+     "coastal",
+     "neutral"
     ],
     "6": [
      "obvious",
      "script",
      "humane",
-     "confess",
-     "careful",
-     "unite"
+     "coastal",
+     "neutral",
+     "strategy"
     ]
    }
   },
@@ -360,22 +358,22 @@
      "truck",
      "cautious",
      "fireplace",
-     "regulate"
+     "resource"
     ],
     "5": [
      "truck",
      "cautious",
      "fireplace",
-     "regulate",
-     "exist"
+     "resource",
+     "applicant"
     ],
     "6": [
      "truck",
      "cautious",
      "fireplace",
-     "regulate",
-     "exist",
-     "clerk"
+     "resource",
+     "applicant",
+     "hungry"
     ]
    }
   },
@@ -399,22 +397,22 @@
      "signpost",
      "fragrance",
      "strange",
-     "wagon"
+     "untidy"
     ],
     "5": [
      "signpost",
      "fragrance",
      "strange",
-     "wagon",
-     "approach"
+     "untidy",
+     "imitate"
     ],
     "6": [
      "signpost",
      "fragrance",
      "strange",
-     "wagon",
-     "approach",
-     "justify"
+     "untidy",
+     "imitate",
+     "necklace"
     ]
    }
   },
@@ -438,22 +436,22 @@
      "website",
      "stimulate",
      "glint",
-     "atomic"
+     "bakery"
     ],
     "5": [
      "website",
      "stimulate",
      "glint",
-     "atomic",
-     "pink"
+     "bakery",
+     "export"
     ],
     "6": [
      "website",
      "stimulate",
      "glint",
-     "atomic",
-     "pink",
-     "invade"
+     "bakery",
+     "export",
+     "together"
     ]
    }
   },
@@ -477,22 +475,22 @@
      "achieve",
      "agree",
      "flat",
-     "various"
+     "volume"
     ],
     "5": [
      "achieve",
      "agree",
      "flat",
-     "various",
-     "liar"
+     "volume",
+     "ethic"
     ],
     "6": [
      "achieve",
      "agree",
      "flat",
-     "various",
-     "liar",
-     "dictator"
+     "volume",
+     "ethic",
+     "replica"
     ]
    }
   },
@@ -516,22 +514,22 @@
      "ignorance",
      "song",
      "absolute",
-     "cute"
+     "debate"
     ],
     "5": [
      "ignorance",
      "song",
      "absolute",
-     "cute",
-     "nonsense"
+     "debate",
+     "exploit"
     ],
     "6": [
      "ignorance",
      "song",
      "absolute",
-     "cute",
-     "nonsense",
-     "engage"
+     "debate",
+     "exploit",
+     "culture"
     ]
    }
   },
@@ -562,15 +560,15 @@
      "abandon",
      "abandon",
      "abandon",
-     "ambulance"
+     "absorb"
     ],
     "6": [
      "library",
      "abandon",
      "abandon",
      "abandon",
-     "ambulance",
-     "hardware"
+     "absorb",
+     "startle"
     ]
    }
   },
@@ -594,22 +592,22 @@
      "fume",
      "work",
      "work",
-     "wardrobe"
+     "useful"
     ],
     "5": [
      "fume",
      "work",
      "work",
-     "wardrobe",
-     "venture"
+     "useful",
+     "woman"
     ],
     "6": [
      "fume",
      "work",
      "work",
-     "wardrobe",
-     "venture",
-     "agency"
+     "useful",
+     "woman",
+     "groom"
     ]
    }
   },
@@ -633,22 +631,22 @@
      "large",
      "abandon",
      "abandon",
-     "abandon"
+     "abolish"
     ],
     "5": [
      "large",
      "abandon",
      "abandon",
-     "abandon",
-     "battery"
+     "abolish",
+     "absorb"
     ],
     "6": [
      "large",
      "abandon",
      "abandon",
-     "abandon",
-     "battery",
-     "ambulance"
+     "abolish",
+     "absorb",
+     "literal"
     ]
    }
   },
@@ -672,22 +670,22 @@
      "lyric",
      "alert",
      "alert",
-     "alert"
+     "arrive"
     ],
     "5": [
      "lyric",
      "alert",
      "alert",
-     "alert",
-     "explain"
+     "arrive",
+     "border"
     ],
     "6": [
      "lyric",
      "alert",
      "alert",
-     "alert",
-     "explain",
-     "parallel"
+     "arrive",
+     "border",
+     "pineapple"
     ]
    }
   },
@@ -711,22 +709,22 @@
      "width",
      "volunteer",
      "volunteer",
-     "volunteer"
+     "unlock"
     ],
     "5": [
      "width",
      "volunteer",
      "volunteer",
-     "volunteer",
-     "pupil"
+     "unlock",
+     "thrill"
     ],
     "6": [
      "width",
      "volunteer",
      "volunteer",
-     "volunteer",
-     "pupil",
-     "advance"
+     "unlock",
+     "thrill",
+     "alert"
     ]
    }
   },
@@ -750,22 +748,22 @@
      "admire",
      "abandon",
      "abandon",
-     "abandon"
+     "about"
     ],
     "5": [
      "admire",
      "abandon",
      "abandon",
-     "abandon",
-     "airport"
+     "about",
+     "achieve"
     ],
     "6": [
      "admire",
      "abandon",
      "abandon",
-     "abandon",
-     "airport",
-     "tumble"
+     "about",
+     "achieve",
+     "fantastic"
     ]
    }
   },
@@ -789,22 +787,22 @@
      "zoom",
      "zoom",
      "zoom",
-     "zoom"
+     "yogurt"
     ],
     "5": [
      "zoom",
      "zoom",
      "zoom",
-     "zoom",
-     "motivate"
+     "yogurt",
+     "sculpture"
     ],
     "6": [
      "zoom",
      "zoom",
      "zoom",
-     "zoom",
-     "motivate",
-     "synonym"
+     "yogurt",
+     "sculpture",
+     "presence"
     ]
    }
   }
@@ -819,13 +817,13 @@
     -0.1246
    ],
    "words": [
-    "studio",
-    "scribble",
-    "critical"
+    "table",
+    "glint",
+    "export"
    ],
    "resolved": [
-    51.50072067083656,
-    -0.12456418609966136
+    51.50072675957683,
+    -0.12457609358330046
    ]
   },
   {
@@ -838,13 +836,13 @@
    ],
    "words": [
     "maintain",
-    "studio",
-    "scribble",
-    "critical"
+    "table",
+    "glint",
+    "export"
    ],
    "resolved": [
-    51.50072067083656,
-    -0.12456418609966136
+    51.50072675957683,
+    -0.12457609358330046
    ]
   },
   {
@@ -858,13 +856,13 @@
    "words": [
     "waitress",
     "maintain",
-    "studio",
-    "scribble",
-    "critical"
+    "table",
+    "glint",
+    "export"
    ],
    "resolved": [
-    51.50072067083656,
-    -0.12456418609966136
+    51.50072675957683,
+    -0.12457609358330046
    ]
   },
   {
@@ -877,13 +875,13 @@
    ],
    "words": [
     "arrest",
-    "elephant",
-    "microphone",
-    "salsa"
+    "envelope",
+    "ethic",
+    "bilingual"
    ],
    "resolved": [
-    -16.50001006095903,
-    -179.99003343621402
+    -16.499998201785623,
+    -179.9900215287304
    ]
   },
   {
@@ -896,13 +894,13 @@
    ],
    "words": [
     "arrest",
-    "elephant",
-    "microphone",
-    "salsa"
+    "envelope",
+    "ethic",
+    "bilingual"
    ],
    "resolved": [
-    -16.50001006095903,
-    -179.99003343621402
+    -16.499998201785623,
+    -179.9900215287304
    ]
   }
  ],
@@ -915,9 +913,9 @@
    ],
    "words": [
     "maintain",
-    "studio",
-    "scribble",
-    "critical"
+    "table",
+    "glint",
+    "export"
    ]
   },
   {
@@ -927,229 +925,9 @@
     2.3522
    ],
    "words": [
-    "studio",
-    "scribble",
-    "critical"
-   ]
-  }
- ],
- "boxes": [
-  {
-   "name": "United Kingdom",
-   "box": [
-    49.674,
-    61.061,
-    -14.015,
-    2.096
-   ],
-   "points": [
-    {
-     "lat": 51.50072,
-     "lng": -0.12456,
-     "said": 5,
-     "search": {
-      "4": {
-       "hits": 1,
-       "searched": 4234
-      },
-      "5": {
-       "hits": 1,
-       "searched": 4
-      },
-      "6": {
-       "hits": 1,
-       "searched": 1
-      }
-     }
-    },
-    {
-     "lat": 55.94859,
-     "lng": -3.19951,
-     "said": 5,
-     "search": {
-      "4": {
-       "hits": 1,
-       "searched": 4234
-      },
-      "5": {
-       "hits": 1,
-       "searched": 4
-      },
-      "6": {
-       "hits": 1,
-       "searched": 1
-      }
-     }
-    },
-    {
-     "lat": 54.5973,
-     "lng": -5.9301,
-     "said": 5,
-     "search": {
-      "4": {
-       "hits": 1,
-       "searched": 4234
-      },
-      "5": {
-       "hits": 1,
-       "searched": 2
-      },
-      "6": {
-       "hits": 1,
-       "searched": 1
-      }
-     }
-    }
-   ]
-  },
-  {
-   "name": "Ireland",
-   "box": [
-    51.222,
-    55.636,
-    -11.017,
-    -5.066
-   ],
-   "points": [
-    {
-     "lat": 53.3498,
-     "lng": -6.2603,
-     "said": 4,
-     "search": {
-      "4": {
-       "hits": 1,
-       "searched": 660
-      },
-      "5": {
-       "hits": 1,
-       "searched": 1
-      },
-      "6": {
-       "hits": 1,
-       "searched": 1
-      }
-     }
-    }
-   ]
-  },
-  {
-   "name": "Switzerland",
-   "box": [
-    45.818,
-    47.808,
-    5.956,
-    10.492
-   ],
-   "points": [
-    {
-     "lat": 46.948,
-     "lng": 7.4474,
-     "said": 4,
-     "search": {
-      "4": {
-       "hits": 1,
-       "searched": 240
-      },
-      "5": {
-       "hits": 1,
-       "searched": 1
-      },
-      "6": {
-       "hits": 1,
-       "searched": 1
-      }
-     }
-    }
-   ]
-  },
-  {
-   "name": "Australia",
-   "box": [
-    -43.644,
-    -9.221,
-    112.921,
-    159.109
-   ],
-   "points": [
-    {
-     "lat": -33.8688,
-     "lng": 151.2093,
-     "said": 5,
-     "search": {
-      "4": {
-       "hits": null,
-       "searched": 57104
-      },
-      "5": {
-       "hits": 1,
-       "searched": 40
-      },
-      "6": {
-       "hits": 1,
-       "searched": 1
-      }
-     }
-    }
-   ]
-  },
-  {
-   "name": "France",
-   "box": [
-    41.303,
-    51.124,
-    -5.559,
-    9.662
-   ],
-   "points": [
-    {
-     "lat": 51.50072,
-     "lng": -0.12456,
-     "said": 6,
-     "search": {
-      "4": {
-       "hits": 0,
-       "searched": 4235
-      },
-      "5": {
-       "hits": 0,
-       "searched": 2
-      },
-      "6": {
-       "hits": 0,
-       "searched": 0
-      }
-     }
-    }
-   ]
-  },
-  {
-   "name": "Fiji",
-   "box": [
-    -20.677,
-    -12.48,
-    176.909,
-    -178.144
-   ],
-   "points": [
-    {
-     "lat": -18.1416,
-     "lng": 178.4419,
-     "said": 6,
-     "search": {
-      "4": {
-       "hits": null,
-       "searched": 113742
-      },
-      "5": {
-       "hits": 0,
-       "searched": 70
-      },
-      "6": {
-       "hits": 0,
-       "searched": 0
-      }
-     }
-    }
+    "table",
+    "glint",
+    "export"
    ]
   }
  ]

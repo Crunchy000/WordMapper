@@ -27,9 +27,6 @@
                        1px 0 3px #fff, -1px 0 3px #fff, 0 -1px 3px #fff; }
   #addr .row { white-space: pre; }
   #addr .w { color: #16171a; font-weight: 700; white-space: pre; }
-  /* Words the country supplies: shown, not hidden, so it is obvious what is
-     standing in for what. */
-  #addr .w.dim { color: #b9b9b2; font-weight: 400; }
   /* The last word is set apart because it does a different job: it moves the
      position not at all and is nothing but checksum. */
   #addr .w.chk { color: #1a5c4a; font-style: italic;
@@ -80,7 +77,6 @@ const K = 1 / Math.sqrt(Math.PI);
 // which is the whole point. Binary forced the list to 1024 and the cell to
 // 10.8 m; 36 x 36 is 1296 words and 4.5 m, for the same five words said.
 const RADIX = 36;                 // a word that splits a cell RADIX x RADIX
-const REFINE = 3;                 // ...one that only refines it this far...
 const LIST_SIZE = RADIX * RADIX;                    // 1296 words
 // EVERY WORD CAN CARRY CHECK, AND THE CHECKS MULTIPLY. A word that splits its
 // cell r x r keeps r*r of its LIST_SIZE values for position and has
@@ -89,11 +85,23 @@ const LIST_SIZE = RADIX * RADIX;                    // 1296 words
 //
 // The last word splits 1 x 1: it moves the position not at all and is pure
 // check. That is the whole of the sixth word. It costs no resolution and
-// multiplies the check by 1296, taking a misheard word from 1-in-144 undetected
-// to 1-in-186,624. Check digits are assigned least-significant-first, so word
-// five still carries exactly `checksum % 144` and THE FIRST FIVE WORDS ARE
-// BYTE-IDENTICAL to the five-word scheme this replaces.
-const SPLITS = [RADIX, RADIX, RADIX, RADIX, REFINE, 1];
+// multiplies the check by 1296.
+//
+// Check digits are assigned least-significant-first, so each length's check
+// modulus divides the next one's: a shorter address is verified more weakly
+// rather than differently, and a longer one only ever strengthens it.
+//
+// EXACTLY THREE METRES. Word five's refinement has to divide 36, so on its own
+// it jumps 3 -> 4 -> 6 and the cell jumps 4.48 -> 3.36 -> 2.24 m, stepping over
+// 3 m entirely. Getting there means taking the last factor of 2 out of word
+// FOUR as well: 36 x 36 x 36 x 18 x 9 = 7,558,272 divisions, or 2.99 m.
+//
+// That costs a four-word address, which coarsens from 13.45 m to 26.9 m -- and
+// it is the reason to think twice. Word four's spare values go to the checksum,
+// but the checksum is over the WHOLE position, so a four-word address cannot
+// verify them -- they are dead weight at that length and pay off only at five
+// words and six.
+const SPLITS = [RADIX, RADIX, RADIX, RADIX / 2, RADIX / 4, 1];
 const CHECKS = SPLITS.map((r) => LIST_SIZE / (r * r));   // [1,1,1,1,144,1296]
 const CHECK = CHECKS.reduce((a, b) => a * b, 1);         // 186,624
 const SEP = '.';
@@ -312,9 +320,13 @@ function decode(spoken, sc) {
   });
   const splits = sc.splits.slice(0, n);
   const xi = undigits(xd, splits), yi = undigits(yd, splits);
-  // Only as much of the checksum as the words said actually carry: none below
-  // five words, one digit in 144 at five, the whole 186,624 at six.
-  const modulus = prod(sc.checks.slice(0, n));
+  // THE CHECKSUM IS OVER THE WHOLE POSITION, so no prefix of it is determined
+  // until the whole position is. A four-word address stops one split short of
+  // full depth, so word four's check digit -- a digit of a hash of digits it
+  // has not said yet -- cannot be verified from it. Five words reach full depth
+  // (word six splits 1 x 1 and adds no position), so five is where verification
+  // starts: 1 in 64 there, and the whole 82,944 at six.
+  const modulus = sc.divisions(n) === sc.div ? prod(sc.checks.slice(0, n)) : 1;
   if (modulus > 1 && checksum(xi, yi) % modulus !== undigitsCheck(cd, sc.checks.slice(0, n)))
     throw new Error('checksum failed - a word is wrong');
   return fromIndices(xi, yi, n, sc);
@@ -407,121 +419,6 @@ function parseAddress(text) {
 }
 
 
-// --- the country, from OpenStreetMap ---------------------------------------
-// Nominatim's reverse geocoder returns the country AND its bounding box, which
-// is all this needs: the box is only a search window, never part of an address.
-//
-// The grid does not depend on any of this. The five-word address is computed
-// and shown offline, immediately; the lookup only ever SHORTENS it. If the
-// network is down, or the country moves, or a border is redrawn, the five-word
-// address is unchanged and still correct.
-const GEOCODER = 'https://nominatim.openstreetmap.org/reverse';
-const cache = new Map();
-let lastCall = 0;
-
-async function countryAt(lat, lng) {
-  const key = `${lat.toFixed(2)},${lng.toFixed(2)}`;
-  if (cache.has(key)) return cache.get(key);
-  // Nominatim asks for at most one request a second, and for callers to
-  // identify themselves. A browser cannot set User-Agent, so the Referer this
-  // page sends is the identification -- which is what their policy expects of a
-  // web app. Results are cached by two decimal places, about a kilometre, so
-  // clicking around one place asks once.
-  const wait = Math.max(0, 1100 - (Date.now() - lastCall));
-  if (wait) await new Promise((r) => setTimeout(r, wait));
-  lastCall = Date.now();
-  const url = `${GEOCODER}?lat=${lat}&lon=${lng}&format=jsonv2&zoom=3`;
-  const res = await fetch(url, { headers: { Accept: 'application/json' } });
-  if (!res.ok) throw new Error(`geocoder returned ${res.status}`);
-  const d = await res.json();
-  const bb = (d.boundingbox || []).map(Number);      // [south, north, west, east]
-  const name = (d.address && d.address.country) || null;
-  const out = (name && bb.length === 4 && bb.every(Number.isFinite))
-    ? { name, box: bb } : null;
-  cache.set(key, out);
-  return out;
-}
-
-// --- shortening -------------------------------------------------------------
-// Every point inside the box whose address ends with these words and whose
-// checksum passes. The country picks the window; the checksum picks the answer.
-function candidatesInBox(tail, box, sc, limit = 20000) {
-  const t = tailPosition(tail, sc);
-  const { knownX, knownY, period } = t;
-  if (t.modulus === 1) return { hits: [], searched: 0 };
-  const [south, north, west, east] = box;
-  const [xa, ya] = project(south, normaliseLng(west, sc));
-  const [xb, yb] = project(north, normaliseLng(east, sc));
-  const toI = (v, lo, span) => Math.floor((v - lo) / span * sc.div);
-  const loX = Math.max(0, toI(Math.min(xa, xb), sc.x0, sc.xr));
-  const hiX = Math.min(sc.div - 1, toI(Math.max(xa, xb), sc.x0, sc.xr));
-  const loY = Math.max(0, toI(Math.min(ya, yb), sc.y0, sc.yr));
-  const hiY = Math.min(sc.div - 1, toI(Math.max(ya, yb), sc.y0, sc.yr));
-  const firstX = knownX + Math.ceil((loX - knownX) / period) * period;
-  const firstY = knownY + Math.ceil((loY - knownY) / period) * period;
-  const nx = Math.max(0, Math.floor((hiX - firstX) / period) + 1);
-  const ny = Math.max(0, Math.floor((hiY - firstY) / period) + 1);
-  if (nx * ny > limit) return { hits: null, searched: nx * ny };
-  const hits = [];
-  for (let xi = firstX; xi <= hiX; xi += period) {
-    for (let yi = firstY; yi <= hiY; yi += period) {
-      if (Math.floor(checksum(xi, yi) / t.divisor) % t.modulus === t.check)
-        hits.push(fromIndices(xi, yi, sc.maxWords, sc));
-    }
-  }
-  return { hits, searched: nx * ny };
-}
-
-// Searching a region trades DETECTION for a word, and MAX_CANDIDATES is the cap
-// on that trade. When a word is wrong the true tile is gone, so every candidate
-// in the window is a fresh lottery against the same checksum and a wrong word
-// is caught only ((CHECK-1)/CHECK)**k of the time.
-//
-// So the cap is DERIVED from the checksum rather than written down: the most
-// candidates that still leave FLOOR of the detection standing. The sixth word
-// moved the check by three orders of magnitude and the cap with it -- at 144
-// the honest cap was 6, which refused Australia and the United States outright;
-// at 186,624 it is over nine hundred and every country on earth buys a word.
-//
-// resolveTail() has no such loss either way: it tests the single nearest tile,
-// one chance to be fooled rather than k.
-const FLOOR = 0.995;
-const MAX_CANDIDATES = Math.floor(Math.log(FLOOR) / Math.log(1 - 1 / CHECK));
-
-// The fewest trailing words that identify this point uniquely inside the box
-// WITHOUT weakening the check past that cap. The cap doubles as the enumeration
-// limit, so a window it would reject is counted and dropped rather than
-// searched.
-function shortestInBox(lat, lng, box, sc) {
-  const full = encode(lat, lng, sc.maxWords, sc);
-  const want = indices(lat, lng, sc);
-  for (let n = 1; n < sc.maxWords; n++) {
-    const { hits, searched } = candidatesInBox(full.slice(-n), box, sc, MAX_CANDIDATES);
-    if (searched > MAX_CANDIDATES) continue;
-    if (hits && hits.length === 1) {
-      const got = indices(hits[0][0], hits[0][1], sc);
-      if (got[0] === want[0] && got[1] === want[1]) return n;
-    }
-  }
-  return sc.maxWords;
-}
-
-// The reader's half, and where the cap actually protects anyone: a window too
-// big to screen is refused rather than answered from.
-function decodeInBox(spoken, box, sc) {
-  const { hits, searched } = candidatesInBox(spoken, box, sc, MAX_CANDIDATES);
-  if (searched > MAX_CANDIDATES)
-    throw new Error(`${searched} candidates in this region, more than the `
-      + `${MAX_CANDIDATES} a ${CHECK.toLocaleString()}-value check can screen `
-      + '- say the whole address');
-  if (!hits || !hits.length)
-    throw new Error('checksum failed - a word is wrong, or this address does '
-      + 'not belong in this region');
-  if (hits.length > 1)
-    throw new Error(`${hits.length} places here match - say one more word`);
-  return hits[0];
-}
-
 // --- map --------------------------------------------------------------------
 // The zoom control sits top right: the address lives top left, where it reads
 // best, and the two were overlapping.
@@ -536,41 +433,43 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 const addrEl = document.getElementById('addr');
 const noteEl = document.getElementById('note');
 const scope = GLOBAL;
-let marker = null, cellBox = null, seq = 0;
+let marker = null, cellBox = null;
 
 const fmt = (m) => m >= 1000 ? `${(m / 1000).toFixed(1)} km`
   : m >= 1 ? `${m.toFixed(2)} m` : `${(m * 100).toFixed(0)} cm`;
 
-// One grid, so this never changes -- which is the thing worth saying.
+// One grid and one length, so this never changes -- which is the thing worth
+// saying. There is nothing to shorten against any more: the country search that
+// used to buy a word is gone, along with its network call, its inconsistent word
+// count and, the real objection, its cost in detection.
 function gridHint() {
   const [w, h] = cellSize(scope.maxWords, scope);
   return fmt(Math.sqrt(w * h));
 }
 
-function draw(lat, lng, said) {
+// Six words, always. Nothing is ever dropped, so nothing is greyed and there is
+// no network call to wait for: the address is drawn the instant you click.
+function draw(lat, lng) {
   const full = encode(lat, lng, scope.maxWords, scope);
-  const supplied = full.length - said;   // the leading words the country gives
   addrEl.textContent = '';
   let row;
   full.forEach((w, i) => {
     if (i % 2 === 0) { row = document.createElement('div'); row.className = 'row';
                        addrEl.appendChild(row); }
     const el = document.createElement('span');
-    el.className = 'w' + (i < supplied ? ' dim' : '')
-                       + (i === full.length - 1 ? ' chk' : '');
-    // The separator stays on the word it follows, so a line that continues
-    // ends in a dot and the address is still correct if it is copied.
+    el.className = 'w' + (i === full.length - 1 ? ' chk' : '');
+    // The separator stays on the word it follows, so a line that continues ends
+    // in a dot and the address is still correct if it is copied.
     el.textContent = w + (i < full.length - 1 ? SEP : '');
     row.appendChild(el);
   });
 }
 
-async function show(lat, lng) {
-  const mine = ++seq;
+function show(lat, lng) {
   if (marker) map.removeLayer(marker);
   marker = L.circleMarker([lat, lng],
     { radius: 5, color: '#a8322a', weight: 2, fillOpacity: .9 }).addTo(map);
-  if (cellBox) { map.removeLayer(cellBox); cellBox = null; }
+  if (cellBox) map.removeLayer(cellBox);
   const [x, y] = project(lat, normaliseLng(lng, scope));
   const [w, h] = cellSize(scope.maxWords, scope);
   const cx = scope.x0 + Math.floor((x - scope.x0) / w) * w;
@@ -578,51 +477,11 @@ async function show(lat, lng) {
   const sw = unproject(cx, cy), ne = unproject(cx + w, cy + h);
   cellBox = L.rectangle([[sw[0], wrapLng(sw[1])], [ne[0], wrapLng(sw[1]) + (ne[1] - sw[1])]],
     { color: '#1a5c4a', weight: 2, fill: false }).addTo(map);
-
-  // The full address first, with no network involved at all.
-  draw(lat, lng, scope.maxWords);
-  noteEl.innerHTML = `${gridHint()}<span class="dim"> &mdash; asking OpenStreetMap `
-    + 'which country&hellip;</span>';
-  let country;
-  try {
-    country = await countryAt(lat, lng);
-  } catch (e) {
-    if (mine !== seq) return;
-    noteEl.innerHTML = `${gridHint()}<span class="dim"> &mdash; no country lookup `
-      + `(${e.message}), so all ${scope.maxWords} words</span>`;
-    return;
-  }
-  if (mine !== seq) return;                 // a later click has overtaken this one
-  if (!country) {
-    noteEl.innerHTML = `${gridHint()}<span class="dim"> &mdash; open water, no country `
-      + `to drop a word, so all ${scope.maxWords}</span>`;
-    return;
-  }
-  const said = shortestInBox(lat, lng, country.box, scope);
-  draw(lat, lng, said);
-  // The cell size is the hint worth showing: it is the same 4.5 m whether the
-  // country bought a word or not, which is the point of one grid.
-  //
-  // There are TWO reasons a country can fail to buy a word, and they are not
-  // the same thing. A window over the cap is a property of the country -- the
-  // United States always fails, everywhere. A second place matching the same
-  // words is a property of the ADDRESS: a 1-in-144 coincidence that hits about
-  // one UK point in eighty, scattered at random. Saying "too wide a box" for
-  // both told the wrong story about Britain.
-  noteEl.innerHTML = `${country.name} &middot; ${gridHint()}`
-    + (said < scope.maxWords ? '' : `<span class="dim"> &mdash; ${whyNotShort(
-         lat, lng, country.box, scope)}</span>`);
+  draw(lat, lng);
+  noteEl.innerHTML = `${gridHint()}<span class="dim"> &mdash; a wrong word caught `
+    + `${(100 * (1 - 1 / CHECK)).toFixed(4)}% of the time</span>`;
 }
 
-function whyNotShort(lat, lng, box, sc) {
-  const full = encode(lat, lng, sc.maxWords, sc);
-  const { searched } = candidatesInBox(full.slice(1 - sc.maxWords), box, sc,
-                                       MAX_CANDIDATES);
-  return searched > MAX_CANDIDATES
-    ? 'too wide a box to drop a word safely'
-    : `another place here matches those last ${sc.maxWords - 1} words, so all `
-      + `${sc.maxWords}`;
-}
 
 map.on('click', (e) => show(e.latlng.lat, wrapLng(e.latlng.lng)));
 show(53.3498, -6.2603);

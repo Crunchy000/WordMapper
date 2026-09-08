@@ -89,10 +89,13 @@ check('every word spends exactly its list on position and check',
       [g.LIST_SIZE] * g.GLOBAL.max_words)
 check('the checks multiply out to the whole checksum',
       math.prod(g.GLOBAL.checks), g.CHECK)
-# The five-word check is a genuine PREFIX of the six-word one, not a different
-# function near it -- which is what keeps every address already in circulation
-# valid. 144 divides 186,624, and the check digits go least-significant first.
-check('the sixth word only ever adds to the fifth', g.CHECK % 144, 0)
+# Each length's check is a genuine PREFIX of the next one's, not a different
+# function near it: the digits go least-significant first, so the modulus at n
+# words divides the modulus at n+1. That is what lets a shorter address be
+# verified at all, and lets a longer one only ever strengthen it.
+check('each length\'s check divides the next one\'s',
+      [math.prod(g.GLOBAL.checks[:n + 1]) % math.prod(g.GLOBAL.checks[:n])
+       for n in range(1, g.GLOBAL.max_words)], [0] * (g.GLOBAL.max_words - 1))
 check('check digits round-trip through undigits',
       all(g._undigits_check(g._check_digits(v, g.GLOBAL.checks), g.GLOBAL.checks) == v
           for v in (random.randrange(g.CHECK) for _ in range(2000))), True)
@@ -273,206 +276,36 @@ check('an index is never negative and never past the end',
                          PTS + [(-90.0, -180.0), (90.0, 180.0)])), True)
 check('there is exactly one scope', sorted(g.SCOPES), ['global'])
 
-print('\nshortening against a country box')
-# The other way to fill in dropped leading words. resolve_tail() needs a nearby
-# POINT; this needs only a REGION, and lets the checksum pick. A country name is
-# such a region, and OpenStreetMap will hand you its bounding box. The box is
-# never part of the address -- it is a search window -- so the properties worth
-# pinning down are about what a WRONG window costs.
-BOXES = {                       # as Nominatim returns them: south, north, west, east
-    'Luxembourg':     (49.447, 50.183, 5.735, 6.531),
-    'Switzerland':    (45.818, 47.808, 5.956, 10.492),
-    'Ireland':        (51.222, 55.636, -11.017, -5.066),
-    'United Kingdom': (49.674, 61.061, -14.015, 2.096),
-    'France':         (41.303, 51.124, -5.559, 9.662),
-    'Australia':      (-43.644, -9.221, 112.921, 159.109),
-    'United States':  (18.910, 71.441, -179.231, 179.859),
-}
-IN_UK = [(51.50072, -0.12456), (55.94859, -3.19951), (54.59730, -5.93010),
-         (50.06569, -5.71531), (57.47780, -4.22470)]
-# "The country supplies one word" is max_words - 1 said, whatever the address
-# length happens to be. Writing 4 here was right once and silently wrong after.
-SAY = g.GLOBAL.max_words - 1
+print('\nthe checksum at every length')
+# The checksum is over the WHOLE position, so nothing about it can be verified
+# until the whole position is. Word six adds no position, so five words already
+# reach full depth -- which is why verification starts there and not at six.
+import math as _m
+for n in range(1, g.GLOBAL.max_words + 1):
+    full_depth = g.GLOBAL.divisions(n) == g.GLOBAL.div
+    mod = _m.prod(g.GLOBAL.checks[:n]) if full_depth else 1
+    print(f'  ----  {n} words: {g.cell_size(n)[0]:>10,.2f} m, '
+          + (f'checked 1 in {mod:,}' if mod > 1 else 'unverified'))
+check('verification starts exactly where the position reaches full depth',
+      [g.GLOBAL.divisions(n) == g.GLOBAL.div for n in range(1, g.GLOBAL.max_words + 1)],
+      [False] * (g.GLOBAL.max_words - 2) + [True, True])
+check('the full address is checked to one in CHECK', _m.prod(g.GLOBAL.checks), g.CHECK)
 
-check('the true point is never lost from the search',
-      all(g.candidates_in_box(g.encode(la, lo, WORDS)[-SAY:], WORDS,
-                              BOXES['United Kingdom'])[0] is not None
-          and g._indices(la, lo) in
-          [g._indices(a, b) for a, b in
-           g.candidates_in_box(g.encode(la, lo, WORDS)[-SAY:], WORDS,
-                               BOXES['United Kingdom'])[0]]
-          for la, lo in IN_UK), True)
-
-# HOW MANY WORDS A BOX BUYS is one number: how many candidate tiles it holds.
-# Each word is 11 bits, so one fewer word is 2048 times as many tiles, and 7
-# check bits leave one in 128 standing. So a length works exactly when no OTHER
-# candidate survives -- a Poisson zero at rate (tiles - 1)/128. Nothing about
-# countries enters into it; a country is just a box someone else drew.
-# HOW MANY WORDS A BOX BUYS is one number: how many candidate tiles it holds.
-# Each word is 11 bits, so one fewer word is 2048 times as many tiles, and 7
-# check bits leave one in 128 standing. Uniqueness is then a Poisson zero at
-# rate (tiles - 1)/128. Nothing about countries enters into it; a country is
-# just a box someone else drew.
-#
-# But uniqueness is NOT the whole test, because the same k candidates are also
-# k lotteries against the same check when a word is wrong. So shortening is
-# capped at MAX_CANDIDATES, and these two are measured separately: the law
-# below, and the detection it costs further down.
-said, tiles, over_cap = {}, {}, []
-for name, box in BOXES.items():
-    pts = in_box(box, 60)
-    said[name] = [g.shortest_in_box(la, lo, WORDS, box)[0] for la, lo in pts]
-    ks = [g.candidates_in_box(g.encode(la, lo, WORDS)[-SAY:], WORDS, box)[1]
-          for la, lo in pts]
-    tiles[name] = sum(ks) / len(ks)
-    # The cap is per point, not per country: a box averaging under it still has
-    # corners where the window is wider, and those points say every word.
-    over_cap += [(name, k) for n, k in zip(said[name], ks)
-                 if n < g.GLOBAL.max_words and k > g.MAX_CANDIDATES]
-    # The same points on both sides, so this compares the rule against the
-    # measurement rather than against a second sample of it.
-    unique = sum(1 for la, lo in pts
-                 if len(g.candidates_in_box(
-                     g.encode(la, lo, WORDS)[-SAY:], WORDS, box)[0] or []) == 1)
-    unique = unique / len(pts) * 100
-    poisson = sum(math.exp(-(k - 1) / g.CHECK) for k in ks) / len(ks) * 100
-    four = sum(1 for n in said[name] if n <= SAY) / len(said[name]) * 100
-    print(f'  ----  {name}: {tiles[name]:6.1f} tiles, unique {unique:3.0f}% '
-          f'(poisson {poisson:3.0f}%), shortens {four:3.0f}%')
-    check(f'{name} uniqueness matches the Poisson law', abs(unique - poisson) < 12, True)
-
-# The cap, not luck, is what decides. This is the safety property itself: no
-# address is ever shortened against a window too wide to screen it, however
-# temptingly unique the survivor looked.
-check('no address is shortened against a window over the cap', over_cap, [])
-check('a box comfortably under the cap always buys a word',
-      all(n <= SAY for name in ('Luxembourg', 'Switzerland', 'Ireland')
-          for n in said[name]), True)
-# A 186,624-value check screens a far wider window than a 144-value one did, so
-# the small countries now buy TWO words rather than one, and the big ones buy
-# their first. Nothing here is over the cap, which is the point: at this check
-# strength a country-sized box is simply not a hard problem any more.
-check('every country box buys at least one word',
-      max(n for name in BOXES for n in said[name]) <= SAY, True)
-check('the small countries can buy two',
-      min(n for name in ('Luxembourg', 'Switzerland', 'Ireland')
-          for n in said[name]), g.GLOBAL.max_words - 2)
-check('Australia and the United States now buy one, where 144 refused them',
-      (set(said['Australia']), set(said['United States'])), ({SAY}, {SAY}))
-
-# WHAT THE CAP IS FOR. A wrong word removes the true tile, so all k candidates
-# are lotteries against the same 7 check bits and detection falls to
-# (127/128)**k. Uncapped over Australia that is 58%, and a third of mishearings
-# would resolve silently to the wrong place inside the country -- the worst
-# failure there is, because it looks like an answer.
-def mishear(spoken):
-    """One word replaced by a different BIP-39 word."""
-    out = list(spoken)
-    i = random.randrange(len(out))
-    while True:
-        w = random.choice(WORDS)
-        if w != out[i]:
-            out[i] = w
-            return out
-
-
-for name in ('Ireland', 'United Kingdom', 'France'):
-    box = BOXES[name]
-    caught = trials = 0
-    for la, lo in in_box(box, 250):
-        n, tail = g.shortest_in_box(la, lo, WORDS, box)
-        if n == g.GLOBAL.max_words:
-            continue
-        trials += 1
-        try:
-            g.decode_in_box(mishear(tail), WORDS, box)
-        except ValueError:
-            caught += 1
-    rate = caught / trials * 100
-    print(f'  ----  {name}: a misheard word in a shortened address is caught '
-          f'{rate:.0f}% of the time ({trials} shortened)')
-    check(f'{name} still catches a wrong word 93% of the time', rate > 93, True)
-
-check('the full address is better than either, and unaffected',
-      sum(1 for _ in range(400)
-          if not _decodes(mishear(g.encode(*PTS[_], WORDS)))) / 400 > 0.97, True)
-
-# The reader's half. A window too big to screen is refused rather than answered
-# from, so an address that should never have been shortened cannot be read as
-# though it had been. Australia no longer qualifies -- 45 tiles is comfortably
-# inside a 935 cap -- so the window has to be the one that genuinely is too
-# wide: two words further back, where the same box holds tens of millions.
-TOO_WIDE = g.encode(-33.8688, 151.2093, WORDS)[-(SAY - 2):]
-_, searched = g.candidates_in_box(TOO_WIDE, WORDS, BOXES['Australia'],
-                                  limit=g.MAX_CANDIDATES)
-check('such a window is over the cap', searched > g.MAX_CANDIDATES, True)
-try:
-    g.decode_in_box(TOO_WIDE, WORDS, BOXES['Australia'])
-    refused = False
-except ValueError:
-    refused = True
-check('a window over the cap is refused, not answered from', refused, True)
-check('a shortened address reads back to the same cell',
-      all(g._indices(*g.decode_in_box(
-          g.shortest_in_box(la, lo, WORDS, BOXES['United Kingdom'])[1],
-          WORDS, BOXES['United Kingdom'])) == g._indices(la, lo)
-          for la, lo in IN_UK), True)
-
-# A wrong window costs uniqueness, never correctness. The address itself is
-# arithmetic on the coordinates; the country is only consulted to decide how
-# much of it can go unsaid.
-check('the address does not depend on the box',
-      len({tuple(g.encode(51.50072, -0.12456, WORDS)) for _ in BOXES}), 1)
-check('a box that excludes the point falls back to the full address',
-      all(g.shortest_in_box(la, lo, WORDS, BOXES['France'])[0] == g.GLOBAL.max_words
-          for la, lo in IN_UK), True)
-# Nominatim reports an antimeridian country inside out (west > east). That box
-# reads as most of the planet, which is a useless window but a safe one.
-check('an inside-out box costs words, not correctness',
-      g.shortest_in_box(-18.14160, 178.44190, WORDS,
-                        (-20.68, -12.48, 176.9, -178.1))[0], g.GLOBAL.max_words)
-
-# Whatever tail comes back, saying it inside that box has to land back here.
-def lands_back(la, lo, box):
-    n, tail = g.shortest_in_box(la, lo, WORDS, box)
-    got, _ = g.candidates_in_box(tail, WORDS, box)
-    return got is not None and len(got) == 1 and g._indices(*got[0]) == g._indices(la, lo)
-check('the shortened form resolves back to the same cell',
-      all(lands_back(la, lo, BOXES['United Kingdom']) for la, lo in IN_UK), True)
-
-# A direct look at the 1-in-CHECK rate the whole scheme rests on. Counting the
-# survivors of a REAL address no longer measures it: at 186,624 the false
-# survivors are so rare that the only thing passing is the true point itself,
-# which says nothing. So the check is deliberately set to a value that is NOT
-# the true one -- then every survivor is a false positive and the rate is what
-# is being measured rather than inferred.
-false_pass = searched_total = 0
-for la, lo in IN_UK:
-    tail = list(g.encode(la, lo, WORDS)[-(SAY - 1):])
-    wrong = WORDS[(WORDS.index(tail[-1]) + 1) % g.LIST_SIZE]   # a different check word
-    tail[-1] = wrong
-    hits, searched = g.candidates_in_box(tail, WORDS, BOXES['United Kingdom'],
-                                         limit=10 ** 7)
-    false_pass += len(hits)
-    searched_total += searched
-expected = searched_total / g.CHECK
-print(f'  ----  {SAY - 1} words over the UK with a wrong check word: '
-      f'{searched_total:,} cells searched across {len(IN_UK)} points, '
-      f'{false_pass} pass anyway (expected {expected:.2f} at 1 in {g.CHECK:,})')
-# A Poisson count this small can only be bounded, not matched: at an expected
-# 0.1 the odds of seeing 4 or more are about one in a hundred thousand.
-check('false survivors are as rare as the checksum says',
-      false_pass <= max(3, expected * 3), True)
-check('a search too big to be worth running is refused, not run',
-      g.candidates_in_box(g.encode(51.50072, -0.12456, WORDS)[-(SAY - 2):], WORDS,
-                          BOXES['United Kingdom'])[0], None)
+# There is nothing left to shorten AGAINST. The country box search is gone: it
+# bought a word at the cost of a network call, an inconsistent word count, and
+# detection -- every candidate the box left was a fresh lottery against the same
+# checksum. Saying the sixth word costs less than that and is the same every
+# time. What remains is a reference POINT, which tests ONE candidate and so
+# costs no detection at all.
+check('no box search survives',
+      [n for n in dir(g) if 'box' in n or n in ('MAX_CANDIDATES', 'FLOOR')], [])
 
 print()
 w, h = g.cell_size(g.GLOBAL.max_words)
 print(f'  ----  {g.GLOBAL.max_words} words is {w:.2f} x {h:.2f} m; '
       f'{g.GLOBAL.max_words - 1} words alone is '
       f'{math.sqrt(math.prod(g.cell_size(g.GLOBAL.max_words - 1))):.2f} m')
-print('  ----  one grid, one address for a place; a country buys one word')
+print('  ----  one grid, one address for a place, and always the same six words')
 print()
 if fails:
     print(f'{len(fails)} FAILURE(S): ' + ', '.join(fails)); sys.exit(1)
