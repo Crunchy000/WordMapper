@@ -23,7 +23,9 @@ pairs live and there is no redundancy in them to survive a dropped phoneme.
 ```
 apt-get install wamerican wbritish        # a word list WITH capitalisation
 pip install geonamescache                 # cities, countries, states
-WORDLIST_DATA=<data-dir> python3 build.py --out spoken-2048.txt
+# the shipped list: 1,296 words (36 x 36), every one graded CEFR A1-B2
+WORDLIST_DATA=<data-dir> python3 build.py --base cefr --cefr A1,A2,B1,B2 \
+                                          --size 1296 --out spoken-1296-plain.txt
 WORDLIST_DATA=<data-dir> python3 build.py --audit some-other-list.txt
 ```
 
@@ -233,24 +235,30 @@ and `price`, which are ordinary words that happen to be surnames too.
 ```
 9,025 graded headwords
   -> 3,077 sayable      after names, places, vulgarity, inflections, meaning
-  -> 1,024 chosen       after removing everything confusable or sound-alike
+  -> 1,296 chosen       after removing everything confusable or sound-alike
 ```
 
-The ceiling from this base is **1,835** across all levels, or **1,473** at
-A1–B2. The similarity rule is what binds: over half the pool goes to it.
+The ceiling from this base is **1,445** at A1–B2. The similarity rule is what
+binds: over half the pool goes to it, 1,193 words on sound alone.
 
-**1,473 clears 1,024, and 1,024 is 10 bits.** So there is a real second option,
-built here as `spoken-1024-plain.txt`:
+**The list does not have to be a power of two.** A list of *s*² words lets each
+word subdivide a cell *s* × *s*, so it is one base-36 digit of x and one of y —
+no bit interleaving, no per-length axis split, and the prefix property for free.
+That is what lets the shipped list sit at 1,296 (36 × 36) rather than 1,024,
+which is the difference between a 10.8 m cell and a 4.48 m one for the same five
+words said:
 
 | | words per address | cell | vocabulary |
 |---|---|---|---|
 | `spoken-2048.txt` | **5** | 1.35 m | mixed; a third ungraded |
-| `spoken-1024-plain.txt` | **6** | 0.24 m | every word CEFR A1–B2 |
+| `spoken-1024-plain.txt` | **5** | 10.8 m | every word CEFR A1–B2 |
+| **`spoken-1296-plain.txt`** | **5** | **4.48 m** | every word CEFR A1–B2 |
 
-Its mix is 290 A1, 286 A2, 222 B1, 226 B2 — over half of it at the two easiest
-levels.
+The shipped list's mix is 290 A1, 286 A2, 426 B1, 294 B2 — 44 % of it at the two
+easiest levels. With the ceiling at 1,445 there are 149 words of slack, so
+1,296 is close to everything the easy band has to give.
 
-One more word per address buys a vocabulary everyone already has. That is the
+A vocabulary everyone already has, at no cost in words per address. That is the
 whole trade, and it is a decision about who says these addresses out loud rather
 than a technical one.
 
@@ -269,6 +277,6 @@ word must fall within the top N of spoken English:
 | top 30,000 | 2,198 |
 
 So **2,048 words cannot all be common** — around the top 30,000 is the floor.
-The shipped list sits at a median rank near 10,000 with its rarest word around
+`spoken-2048.txt` sits at a median rank near 10,000 with its rarest word around
 45,000. Wanting a list of only everyday words means wanting a list of about
-1,000, which is 10 bits, which is six words to an address instead of five.
+1,300 — which, in base 36, still costs only five words to an address.

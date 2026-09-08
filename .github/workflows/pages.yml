@@ -25,7 +25,7 @@ jobs:
 
       # No setup-node: the runner ships one, and the check is plain ESM with no
       # dependencies. No npm install either -- the word list is a file in the
-      # repo, checked against the SHA-256 published in BIP-39.
+      # repo, checked against the SHA-256 pinned in the reference codec.
 
       # The demo carries its own JavaScript port of the codec. Fail the build if
       # it stops agreeing with the Python reference, or stops round-tripping.

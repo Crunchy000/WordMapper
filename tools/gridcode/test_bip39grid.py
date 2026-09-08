@@ -71,27 +71,25 @@ check('the poles and the antimeridian encode',
       all(len(g.encode(lat, lng, WORDS)) == g.GLOBAL.max_words
           for lat in (-90, -89.999, 0, 89.999, 90)
           for lng in (-180, -179.999, 0, 179.999, 180)), True)
-# The projected world is square, so the axes split evenly at full depth.
+# The projected world is square and both axes get the same base-36 splits, so
+# every cell at every length is exactly square -- there is nothing to arrange.
+# The old binary layout needed a greedy bit order for this and still left the
+# odd lengths at 2:1.
 check('the frame is square', round(g.GLOBAL.xr / g.GLOBAL.yr, 9), 1.0)
-check('the axes split evenly at full depth', (g.GLOBAL.xb, g.GLOBAL.yb),
-      (g.GLOBAL.position_bits // 2, g.GLOBAL.position_bits // 2))
-# Even bit counts land on frame*4**k and odd ones on frame*2*4**k, so with a
-# square frame the even lengths are exactly square and the odd ones are 2:1.
-# The terminal length, 48 bits, is even.
-w, h = g.cell_size(g.GLOBAL.max_words)
-check('the terminal cell is exactly square', round(max(w, h) / min(w, h), 9), 1.0)
-check('cells are exactly square at even lengths',
+check('cells are exactly square at every length',
       [round(max(w, h) / min(w, h), 9)
-       for w, h in (g.cell_size(n) for n in (2, 4))], [1.0, 1.0])
-worst = max(max(w, h) / min(w, h) for w, h in
-            (g.cell_size(n) for n in range(1, g.GLOBAL.max_words + 1)))
-check('no cell is worse than 2:1', worst <= 2.0 + 1e-9, True)
+       for w, h in (g.cell_size(n) for n in range(1, g.GLOBAL.max_words + 1))],
+      [1.0] * g.GLOBAL.max_words)
+check('the list is RADIX squared', g.LIST_SIZE, g.RADIX ** 2)
+check('the last word spends what it does not refine on the check',
+      g.REFINE * g.REFINE * g.CHECK, g.LIST_SIZE)
 
-# The box search spreads each axis once and ORs, rather than interleaving every
-# candidate. That is only sound because the axes occupy disjoint bits.
-check('spreading each axis and OR-ing equals interleaving',
-      all(g._spread(x, 0) | g._spread(y, 1) == g._interleave(x, y)
-          for x, y in (tuple(g._indices(lat, lng)) for lat, lng in PTS[:500])), True)
+# Digits round-trip, which is the whole of the addressing: there is no
+# interleaving left to get wrong.
+check('digits round-trip through undigits',
+      all(g._undigits(g._digits(i, g.GLOBAL.splits), g.GLOBAL.splits) == i
+          for i in (xi for lat, lng in PTS[:500]
+                    for xi in g._indices(lat, lng))), True)
 
 print('\ntrailing words: coarser, no context needed')
 bad = 0
@@ -131,16 +129,17 @@ for n in range(1, g.GLOBAL.max_words):
     # ambiguity period on each axis. That is exactly the guarantee -- nearer
     # than half a tile -- stated in the units the reconstruction works in, so
     # index truncation cannot eat the margin at the smallest tiles.
-    cx, cy = g._known_low(n)
+    period = g._known_period(n)
+    div = g.GLOBAL.div
     ok = True
     for lat, lng in PTS[:400]:
         full = g.encode(lat, lng, WORDS)
         xi, yi = g._indices(lat, lng)
-        rx = (xi + random.randint(-(2 ** cx // 2 - 1), 2 ** cx // 2 - 1)) % 2 ** g.GLOBAL.xb
-        ry = min(max(yi + random.randint(-(2 ** cy // 2 - 1), 2 ** cy // 2 - 1), 0),
-                 2 ** g.GLOBAL.yb - 1)
-        ref = g.unproject(g.GLOBAL.x0 + (rx + 0.5) / 2 ** g.GLOBAL.xb * g.GLOBAL.xr,
-                          g.GLOBAL.y0 + (ry + 0.5) / 2 ** g.GLOBAL.yb * g.GLOBAL.yr)
+        slack = period // 2 - 1
+        rx = (xi + random.randint(-slack, slack)) % div
+        ry = min(max(yi + random.randint(-slack, slack), 0), div - 1)
+        ref = g.unproject(g.GLOBAL.x0 + (rx + 0.5) / div * g.GLOBAL.xr,
+                          g.GLOBAL.y0 + (ry + 0.5) / div * g.GLOBAL.yr)
         try:
             got = g.resolve_tail(full[-n:], WORDS, *ref)
         except ValueError:
@@ -157,7 +156,7 @@ check('a full address needs no reference at all',
 
 # The checksum covers the whole reconstruction, so a reference too far away to
 # pick the right tile is caught rather than resolving quietly to the wrong place.
-theory = (1 - 2 ** -g.CHECK_BITS) * 100
+theory = (1 - 1 / g.CHECK) * 100
 caught = tot = 0
 for lat, lng in PTS[:2000]:
     full = g.encode(lat, lng, WORDS)
@@ -173,7 +172,7 @@ for lat, lng in PTS[:2000]:
     if g._indices(*got) == g._indices(lat, lng):
         caught += 1              # got lucky and landed on the right tile anyway
 print(f'  ----  a reference too far away is caught {caught/tot*100:.1f}% '
-      f'(theory {theory:.2f}%, {g.CHECK_BITS} check bits)')
+      f'(theory {theory:.2f}%, 1 of {g.CHECK} check values)')
 check('a hopeless reference is caught within a point of theory',
       abs(caught / tot * 100 - theory) < 1.0, True)
 
@@ -249,11 +248,11 @@ check('the poles and the seam are covered',
           [(-90.0, 0.0), (90.0, 0.0), (0.0, 180.0), (0.0, -180.0)]), True)
 # Clamping is at BOTH ends. The top saturates a point on the boundary into the
 # last cell; the bottom is only reachable by floating-point slop, but an
-# unclamped negative index would sign-extend under >> and mint a plausible
-# address for the wrong place -- which is exactly the bug regional boxes used
-# to have outside them, and the reason there is now nothing outside.
+# unclamped negative index would mint a plausible address for the wrong place
+# -- which is exactly the bug regional boxes used to have outside them, and the
+# reason there is now nothing outside.
 check('an index is never negative and never past the end',
-      all(0 <= xi < 2 ** g.GLOBAL.xb and 0 <= yi < 2 ** g.GLOBAL.yb
+      all(0 <= xi < g.GLOBAL.div and 0 <= yi < g.GLOBAL.div
           for xi, yi in (g._indices(lat, lng) for lat, lng in
                          PTS + [(-90.0, -180.0), (90.0, 180.0)])), True)
 check('there is exactly one scope', sorted(g.SCOPES), ['global'])
@@ -320,7 +319,7 @@ for name, box in BOXES.items():
                  if len(g.candidates_in_box(
                      g.encode(la, lo, WORDS)[-SAY:], WORDS, box)[0] or []) == 1)
     unique = unique / len(pts) * 100
-    poisson = sum(math.exp(-(k - 1) / 2 ** g.CHECK_BITS) for k in ks) / len(ks) * 100
+    poisson = sum(math.exp(-(k - 1) / g.CHECK) for k in ks) / len(ks) * 100
     four = sum(1 for n in said[name] if n <= SAY) / len(said[name]) * 100
     print(f'  ----  {name}: {tiles[name]:6.1f} tiles, unique {unique:3.0f}% '
           f'(poisson {poisson:3.0f}%), shortens {four:3.0f}%')
@@ -415,8 +414,8 @@ check('the shortened form resolves back to the same cell',
       all(lands_back(la, lo, BOXES['United Kingdom']) for la, lo in IN_UK), True)
 
 # One word further back than the country can supply: far too many candidates
-# to pin a place down, and a direct look at the 1-in-2**CHECK_BITS rate the
-# whole scheme rests on. Averaged over several points, because a single box is
+# to pin a place down, and a direct look at the 1-in-CHECK rate the whole
+# scheme rests on. Averaged over several points, because a single box is
 # one Poisson sample and will sit a factor of two off often enough to fail a
 # test that means nothing by it.
 survivors = searched_total = 0
@@ -429,9 +428,9 @@ for la, lo in IN_UK:
 rate = searched_total / survivors
 print(f'  ----  {SAY - 1} words over the UK: {searched_total} cells searched across '
       f'{len(IN_UK)} points, {survivors} pass the check '
-      f'(1 in {rate:.0f}, theory 1 in {2 ** g.CHECK_BITS})')
+      f'(1 in {rate:.0f}, theory 1 in {g.CHECK})')
 check('survivors are within a factor of two of the checksum rate',
-      0.5 < (2 ** g.CHECK_BITS) / rate < 2.0, True)
+      0.5 < g.CHECK / rate < 2.0, True)
 check('a search too big to be worth running is refused, not run',
       g.candidates_in_box(g.encode(51.50072, -0.12456, WORDS)[-(SAY - 2):], WORDS,
                           BOXES['United Kingdom'])[0], None)

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Five everyday words name any point on earth to about ten metres. Say four where the country you are in supplies the fifth.">
+<meta name="description" content="Five everyday words name any point on earth to four and a half metres. Say four where the country you are in supplies the fifth.">
 <title>Word grid — five easy words anywhere, four where a country supplies the last</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
@@ -44,8 +44,11 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-// The BIP-39 English list: exactly 2048 words, so exactly 11 bits each.
-const WORDS = ["abandon", "abnormal", "about", "abroad", "absolute", "abundance", "account", "accurate", "achieve", "acquire", "active", "actor", "actress", "adjective", "adjust", "admire", "admit", "adopt", "advantage", "advertise", "afford", "afternoon", "age", "agency", "agent", "agree", "airport", "alarm", "album", "alert", "alien", "allergic", "alone", "alphabet", "alright", "altitude", "amaze", "ambition", "ambulance", "ammonia", "amuse", "analyst", "ancestor", "angry", "animal", "annoy", "answer", "antique", "anymore", "appear", "appearance", "approval", "apron", "architect", "area", "argue", "argument", "arm", "arrange", "arrive", "artistic", "ask", "aspirin", "assembly", "assurance", "astronaut", "athlete", "atmosphere", "atomic", "attempt", "attend", "attention", "attractive", "audio", "author", "avenue", "avoid", "awake", "axis", "bad", "badminton", "bakery", "balcony", "balloon", "banana", "bartender", "basically", "basketball", "bathroom", "battery", "beautiful", "beauty", "become", "beef", "behave", "believe", "belong", "belt", "bench", "benefit", "bias", "bicycle", "bikini", "bilingual", "birdcage", "biscuit", "blackboard", "blend", "blog", "blur", "body", "bone", "bonus", "book", "border", "bottle", "box", "boyfriend", "bracelet", "brainstorm", "brave", "breakfast", "bridge", "brilliant", "broadband", "broken", "brush", "budget", "bulb", "bureau", "busy", "butterfly", "cake", "calendar", "camp", "campus", "canal", "captain", "careful", "carnival", "cartoon", "castle", "catch", "cautious", "celebrate", "central", "century", "certain", "chair", "challenge", "chaotic", "chapter", "character", "cheap", "chemist", "child", "childish", "chimpanzee", "chunk", "cinema", "circle", "city", "civil", "classic", "classical", "classmate", "clean", "clerk", "client", "cloth", "cloudy", "clumsy", "coat", "coconut", "coherent", "coincide", "collect", "college", "columnist", "comedy", "comic", "committee", "common", "company", "compare", "compensate", "complain", "complete", "complicate", "concern", "condition", "confident", "confuse", "consensus", "consider", "consist", "contain", "continue", "contradict", "control", "convenient", "copy", "corn", "country", "couple", "courageous", "crazy", "create", "creative", "creature", "crisp", "crop", "crucial", "cry", "cucumber", "cuff", "cultivate", "culture", "currency", "custom", "cute", "daddy", "dance", "dark", "daughter", "debate", "decide", "decisive", "decorative", "dedicate", "definite", "degree", "delay", "delightful", "deny", "departure", "depend", "describe", "dessert", "detective", "develop", "diamond", "dictator", "diet", "difficult", "dig", "dignity", "dilemma", "diligent", "dimension", "dinosaur", "dioxide", "diploma", "disastrous", "dishwasher", "dislike", "disposal", "distance", "distinct", "division", "dolphin", "dominant", "donation", "dose", "doubtful", "downstairs", "dozen", "drama", "dress", "drink", "droop", "dull", "duration", "dust", "dwarf", "dynamic", "eager", "ease", "ecstatic", "efficient", "effort", "elbow", "electric", "elephant", "elsewhere", "embarrass", "emperor", "enclose", "end", "endurance", "energy", "enforce", "engage", "enhance", "entrance", "envelope", "equity", "escape", "essay", "essayist", "establish", "ethic", "everyday", "evidence", "exact", "exam", "examine", "example", "excellent", "except", "excessive", "exchange", "exclude", "exclusion", "exclusive", "excursion", "exercise", "exhibit", "exist", "exotic", "expect", "expensive", "explain", "explore", "express", "exquisite", "external", "extra", "extreme", "eyesight", "fabulous", "fact", "factory", "fail", "false", "familiar", "famous", "fancy", "fantastic", "faraway", "fashion", "faulty", "feature", "feedback", "ferryboat", "festive", "fiction", "fictional", "fight", "figure", "film", "final", "finger", "fireplace", "fiscal", "fix", "flat", "flexible", "flock", "fluency", "foggy", "follow", "footnote", "forecast", "forestry", "forever", "fossil", "foundation", "fragment", "freedom", "frighten", "front", "fully", "fume", "fun", "function", "functional", "furniture", "future", "gallery", "gangster", "garage", "garden", "garlic", "gender", "genius", "genre", "gesture", "gift", "giggle", "giraffe", "glance", "glimpse", "globe", "goalkeeper", "gold", "gorgeous", "gossip", "govern", "grammar", "grandma", "grateful", "greedy", "ground", "guarantee", "guess", "guitar", "guitarist", "gymnastic", "habit", "haircut", "half", "handicraft", "handle", "handsome", "happiness", "happy", "hardware", "harmful", "harmony", "hasty", "haunt", "headache", "healthcare", "help", "helpful", "hesitate", "hidden", "highway", "hike", "historic", "hit", "hometown", "honeymoon", "hopeful", "horizon", "hospital", "hotel", "household", "humorous", "hungry", "hurry", "husband", "hygiene", "hyphen", "icon", "icy", "idea", "ignore", "illegal", "illustrate", "imagine", "imitate", "immune", "impartial", "implement", "important", "impress", "improve", "inborn", "inch", "include", "increase", "indicate", "indoor", "industry", "inference", "inflation", "influence", "informal", "infringe", "inhabit", "initial", "innermost", "input", "inquire", "insect", "instant", "institute", "instructor", "insurance", "intensive", "interrupt", "interview", "invade", "invent", "involve", "irritate", "island", "isolate", "issue", "item", "jaw", "join", "journey", "judge", "juicy", "jump", "juror", "justify", "kangaroo", "keystroke", "kilo", "kingdom", "kitchen", "lady", "laptop", "large", "latecomer", "laundry", "lava", "lawmaker", "laziness", "leadership", "lecture", "leg", "legislate", "lemonade", "lengthy", "leopard", "lettuce", "level", "liar", "liberate", "liberty", "library", "lifestyle", "lightning", "limit", "listen", "literal", "loaf", "local", "logical", "lost", "lottery", "loyalty", "lucky", "lunch", "luxury", "lyric", "machine", "maestro", "magazine", "magic", "maintain", "manual", "map", "marriage", "massive", "maximum", "meaningful", "meanwhile", "medicine", "meditate", "melon", "member", "memory", "mention", "menu", "merchant", "messy", "method", "microphone", "microscope", "microwave", "midnight", "migration", "milk", "mimic", "minimum", "mirror", "mischief", "mistake", "mixture", "modern", "moisture", "molecule", "moment", "monkey", "month", "mortify", "mosquito", "motionless", "motorist", "mountain", "move", "mug", "multiple", "murmur", "museum", "music", "musical", "musician", "mutable", "mystery", "mystify", "myth", "naked", "name", "napkin", "narrate", "native", "nature", "navigate", "nearby", "necklace", "needle", "negative", "nervous", "neutral", "newspaper", "noisy", "nomad", "nonsense", "normal", "novel", "novelist", "novelty", "nuclear", "numerous", "nurse", "nutshell", "obey", "objective", "observe", "obtain", "obvious", "occasion", "odd", "office", "official", "oil", "oneself", "open", "opera", "opinion", "oppose", "optimist", "orator", "orbit", "orchestra", "organic", "origin", "ounce", "outdo", "outrageous", "outweigh", "oval", "overweight", "ozone", "paddle", "paint", "palace", "papaya", "paradox", "parent", "parental", "partner", "passenger", "pasta", "pattern", "pawnshop", "peaceful", "pedantic", "pencil", "people", "period", "permanent", "person", "personal", "personnel", "persuade", "persuasion", "persuasive", "pessimist", "petrol", "pharmacist", "photo", "phrase", "physics", "picnic", "picture", "pink", "pizza", "plan", "planet", "plastic", "platform", "playful", "playwright", "plot", "plural", "poem", "poetry", "policeman", "polite", "pollutant", "pop", "popular", "portrait", "positive", "possible", "potato", "powerful", "prefix", "pregnant", "prejudge", "prepare", "preschool", "pressure", "prestige", "pretend", "pretty", "previous", "primary", "private", "probable", "problem", "product", "professor", "prominent", "promise", "proponent", "prosperous", "protect", "provide", "public", "pudding", "punctual", "pupil", "purpose", "purposeful", "pursue", "puzzle", "quality", "quantity", "query", "quick", "quiet", "quotable", "quotation", "racist", "radar", "rainfall", "rally", "range", "raspberry", "rate", "razor", "react", "rebuild", "recipe", "recommend", "recycle", "redundant", "reflect", "region", "reinforce", "release", "remind", "remove", "renew", "repertoire", "replica", "represent", "reprint", "reproduce", "research", "retrospect", "review", "rewrite", "rhythm", "rhythmic", "rib", "risk", "river", "roadside", "rocket", "romance", "romantic", "routine", "rugby", "ruinous", "rule", "safeguard", "sailor", "salsa", "sample", "satellite", "saucepan", "save", "scarf", "scenery", "school", "science", "scientist", "scope", "script", "sculpture", "seafood", "search", "seasonal", "section", "seesaw", "seminar", "sentence", "sequence", "serious", "settle", "shadow", "shampoo", "shelf", "shiny", "showcase", "shrimp", "shut", "signpost", "silver", "similar", "simplify", "simply", "sincere", "single", "singular", "ski", "skirt", "skylark", "sleep", "slice", "slow", "smart", "smell", "smoke", "sneeze", "snowy", "sociable", "social", "sofa", "soldier", "solution", "solve", "song", "sound", "soybean", "space", "spaghetti", "special", "speculate", "speech", "spellbound", "spend", "sphere", "spider", "splash", "split", "spoon", "spot", "spray", "spy", "square", "stadium", "stage", "stamp", "standby", "standstill", "statue", "stepfather", "stimulant", "stockpile", "stop", "story", "stove", "strange", "strategic", "strategy", "strict", "string", "structure", "stubborn", "student", "study", "stylist", "submit", "subsequent", "substance", "substitute", "succeed", "success", "successful", "successive", "sufficient", "sugar", "suitable", "sunshine", "superstar", "surname", "survey", "suspend", "swarm", "sweat", "sweetheart", "swim", "syllable", "symbolic", "symphony", "synonym", "system", "table", "tackle", "talent", "talk", "talkative", "tattoo", "taxi", "teach", "technical", "telephone", "temptation", "tendency", "terrific", "testify", "text", "thankful", "thesis", "thirsty", "thoughtful", "thrill", "thunder", "tightrope", "tiptoe", "title", "together", "tolerate", "tooth", "topic", "torch", "tourism", "tournament", "tradition", "traffic", "train", "transient", "transistor", "travel", "tree", "triumph", "tropical", "truck", "truly", "tuition", "tulip", "tumble", "turbulence", "twist", "type", "ultimate", "umbrella", "unafraid", "uncertain", "uncle", "underline", "uneasy", "unfriendly", "unhelpful", "uniform", "universe", "unknown", "unlike", "unpleasant", "unsure", "untidy", "update", "upgrade", "upright", "upstairs", "upward", "useful", "vacant", "value", "vanish", "various", "vegetable", "venture", "vertical", "vibrate", "video", "vigorous", "vinegar", "violin", "virtual", "visit", "vitamin", "vocalist", "voice", "volcano", "vowel", "wagon", "waitress", "wallet", "wardrobe", "wasteful", "waterproof", "wax", "wealthy", "website", "welcome", "wetland", "widespread", "wife", "window", "wisdom", "wish", "woman", "wonderful", "work", "world", "wristwatch", "yard", "year", "yogurt", "yummy", "zebra", "zoom"];
+// 1,296 words, every one graded CEFR A1-B2 -- the vocabulary a person can
+// retrieve under pressure -- with everything confusable or sound-alike
+// removed. 36 x 36, so each word is one base-36 digit of x and one of y.
+// Built by tools/wordlist; see that directory's README for how and why.
+const WORDS = ["abandon", "abnormal", "abolish", "about", "abroad", "absent", "absolute", "absorb", "abstract", "abundance", "accomplish", "account", "accurate", "achieve", "acquire", "activate", "active", "actor", "actress", "adjective", "adjust", "admire", "admit", "adopt", "adore", "advance", "advantage", "adverb", "advertise", "afford", "afternoon", "age", "agency", "agent", "agree", "airport", "alarm", "album", "alert", "alien", "allergic", "allowance", "alone", "alphabet", "alright", "altitude", "amaze", "ambition", "ambulance", "ammonia", "amuse", "analyst", "ancestor", "angry", "animal", "announce", "annoy", "annoyance", "answer", "antique", "anymore", "appear", "appearance", "appetite", "applicant", "appoint", "approval", "apron", "architect", "area", "argue", "argument", "arm", "arrange", "arrest", "arrival", "arrive", "artistic", "ask", "aspect", "aspirin", "assembly", "asset", "assign", "assist", "assistance", "assumption", "assurance", "astonish", "astronaut", "athlete", "athletic", "atmosphere", "atomic", "attach", "attempt", "attend", "attendance", "attention", "attentive", "attract", "attractive", "audio", "author", "avenue", "avoid", "awake", "axis", "bad", "badminton", "bakery", "balcony", "balloon", "banana", "bartender", "basically", "basketball", "bathroom", "battery", "beautiful", "beauty", "become", "beef", "behave", "believe", "belong", "belt", "bench", "beneath", "benefit", "bias", "bicycle", "bikini", "bilingual", "birdcage", "biscuit", "blackboard", "blend", "blog", "blossom", "blur", "body", "bone", "bonus", "book", "bookish", "boost", "border", "bottle", "box", "boyfriend", "bracelet", "brainstorm", "brave", "bravery", "breakfast", "breakup", "brewery", "bridge", "brilliant", "broadband", "brochure", "broken", "brush", "budget", "bulb", "bulletin", "bureau", "busy", "butterfly", "cake", "calculate", "calendar", "camp", "campaign", "campus", "canal", "canteen", "captain", "capture", "cardigan", "careful", "carnival", "cartoon", "cascade", "castle", "catch", "cautious", "celebrate", "cellist", "central", "century", "certain", "certainty", "certify", "chair", "challenge", "channel", "chaotic", "chapter", "character", "cheap", "checkpoint", "cheeky", "cheerful", "chemist", "cherish", "child", "childish", "chimney", "chimpanzee", "chunk", "cinema", "circle", "circular", "city", "civil", "classic", "classical", "classify", "classmate", "clean", "clerk", "client", "clinic", "cloth", "cloudy", "clumsy", "coastal", "coat", "coconut", "coherent", "coincide", "collect", "college", "colony", "columnist", "comedy", "comfort", "comic", "commercial", "committee", "common", "commute", "companion", "company", "compare", "compensate", "competence", "complain", "complement", "complete", "completion", "complicate", "component", "compose", "comprise", "compromise", "conceal", "concept", "concern", "conclude", "conclusion", "condition", "conductor", "confess", "confident", "confuse", "conquer", "consensus", "consider", "consist", "consistent", "consonant", "constant", "constitute", "consult", "contain", "continue", "contradict", "control", "convenient", "convey", "convince", "copy", "corn", "cornet", "corona", "correspond", "country", "couple", "courageous", "courtesy", "crazy", "create", "creative", "creature", "crisp", "critical", "crocodile", "crop", "crucial", "cry", "cucumber", "cuff", "cultivate", "cultural", "culture", "curious", "currency", "cursor", "custom", "cute", "daddy", "dance", "dark", "daughter", "debate", "debit", "decide", "decisive", "declare", "decline", "decorative", "dedicate", "definite", "degree", "delay", "delete", "delightful", "deliver", "deny", "departure", "depend", "dependent", "depth", "describe", "desire", "dessert", "detective", "develop", "diagram", "diamond", "dictator", "diet", "difficult", "dig", "dignity", "dilemma", "diligent", "dimension", "dinosaur", "dioxide", "diploma", "disastrous", "dishwasher", "dislike", "disposal", "dissident", "distance", "distinct", "division", "dolphin", "dominant", "donation", "dose", "doubtful", "downstairs", "dozen", "drama", "dress", "drink", "droop", "dull", "duration", "dust", "dwarf", "dynamic", "eager", "ease", "ecstatic", "efficient", "effort", "elbow", "electric", "electron", "elephant", "elsewhere", "embarrass", "emperor", "enclose", "end", "endurance", "energy", "enforce", "engage", "enhance", "entire", "entrance", "entry", "envelope", "equal", "equity", "escape", "essay", "essayist", "essence", "establish", "ethic", "everyday", "evidence", "exact", "exam", "examine", "example", "excellent", "except", "excessive", "exchange", "exclude", "exclusion", "exclusive", "excursion", "exercise", "exhibit", "exist", "exotic", "expand", "expect", "expensive", "expertise", "explain", "explore", "explosion", "export", "expose", "express", "exquisite", "external", "extinct", "extra", "extreme", "eyesight", "fabulous", "fact", "factory", "fail", "failure", "fallen", "false", "familiar", "famous", "fancy", "fantastic", "faraway", "farewell", "farther", "farthest", "fascinate", "fashion", "faulty", "feature", "feedback", "ferryboat", "festive", "fiction", "fictional", "fight", "figure", "film", "final", "finger", "fireplace", "fiscal", "fix", "flat", "flexible", "flock", "fluency", "foggy", "follow", "foolish", "footnote", "forecast", "forestry", "forever", "formula", "fossil", "foundation", "fragment", "freedom", "frequency", "frighten", "front", "frozen", "fully", "fume", "fun", "function", "functional", "furniture", "future", "gallery", "gangster", "garage", "garden", "garlic", "gender", "generous", "genius", "genre", "gesture", "gift", "giggle", "giraffe", "glance", "glimpse", "global", "globe", "glorious", "glory", "goalkeeper", "gold", "gorgeous", "gossip", "govern", "grammar", "grandma", "grateful", "gratitude", "greedy", "ground", "guarantee", "guess", "guidance", "guilty", "guitar", "guitarist", "gymnastic", "habit", "habitat", "haircut", "half", "handicraft", "handle", "handsome", "happiness", "happy", "hardware", "harmful", "harmony", "hasty", "haunt", "headache", "healthcare", "help", "helpful", "hesitate", "hidden", "highway", "hike", "historic", "hit", "hometown", "honeymoon", "hopeful", "horizon", "horrify", "hospital", "hotel", "household", "humorous", "hungry", "hurry", "husband", "hygiene", "hyphen", "icon", "icy", "idea", "ignore", "illegal", "illustrate", "imagine", "imitate", "immigrant", "immigrate", "immune", "impartial", "implement", "important", "impress", "impressive", "improve", "impulse", "inborn", "inch", "include", "income", "increase", "index", "indicate", "indirect", "indoor", "industry", "inference", "inflate", "inflation", "influence", "informal", "infringe", "inhabit", "inhale", "initial", "innermost", "input", "inquire", "inscribe", "insect", "inspire", "instant", "institute", "instructor", "insurance", "intensive", "internal", "interrupt", "interview", "invade", "invent", "involve", "irritate", "island", "isolate", "issue", "item", "jaw", "join", "journey", "judge", "juicy", "jump", "juror", "justify", "kangaroo", "keystroke", "kilo", "kingdom", "kitchen", "lady", "laptop", "large", "latecomer", "laundry", "lava", "lawmaker", "laziness", "leadership", "lecture", "leg", "legislate", "lemonade", "lengthy", "leopard", "lettuce", "level", "liar", "liberate", "liberty", "library", "lifestyle", "lightning", "limit", "listen", "literal", "loaf", "local", "locate", "location", "logic", "logical", "lost", "lottery", "loyalty", "lucky", "lunch", "luxury", "lyric", "machine", "maestro", "magazine", "magic", "magical", "magician", "maintain", "manual", "map", "marriage", "massive", "maximum", "meaningful", "meanwhile", "measure", "medicine", "meditate", "medium", "melon", "member", "memory", "mention", "menu", "merchant", "messy", "method", "microphone", "microscope", "microwave", "midnight", "migration", "milk", "mimic", "minimum", "minus", "mirror", "mischief", "mistake", "mistreat", "mixture", "modem", "modern", "modify", "moisture", "molecule", "moment", "monitor", "monkey", "month", "mortify", "mosquito", "motionless", "motivate", "motorist", "motto", "mountain", "move", "mug", "multiple", "murmur", "museum", "music", "musical", "musician", "mustard", "mutable", "mutual", "mystery", "mystify", "myth", "naked", "name", "napkin", "narrate", "native", "nature", "navigate", "nearby", "necklace", "needle", "negative", "nervous", "neutral", "newspaper", "noisy", "nomad", "nonsense", "normal", "northern", "novel", "novelist", "novelty", "nuclear", "numerous", "nurse", "nursery", "nutrient", "nutrition", "nutshell", "obey", "objective", "observe", "obstacle", "obtain", "obvious", "occasion", "occupy", "odd", "office", "official", "oil", "oneself", "open", "opera", "opinion", "oppose", "oppress", "optimist", "orator", "orbit", "orchestra", "organ", "organic", "origin", "ounce", "outdo", "outrageous", "outweigh", "oval", "overweight", "ozone", "paddle", "paint", "palace", "papaya", "parachute", "paradox", "parent", "parental", "partner", "passenger", "password", "pasta", "patience", "pattern", "pawnshop", "peaceful", "pedantic", "pencil", "people", "period", "permanent", "permeate", "person", "personal", "personnel", "persuade", "persuasion", "persuasive", "pessimist", "petrol", "pharmacist", "photo", "phrase", "physics", "picnic", "picture", "pineapple", "pink", "pizza", "plan", "planet", "plastic", "platform", "playful", "playwright", "plot", "plural", "poem", "poetry", "policeman", "polite", "pollutant", "pop", "popular", "portrait", "positive", "possessive", "possible", "potato", "potential", "powder", "powerful", "prefix", "pregnant", "prejudge", "prepare", "preschool", "presence", "pressure", "prestige", "pretend", "pretty", "previous", "primary", "privacy", "private", "probable", "problem", "product", "professor", "prominent", "promise", "prompt", "property", "proponent", "proposal", "prosperous", "protect", "protective", "proven", "provide", "public", "pudding", "punctual", "pupil", "purify", "purpose", "purposeful", "pursue", "puzzle", "quality", "quantity", "query", "quick", "quiet", "quotable", "quotation", "racist", "radar", "rainfall", "rally", "range", "rank", "raspberry", "rate", "razor", "react", "rebuild", "recipe", "reclaim", "recommend", "recover", "recycle", "redundant", "referee", "reflect", "refresh", "refute", "regain", "regard", "region", "regional", "register", "reinforce", "relative", "release", "remedy", "remind", "remove", "renew", "repay", "repertoire", "replica", "represent", "reprint", "reproduce", "rescue", "research", "resident", "resolve", "resource", "restore", "restrict", "retail", "retrospect", "review", "rewrite", "rhythm", "rhythmic", "rib", "risk", "river", "roadside", "rocket", "romance", "romantic", "routine", "rugby", "ruinous", "rule", "safari", "safeguard", "safety", "sailor", "salsa", "sample", "satellite", "saucepan", "save", "scarf", "scenery", "scholar", "school", "science", "scientist", "scope", "script", "sculpture", "seafood", "search", "seasonal", "section", "secure", "seesaw", "seminar", "sensation", "sensible", "sentence", "sequence", "serious", "servant", "settle", "shadow", "shameful", "shampoo", "shelf", "shelter", "shiny", "showcase", "shrimp", "shut", "signal", "signature", "signpost", "silver", "similar", "simplify", "simply", "sincere", "single", "singular", "ski", "skirt", "skylark", "sleep", "slice", "slow", "smart", "smell", "smoke", "sneeze", "snowy", "sociable", "social", "sofa", "soldier", "solution", "solve", "solvent", "song", "sound", "souvenir", "soybean", "space", "spaghetti", "sparkle", "special", "species", "spectator", "speculate", "speech", "spellbound", "spend", "sphere", "spicy", "spider", "spinach", "spiral", "splash", "split", "spoken", "sponsor", "spoon", "spot", "spray", "spy", "square", "stadium", "stage", "stamp", "standard", "standby", "standstill", "stanza", "statistic", "statue", "stepfather", "sticky", "stimulant", "stockpile", "stop", "story", "stove", "strange", "strategic", "strategy", "straw", "strengthen", "stretch", "strict", "string", "stripe", "structure", "stubborn", "student", "studio", "study", "stylist", "submit", "subsequent", "substance", "substitute", "succeed", "success", "successful", "successive", "sufficient", "suffix", "sugar", "suitable", "sunshine", "superb", "superstar", "supportive", "surname", "survey", "survival", "suspend", "swarm", "sweat", "sweetheart", "swim", "syllable", "symbolic", "sympathy", "symphony", "synonym", "system", "table", "tackle", "talent", "talk", "talkative", "tattoo", "taxi", "teach", "technical", "technique", "telegram", "telephone", "temptation", "tendency", "terrific", "testify", "text", "thankful", "thesis", "thirsty", "thoughtful", "thrill", "thunder", "tightrope", "tiptoe", "title", "together", "tolerate", "tooth", "topic", "torch", "tourism", "tournament", "tradition", "traffic", "train", "transfer", "transient", "transistor", "travel", "tree", "tremble", "triumph", "tropical", "truck", "truly", "trumpet", "tuition", "tulip", "tumble", "turbulence", "twist", "type", "ultimate", "umbrella", "unable", "unafraid", "unaware", "uncertain", "unchanged", "uncle", "unclear", "uncommon", "uncover", "undergo", "underline", "uneasy", "uneven", "unfold", "unforeseen", "unfriendly", "unheard", "unhelpful", "uniform", "unify", "unique", "unite", "universe", "unknown", "unlike", "unpack", "unpleasant", "unsure", "untidy", "update", "upgrade", "upright", "upstairs", "upward", "useful", "vacancy", "vacant", "valid", "value", "vanish", "various", "vegetable", "venture", "version", "vertical", "vibrate", "video", "vigorous", "vinegar", "violin", "virtual", "visibly", "visit", "visual", "vitamin", "vocalist", "voice", "volcano", "volume", "volunteer", "vowel", "wagon", "waitress", "wallet", "wardrobe", "warmth", "warranty", "wartime", "wasteful", "waterproof", "wax", "wealthy", "website", "welcome", "welfare", "wetland", "widespread", "wife", "window", "wisdom", "wish", "woman", "wonderful", "wondrous", "work", "world", "worthy", "wristwatch", "yard", "year", "yogurt", "yummy", "zebra", "zoom"];
 
 const INDEX = new Map(WORDS.map((w, i) => [w, i]));
 
@@ -55,18 +58,22 @@ const R = 6371008.8;
 // Lambert equal-area, with the standard parallel chosen so the PROJECTED WORLD
 // IS SQUARE. Its aspect is pi*K^2, so K = 1/sqrt(pi) makes it exactly 1.
 //
-// That is what makes cells square. Cell aspect is the frame's aspect times
-// 2**(yb-xb), and xb+yb is fixed by the address length, so parity decides which
-// powers of two are reachable: an even bit count can only land on frame*4**k.
-// With a square frame the even lengths -- which include both terminal lengths --
-// come out exactly 1:1, for the same cell area, since only the shape changes.
-// The odd lengths land on frame*2*4**k and so go to 2:1; no frame can square
-// both, because one exponent is odd whenever the other is even.
+// That is what makes cells square, and with base-36 digits it is the only thing
+// that has to: both axes get the same RADIX split at every word, so a square
+// frame gives a square cell at every length, full stop. Under the old binary
+// layout this took a greedy bit order and still left the odd lengths at 2:1.
+// The projection is equal-area, so fixing the frame changes shape, never
+// resolution.
 const K = 1 / Math.sqrt(Math.PI);
-const BITS = 10;
-// The last word does two jobs: 4 bits refine the position, 7 carry a checksum.
-const REFINE_BITS = 2, CHECK_BITS = BITS - REFINE_BITS;
-const WORD_MASK = (1n << BigInt(BITS)) - 1n;
+// THE ADDRESS IS BASE-36, NOT BINARY. Each word subdivides a cell RADIX x
+// RADIX, so a word is one digit of x and one of y: value = xdigit*RADIX +
+// ydigit. The list is RADIX**2 words, and a power of two is not required --
+// which is the whole point. Binary forced the list to 1024 and the cell to
+// 10.8 m; 36 x 36 is 1296 words and 4.5 m, for the same five words said.
+const RADIX = 36;                 // each word splits a cell RADIX x RADIX
+const REFINE = 3;                 // ...except the last, which splits REFINE x REFINE
+const LIST_SIZE = RADIX * RADIX;                    // 1296 words
+const CHECK = LIST_SIZE / (REFINE * REFINE);        // 144 values of checksum
 const SEP = '.';
 const EPS = 1e-9;
 
@@ -75,27 +82,23 @@ const project = (lat, lng) => [R * lng * Math.PI / 180 * K,
 const unproject = (x, y) => [Math.asin(Math.max(-1, Math.min(1, y * K / R))) * 180 / Math.PI,
                              x / (R * K) * 180 / Math.PI];
 
-// A scope is a box, an address length, and the bit layout they imply. There is
-// one of these -- GLOBAL. It stays a function because the bit layout is DERIVED
-// from the box rather than written down.
+const prod = (a) => a.reduce((p, v) => p * v, 1);
+
+// A scope is a box, an address length, and the subdivision they imply. There is
+// one of these -- GLOBAL. It stays a function because the layout is DERIVED
+// from the box and the length rather than written down.
 function makeScope(key, name, box, maxWords) {
   const [latMin, latMax, lngMin, lngMax] = box;
   const [x0, y0] = project(latMin, lngMin);
   const [x1, y1] = project(latMax, lngMax);
   const xr = Math.abs(x1 - x0), yr = Math.abs(y1 - y0);
-  const positionBitsTotal = BITS * (maxWords - 1) + REFINE_BITS;
-  // Which axis each position bit refines, coarse bit first. Not a plain
-  // alternation: a box wider than it is tall would carry that aspect down into
-  // every cell. Giving each bit to whichever axis is currently wider keeps
-  // cells near square at every length, for the same cell area -- the
-  // projection is equal-area, so only the shape changes.
-  const order = []; let w = xr, h = yr;
-  for (let i = 0; i < positionBitsTotal; i++) {
-    if (w >= h) { order.push(0); w /= 2; } else { order.push(1); h /= 2; }
-  }
-  const xb = order.filter((a) => a === 0).length;
+  // How far each word subdivides a cell, coarsest first. Every word but the
+  // last splits RADIX x RADIX; the last splits only REFINE x REFINE and spends
+  // the rest of itself on the checksum.
+  const splits = Array(maxWords - 1).fill(RADIX).concat([REFINE]);
   return { key, name, box, maxWords, x0, y0, xr, yr,
-           positionBitsTotal, order, xb, yb: positionBitsTotal - xb };
+           splits, div: prod(splits),
+           divisions: (n) => prod(splits.slice(0, n)) };
 }
 // Five words over the whole earth, and the only scope there is. A box has to
 // be a rectangle and most of the world cannot be boxed without swallowing a
@@ -123,60 +126,44 @@ function covers(lat, lng, sc) {
 
 // Both ends are clamped. The top saturates a point on the boundary -- the
 // poles, the antimeridian -- into the last cell. The bottom is only reachable
-// by floating-point slop, but an unclamped negative index would sign-extend
-// under >> and mint a plausible address for the wrong place.
+// by floating-point slop, but an unclamped negative index would mint a
+// plausible address for the wrong place.
 function indices(lat, lng, sc) {
   if (!covers(lat, lng, sc)) throw new Error(`outside ${sc.name}`);
   const [x, y] = project(lat, normaliseLng(lng, sc));
-  const cell = (v, lo, span, bits) =>
-    Math.min(Math.max(Math.floor((v - lo) / span * 2 ** bits), 0), 2 ** bits - 1);
-  return [cell(x, sc.x0, sc.xr, sc.xb), cell(y, sc.y0, sc.yr, sc.yb)];
+  const cell = (v, lo, span) =>
+    Math.min(Math.max(Math.floor((v - lo) / span * sc.div), 0), sc.div - 1);
+  return [cell(x, sc.x0, sc.xr), cell(y, sc.y0, sc.yr)];
 }
 
-function interleave(xi, yi, sc) {
-  let v = 0n, xa = sc.xb, ya = sc.yb;
-  const X = BigInt(xi), Y = BigInt(yi);
-  for (const axis of sc.order) {
-    if (axis === 0) { xa--; v = (v << 1n) | ((X >> BigInt(xa)) & 1n); }
-    else { ya--; v = (v << 1n) | ((Y >> BigInt(ya)) & 1n); }
+// One index as per-word digits, coarsest first, and back again.
+function digits(i, splits) {
+  const out = []; let rem = i;
+  for (let k = 0; k < splits.length; k++) {
+    const period = prod(splits.slice(k + 1));
+    out.push(Math.floor(rem / period));
+    rem %= period;
   }
-  return v;
+  return out;
 }
 
-function deinterleave(v, bits, sc) {
-  let xi = 0n, yi = 0n;
-  for (let i = 0; i < bits; i++) {
-    const bit = (v >> BigInt(bits - 1 - i)) & 1n;
-    if (sc.order[i] === 0) xi = (xi << 1n) | bit; else yi = (yi << 1n) | bit;
-  }
-  return [Number(xi), Number(yi)];
-}
+const undigits = (ds, splits) => ds.reduce((i, d, k) => i * splits[k] + d, 0);
 
-const positionBits = (n, sc) => (n < sc.maxWords ? BITS * n : sc.positionBitsTotal);
-const axisBits = (n, sc) => {
-  const b = positionBits(n, sc);
-  const xb = sc.order.slice(0, b).filter((a) => a === 0).length;
-  return [xb, b - xb];
-};
-
+// Metres on the ground for an address of this many words. Square at every
+// length, because both axes get the same splits.
 function cellSize(n, sc) {
-  const [xb, yb] = axisBits(n, sc);
-  return [sc.xr / 2 ** xb, sc.yr / 2 ** yb];
+  const d = sc.divisions(n);
+  return [sc.xr / d, sc.yr / d];
 }
 
 // The ambiguity left when an address is given as its last n words.
-function tileSize(nSaid, sc) {
-  if (nSaid >= sc.maxWords) return [sc.xr, sc.yr];
-  const [xb, yb] = axisBits(sc.maxWords - nSaid, sc);
-  return [sc.xr / 2 ** xb, sc.yr / 2 ** yb];
-}
+const tileSize = (nSaid, sc) =>
+  (nSaid < sc.maxWords ? cellSize(sc.maxWords - nSaid, sc) : [sc.xr, sc.yr]);
 
-// How many low bits of each axis index a tail of nSaid words pins down.
-function knownLow(nSaid, sc) {
-  const dropped = BITS * (sc.maxWords - nSaid);
-  const dx = sc.order.slice(0, dropped).filter((a) => a === 0).length;
-  return [sc.xb - dx, sc.yb - (dropped - dx)];
-}
+// The spacing of the candidates a tail of nSaid words leaves: the words said
+// fix the TRAILING digits, so the candidates are every index congruent to them
+// modulo the product of those digits' places.
+const knownPeriod = (nSaid, sc) => prod(sc.splits.slice(sc.maxWords - nSaid));
 
 // SHA-256 in plain JS. crypto.subtle would be neater but only exists in a
 // secure context, so it is undefined when this file is opened from disk --
@@ -225,109 +212,136 @@ function sha256(bytes) {
 }
 
 
-// Seven bits over the whole position -- which is what makes both kinds of
-// shortening safe, since a reconstruction that guesses wrong fails it.
-function checksum(position, sc) {
-  const p = new Array(8);
-  let v = position;
-  for (let i = 7; i >= 0; i--) { p[i] = Number(v & 0xffn); v >>= 8n; }
-  return BigInt(sha256(p)[0] >>> (32 - CHECK_BITS));
+// One of CHECK values over the whole position -- which is what makes both kinds
+// of shortening safe, since a reconstruction that guesses wrong fails it.
+function checksum(xi, yi) {
+  const p = new Uint8Array(16);
+  const dv = new DataView(p.buffer);
+  dv.setUint32(4, xi);                    // 8 bytes big-endian each, as Python
+  dv.setUint32(12, yi);
+  const h = sha256(p);
+  return Number(((BigInt(h[0] >>> 0) << 32n) | BigInt(h[1] >>> 0)) % BigInt(CHECK));
 }
 
-function value(lat, lng, sc) {
-  const position = interleave(...indices(lat, lng, sc), sc);
-  return (position << BigInt(CHECK_BITS)) | checksum(position, sc);
+// Python's round() is half-to-even and JS's is half-up. The lattice arithmetic
+// below lands exactly on .5 whenever a period is even, so the two ports would
+// disagree on those points unless this says which way to go.
+function pyRound(v) {
+  const f = Math.floor(v), d = v - f;
+  if (d > 0.5) return f + 1;
+  if (d < 0.5) return f;
+  return f % 2 === 0 ? f : f + 1;
+}
+
+// The value of each word of the full address, coarsest first.
+function wordValues(xi, yi, sc) {
+  const xd = digits(xi, sc.splits), yd = digits(yi, sc.splits);
+  const out = [];
+  for (let k = 0; k < sc.maxWords - 1; k++) out.push(xd[k] * RADIX + yd[k]);
+  const last = xd[sc.maxWords - 1] * REFINE + yd[sc.maxWords - 1];
+  return out.concat([last * CHECK + checksum(xi, yi)]);
 }
 
 // The first n words. Coarser as n falls; needs no context at any length.
+//
+// The leading digits do not depend on the trailing ones, so a shorter address
+// is literally a prefix of the longer one -- no truncation subtlety, unlike the
+// interleaved binary layout this replaced.
 function encode(lat, lng, n, sc) {
-  let v = value(lat, lng, sc);
-  if (n < sc.maxWords) v >>= BigInt(BITS * (sc.maxWords - n));
-  const out = [];
-  for (let i = 0; i < n; i++) out.push(WORDS[Number((v >> BigInt(BITS * (n - 1 - i))) & WORD_MASK)]);
-  return out;
+  return wordValues(...indices(lat, lng, sc), sc).slice(0, n).map((v) => WORDS[v]);
 }
 
-// A box past 180 unprojects past 180 too; bring it back to -180..180.
-function fromPosition(position, sc) {
-  const [xi, yi] = deinterleave(position, sc.positionBitsTotal, sc);
-  const ll = unproject(sc.x0 + (xi + 0.5) / 2 ** sc.xb * sc.xr,
-                       sc.y0 + (yi + 0.5) / 2 ** sc.yb * sc.yr);
+// The centre of the cell those indices name, at that address length. A box past
+// 180 unprojects past 180 too; bring it back to -180..180.
+function fromIndices(xi, yi, n, sc) {
+  const d = sc.divisions(n);
+  const ll = unproject(sc.x0 + (xi + 0.5) / d * sc.xr,
+                       sc.y0 + (yi + 0.5) / d * sc.yr);
   return [ll[0], wrapLng(ll[1])];
 }
 
 // An absolute address: the first n words, coarser as n falls.
 function decode(spoken, sc) {
   const unknown = spoken.filter((w) => !INDEX.has(w));
-  if (unknown.length) throw new Error(`not BIP-39 words: ${unknown.join(', ')}`);
-  if (spoken.length < 1 || spoken.length > sc.maxWords)
-    throw new Error(`1 to ${sc.maxWords} words in ${sc.name}`);
-  let v = 0n;
-  for (const w of spoken) v = (v << BigInt(BITS)) | BigInt(INDEX.get(w));
-  let prefix;
-  if (spoken.length < sc.maxWords) prefix = v;
-  else {
-    prefix = v >> BigInt(CHECK_BITS);
-    if ((v & ((1n << BigInt(CHECK_BITS)) - 1n)) !== checksum(prefix, sc))
-      throw new Error('checksum failed - a word is wrong');
-  }
-  const bits = positionBits(spoken.length, sc);
-  const [xb, yb] = axisBits(spoken.length, sc);
-  const [xi, yi] = deinterleave(prefix, bits, sc);
-  const ll = unproject(sc.x0 + (xi + 0.5) / 2 ** xb * sc.xr,
-                       sc.y0 + (yi + 0.5) / 2 ** yb * sc.yr);
-  return [ll[0], wrapLng(ll[1])];
+  if (unknown.length) throw new Error(`not on the word list: ${unknown.join(', ')}`);
+  const n = spoken.length;
+  if (n < 1 || n > sc.maxWords) throw new Error(`1 to ${sc.maxWords} words in ${sc.name}`);
+  const xd = [], yd = [];
+  let check = null;
+  spoken.forEach((w, k) => {
+    const v = INDEX.get(w);
+    if (k === sc.maxWords - 1) {
+      const pos = Math.floor(v / CHECK); check = v % CHECK;
+      xd.push(Math.floor(pos / REFINE)); yd.push(pos % REFINE);
+    } else {
+      xd.push(Math.floor(v / RADIX)); yd.push(v % RADIX);
+    }
+  });
+  const splits = sc.splits.slice(0, n);
+  const xi = undigits(xd, splits), yi = undigits(yd, splits);
+  if (check !== null && checksum(xi, yi) !== check)
+    throw new Error('checksum failed - a word is wrong');
+  return fromIndices(xi, yi, n, sc);
 }
+
+// [knownX, knownY, check, period] for an address missing its leading words. The
+// known digits are the low ones; the period is how far apart the candidates sit.
+function tailPosition(spoken, sc) {
+  const unknown = spoken.filter((w) => !INDEX.has(w));
+  if (unknown.length) throw new Error(`not on the word list: ${unknown.join(', ')}`);
+  const n = spoken.length;
+  if (n < 1 || n > sc.maxWords) throw new Error(`1 to ${sc.maxWords} words in ${sc.name}`);
+  const dropped = sc.maxWords - n;
+  const xd = [], yd = [];
+  let check = null;
+  spoken.forEach((w, k) => {
+    const v = INDEX.get(w);
+    if (dropped + k === sc.maxWords - 1) {
+      const pos = Math.floor(v / CHECK); check = v % CHECK;
+      xd.push(Math.floor(pos / REFINE)); yd.push(pos % REFINE);
+    } else {
+      xd.push(Math.floor(v / RADIX)); yd.push(v % RADIX);
+    }
+  });
+  const tailSplits = sc.splits.slice(dropped);
+  return [undigits(xd, tailSplits), undigits(yd, tailSplits), check, prod(tailSplits)];
+}
+
+// The lattice point nearest the reference, kept inside [0, div).
+const clampLattice = (known, period, ref, div) =>
+  Math.min(Math.max(known + pyRound((ref - known) / period) * period, known),
+           known + Math.floor((div - 1 - known) / period) * period);
 
 // An address given as its last words, plus a reference point. The dropped
 // words are the coarse ones, so the reference supplies them: on each axis take
-// the candidate matching the known low bits that is nearest the reference. The
-// checksum then covers the whole reconstruction, so a reference too far off to
-// pick the right tile is caught rather than resolving quietly to the wrong place.
+// the candidate matching the known low digits that is nearest the reference.
+// The checksum then covers the whole reconstruction, so a reference too far off
+// to pick the right tile is caught rather than resolving quietly to the wrong
+// place.
 function resolveTail(spoken, nearLat, nearLng, sc) {
-  const unknown = spoken.filter((w) => !INDEX.has(w));
-  if (unknown.length) throw new Error(`not BIP-39 words: ${unknown.join(', ')}`);
-  const n = spoken.length;
-  if (n < 1 || n > sc.maxWords) throw new Error(`1 to ${sc.maxWords} words in ${sc.name}`);
-  let low = 0n;
-  for (const w of spoken) low = (low << BigInt(BITS)) | BigInt(INDEX.get(w));
-  const check = low & ((1n << BigInt(CHECK_BITS)) - 1n);
-  const knownBits = BITS * n - CHECK_BITS;
-  const posLow = low >> BigInt(CHECK_BITS);
-  const [cx, cy] = knownLow(n, sc);
-  let knownX = 0, knownY = 0;
-  for (let i = 0; i < knownBits; i++) {
-    const seq = sc.positionBitsTotal - knownBits + i;
-    const bit = Number((posLow >> BigInt(knownBits - 1 - i)) & 1n);
-    if (sc.order[seq] === 0) knownX = knownX * 2 + bit; else knownY = knownY * 2 + bit;
-  }
+  const [knownX, knownY, check, period] = tailPosition(spoken, sc);
+  if (check === null)
+    throw new Error('a tail must include the last word, which carries the checksum');
   const [xiRef, yiRef] = indices(nearLat, nearLng, sc);
   // x wraps: the projection is a cylinder, so a reference a few kilometres west
   // of the antimeridian is a whole world-width away in index terms while being
   // next door on the ground. Linear arithmetic picks a tile on the far side.
-  const clampLattice = (known, period, ref, bits) => {
-    const v = known + Math.round((ref - known) / period) * period;
-    return Math.min(Math.max(v, known),
-      known + Math.floor((2 ** bits - 1 - known) / period) * period);
-  };
-  const periodX = 2 ** cx, totalX = 2 ** sc.xb;
   let xi;
   if (sc === GLOBAL) {
-    const k = Math.round((((xiRef - knownX) % totalX + totalX) % totalX) / periodX)
-      % (totalX / periodX);
-    xi = (knownX + k * periodX) % totalX;
+    const k = pyRound(((((xiRef - knownX) % sc.div) + sc.div) % sc.div) / period)
+      % Math.floor(sc.div / period);
+    xi = (knownX + k * period) % sc.div;
   } else {
-    xi = clampLattice(knownX, periodX, xiRef, sc.xb);   // a partial box does not wrap
+    xi = clampLattice(knownX, period, xiRef, sc.div);   // a partial box does not wrap
   }
   // y never wraps -- latitude ends at the poles -- so clamp, but to the last
   // point ON the lattice: clamping to the last index would leave a value the
-  // known bits do not match.
-  const yi = clampLattice(knownY, 2 ** cy, yiRef, sc.yb);
-  const position = interleave(xi, yi, sc);
-  if (checksum(position, sc) !== check)
+  // known digits do not match.
+  const yi = clampLattice(knownY, period, yiRef, sc.div);
+  if (checksum(xi, yi) !== check)
     throw new Error('checksum failed - a word is wrong, or the reference point '
       + 'is too far away to fill in the missing words');
-  return fromPosition(position, sc);
+  return fromIndices(xi, yi, sc.maxWords, sc);
 }
 
 // The fewest trailing words that resolve back to this point from that reference.
@@ -343,8 +357,8 @@ function wordsNeeded(lat, lng, nearLat, nearLng, sc) {
   return sc.maxWords;
 }
 
-// '.cruel.tomato.tone' -- the leading separator says the coarse words are
-// missing and context must supply them.
+// '.machine.structure.science' -- the leading separator says the coarse words
+// are missing and context must supply them.
 const formatAddress = (spoken, tail) => (tail ? SEP : '') + spoken.join(SEP);
 
 function parseAddress(text) {
@@ -395,38 +409,25 @@ async function countryAt(lat, lng) {
 // Every point inside the box whose address ends with these words and whose
 // checksum passes. The country picks the window; the checksum picks the answer.
 function candidatesInBox(tail, box, sc, limit = 20000) {
-  const n = tail.length;
-  let value = 0n;
-  for (const w of tail) value = (value << BigInt(BITS)) | BigInt(INDEX.get(w));
-  const check = value & ((1n << BigInt(CHECK_BITS)) - 1n);
-  const knownBits = BITS * n - CHECK_BITS;
-  const posLow = value >> BigInt(CHECK_BITS);
-  const [cx, cy] = knownLow(n, sc);
-  let knownX = 0, knownY = 0;
-  for (let i = 0; i < knownBits; i++) {
-    const seq = sc.positionBitsTotal - knownBits + i;
-    const bit = Number((posLow >> BigInt(knownBits - 1 - i)) & 1n);
-    if (sc.order[seq] === 0) knownX = knownX * 2 + bit; else knownY = knownY * 2 + bit;
-  }
+  const [knownX, knownY, check, period] = tailPosition(tail, sc);
+  if (check === null) return { hits: [], searched: 0 };
   const [south, north, west, east] = box;
   const [xa, ya] = project(south, normaliseLng(west, sc));
-  const [xb2, yb2] = project(north, normaliseLng(east, sc));
-  const toI = (v, lo, span, bits) => Math.floor((v - lo) / span * 2 ** bits);
-  const loX = Math.max(0, toI(Math.min(xa, xb2), sc.x0, sc.xr, sc.xb));
-  const hiX = Math.min(2 ** sc.xb - 1, toI(Math.max(xa, xb2), sc.x0, sc.xr, sc.xb));
-  const loY = Math.max(0, toI(Math.min(ya, yb2), sc.y0, sc.yr, sc.yb));
-  const hiY = Math.min(2 ** sc.yb - 1, toI(Math.max(ya, yb2), sc.y0, sc.yr, sc.yb));
-  const px = 2 ** cx, py = 2 ** cy;
-  const firstX = knownX + Math.ceil((loX - knownX) / px) * px;
-  const firstY = knownY + Math.ceil((loY - knownY) / py) * py;
-  const nx = Math.max(0, Math.floor((hiX - firstX) / px) + 1);
-  const ny = Math.max(0, Math.floor((hiY - firstY) / py) + 1);
+  const [xb, yb] = project(north, normaliseLng(east, sc));
+  const toI = (v, lo, span) => Math.floor((v - lo) / span * sc.div);
+  const loX = Math.max(0, toI(Math.min(xa, xb), sc.x0, sc.xr));
+  const hiX = Math.min(sc.div - 1, toI(Math.max(xa, xb), sc.x0, sc.xr));
+  const loY = Math.max(0, toI(Math.min(ya, yb), sc.y0, sc.yr));
+  const hiY = Math.min(sc.div - 1, toI(Math.max(ya, yb), sc.y0, sc.yr));
+  const firstX = knownX + Math.ceil((loX - knownX) / period) * period;
+  const firstY = knownY + Math.ceil((loY - knownY) / period) * period;
+  const nx = Math.max(0, Math.floor((hiX - firstX) / period) + 1);
+  const ny = Math.max(0, Math.floor((hiY - firstY) / period) + 1);
   if (nx * ny > limit) return { hits: null, searched: nx * ny };
   const hits = [];
-  for (let xi = firstX; xi <= hiX; xi += px) {
-    for (let yi = firstY; yi <= hiY; yi += py) {
-      const position = interleave(xi, yi, sc);
-      if (checksum(position, sc) === check) hits.push(fromPosition(position, sc));
+  for (let xi = firstX; xi <= hiX; xi += period) {
+    for (let yi = firstY; yi <= hiY; yi += period) {
+      if (checksum(xi, yi) === check) hits.push(fromIndices(xi, yi, sc.maxWords, sc));
     }
   }
   return { hits, searched: nx * ny };
@@ -434,10 +435,10 @@ function candidatesInBox(tail, box, sc, limit = 20000) {
 
 // Searching a region trades DETECTION for a word, and MAX_CANDIDATES is the cap
 // on that trade. When a word is wrong the true tile is gone, so every candidate
-// in the window is a fresh lottery against the same 7 check bits and a wrong
-// word is caught only (127/128)**k of the time. Six holds that at 95.4%,
-// against 99.2% for the full address; an uncapped window the size of Australia
-// holds ~70 and falls to 58%, where a third of mishearings resolve silently to
+// in the window is a fresh lottery against the same checksum and a wrong word
+// is caught only ((CHECK-1)/CHECK)**k of the time. Six holds that at 95.9%,
+// against 99.31% for the full address; an uncapped window the size of Australia
+// holds ~35 and falls to 78%, where a fifth of mishearings resolve silently to
 // somewhere else in the country. resolveTail() has no such loss -- it tests the
 // single nearest tile, one chance to be fooled rather than k.
 const MAX_CANDIDATES = 6;
@@ -466,7 +467,7 @@ function decodeInBox(spoken, box, sc) {
   const { hits, searched } = candidatesInBox(spoken, box, sc, MAX_CANDIDATES);
   if (searched > MAX_CANDIDATES)
     throw new Error(`${searched} candidates in this region, more than the `
-      + `${MAX_CANDIDATES} a 7-bit check can screen - say the whole address`);
+      + `${MAX_CANDIDATES} a ${CHECK}-value check can screen - say the whole address`);
   if (!hits || !hits.length)
     throw new Error('checksum failed - a word is wrong, or this address does '
       + 'not belong in this region');
@@ -519,9 +520,8 @@ async function show(lat, lng) {
   marker = L.circleMarker([lat, lng],
     { radius: 5, color: '#a8322a', weight: 2, fillOpacity: .9 }).addTo(map);
   if (cellBox) { map.removeLayer(cellBox); cellBox = null; }
-  const [xb, yb] = axisBits(scope.maxWords, scope);
   const [x, y] = project(lat, normaliseLng(lng, scope));
-  const w = scope.xr / 2 ** xb, h = scope.yr / 2 ** yb;
+  const [w, h] = cellSize(scope.maxWords, scope);
   const cx = scope.x0 + Math.floor((x - scope.x0) / w) * w;
   const cy = scope.y0 + Math.floor((y - scope.y0) / h) * h;
   const sw = unproject(cx, cy), ne = unproject(cx + w, cy + h);
@@ -549,7 +549,7 @@ async function show(lat, lng) {
   }
   const said = shortestInBox(lat, lng, country.box, scope);
   draw(lat, lng, said);
-  // The cell size is the hint worth showing: it is the same 1.35 m whether the
+  // The cell size is the hint worth showing: it is the same 4.5 m whether the
   // country bought a word or not, which is the point of one grid.
   noteEl.innerHTML = `${country.name} &middot; ${gridHint()}`
     + (said < scope.maxWords ? ''

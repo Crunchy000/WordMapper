@@ -16,7 +16,7 @@ POINTS = [
 ]
 # Tails resolved from a reference POINT: (lat, lng, n_said, ref_lat, ref_lng).
 # The reference has to sit inside the tile the dropped words leave, and those
-# tiles are 21.5 m, 689 m, 22.1 km and 706 km at 1, 2, 3 and 4 words said.
+# tiles are 13.45 m, 484 m, 17.4 km and 627 km at 1, 2, 3 and 4 words said.
 TAILS = [
     (51.50072, -0.12456, 2, 51.50077, -0.12460),      # a few metres: same room
     (51.50072, -0.12456, 3, 51.50200, -0.12500),      # 150 m: same street
@@ -78,8 +78,11 @@ if __name__ == '__main__':
     out = {
         'max_words': sc.max_words,
         'max_candidates': g.MAX_CANDIDATES,
-        'order': ''.join('xy'[a] for a in sc.order),
-        'axis_bits': [sc.xb, sc.yb],
+        'radix': g.RADIX,
+        'refine': g.REFINE,
+        'check': g.CHECK,
+        'splits': list(sc.splits),
+        'div': sc.div,
         'box': list(sc.box),
         'points': [{'lat': la, 'lng': lo,
                     'words': {str(n): g.encode(la, lo, words, n)

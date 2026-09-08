@@ -22,26 +22,29 @@ const words = html.match(/const WORDS = (\[[^\n]*\]);/)[1];
 // two would drift silently, so they are compared directly rather than only
 // through the encodings.
 const listed = readFileSync(
-  join(here, '..', 'wordlist', 'spoken-1024-plain.txt'), 'utf8').trim().split('\n');
+  join(here, '..', 'wordlist', 'spoken-1296-plain.txt'), 'utf8').trim().split('\n');
 if (JSON.parse(words).join('\n') !== listed.join('\n'))
-  fail("the demo's word list is not tools/wordlist/spoken-1024-plain.txt");
+  fail("the demo's word list is not tools/wordlist/spoken-1296-plain.txt");
 const src = `const WORDS = ${words};\n`
   + html.slice(html.indexOf('const INDEX = new Map'), html.indexOf('// --- map ---'))
   + '\nexport { encode, decode, resolveTail, cellSize, tileSize, covers, indices,'
   + ' parseAddress, formatAddress, candidatesInBox, shortestInBox, decodeInBox,'
-  + ' MAX_CANDIDATES, GLOBAL };';
+  + ' MAX_CANDIDATES, RADIX, REFINE, CHECK, GLOBAL };';
 const tmp = join(tmpdir(), `word-grid-check-${process.pid}.mjs`);
 writeFileSync(tmp, src);
 let mod;
 try { mod = await import(pathToFileURL(tmp).href); } finally { rmSync(tmp, { force: true }); }
 const G = mod.GLOBAL;
 
-// The bit order decides the shape of every cell, so the ports must agree on it
-// exactly, not merely on the totals.
-const order = G.order.map((a) => 'xy'[a]).join('');
-if (order !== fixture.order) fail(`bit order: js ${order} vs py ${fixture.order}`);
-if (G.xb !== fixture.axis_bits[0] || G.yb !== fixture.axis_bits[1])
-  fail(`axis bits: js ${[G.xb, G.yb]} vs py ${fixture.axis_bits}`);
+// The subdivision decides the size of every cell, so the ports must agree on it
+// exactly, not merely on the total.
+if (G.splits.join(',') !== fixture.splits.join(','))
+  fail(`splits: js ${G.splits} vs py ${fixture.splits}`);
+if (G.div !== fixture.div) fail(`divisions: js ${G.div} vs py ${fixture.div}`);
+if (mod.RADIX !== fixture.radix || mod.REFINE !== fixture.refine
+    || mod.CHECK !== fixture.check)
+  fail(`radix/refine/check: js ${[mod.RADIX, mod.REFINE, mod.CHECK]} vs py `
+    + `${[fixture.radix, fixture.refine, fixture.check]}`);
 if (G.box.join(',') !== fixture.box.join(',')) fail(`box: js ${G.box} vs py ${fixture.box}`);
 if (mod.MAX_CANDIDATES !== fixture.max_candidates)
   fail(`cap: js ${mod.MAX_CANDIDATES} vs py ${fixture.max_candidates}`);
@@ -104,7 +107,7 @@ for (const b of fixture.boxes) {
     if (said !== p.said)
       fail(`${b.name} ${p.lat},${p.lng}: js says ${said} words, py says ${p.said}`);
     // The cap is the safety property: never shorten against a window too wide
-    // for 7 check bits to screen. Both ports must draw that line in one place.
+    // for the check to screen. Both ports must draw that line in one place.
     if (said < G.maxWords) {
       const { searched } = mod.candidatesInBox(full.slice(-said), b.box, G);
       if (searched > mod.MAX_CANDIDATES)
@@ -120,9 +123,9 @@ for (const b of fixture.boxes) {
 
 // The leading separator is the whole notation for a tail, so parsing it back
 // has to survive the round trip in both ports.
-for (const [text, n, tail] of [['leg.tunnel.slam', 3, false],
-                               ['.slam.subway.gown', 3, true],
-                               ['  LEG tunnel Slam ', 3, false]]) {
+for (const [text, n, tail] of [['machine.structure.science', 3, false],
+                               ['.machine.structure.science', 3, true],
+                               ['  MACHINE structure Science ', 3, false]]) {
   const [parts, isTail] = mod.parseAddress(text);
   if (parts.length !== n || isTail !== tail)
     fail(`PARSE ${JSON.stringify(text)} -> ${parts.length} words, tail=${isTail}`);

@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
-"""Word addresses from the BIP-39 list, on one global grid.
+"""Word addresses from an easy-English word list, on one global grid.
 
-    npm install --prefix tools/gridcode
+FIVE WORDS name any point on earth to 4.48 m:
 
-FIVE WORDS name any point on earth to 1.35 m:
-
-    leg.tunnel.slam.subway.gown
+    kangaroo.wagon.machine.structure.science
 
 There is one grid and one address for a place. No regional boxes, no scope to
 choose, nothing to switch. A box has to be a rectangle and most of the world
@@ -26,28 +24,29 @@ The second is what turns five words into four in ordinary use: "in the UK" is
 worth a word.
 
 HOW MANY WORDS A WINDOW BUYS is one number: how many candidate tiles it holds.
-Each word is 11 bits, so one fewer word is 2048 times as many tiles, and the 7
-check bits leave one in 128 standing -- so a length works exactly when no OTHER
-candidate survives, a Poisson zero at rate (tiles - 1)/128. Nothing about
+Each word is a base-36 digit on each axis, so one fewer word is 1296 times as
+many tiles, and the check leaves one in CHECK standing -- so a length works
+exactly when no OTHER candidate survives, a Poisson zero at rate
+(tiles - 1)/CHECK. Nothing about
 countries enters into it; a country is just a box someone else drew. Measured
 against the boxes Nominatim returns:
 
     Luxembourg      4,700 km2     1.0 tiles   four, always
     Switzerland    76,000 km2     1.0         four, always
-    Ireland       193,000 km2     1.1         four, always
-    United Kingdom  1.3 M km2     5.5         four, 97% of the time
-    France         1.28 M km2     5.5         four, 97% of the time
-    Australia      17.3 M km2      71         five -- over the cap
-    United States   159 M km2     638         five -- over the cap
+    Ireland       193,000 km2     1.0         four, always
+    United Kingdom  1.3 M km2     3.6         four, 97% of the time
+    France         1.28 M km2     3.5         four, 98% of the time
+    Australia      17.3 M km2      45         five -- over the cap
+    United States   159 M km2     405         five -- over the cap
 
 AND IT COSTS DETECTION, which MAX_CANDIDATES is there to bound. A misheard word
 removes the true tile, so every candidate in the window is a fresh lottery
-against the same 7 check bits and a wrong word is caught only (127/128)**k of
-the time -- 95.4% at the cap of 6, against 99.2% for the full address. Uncapped,
-a window the size of Australia holds ~70 and falls to 58%, where a third of
-mishearings resolve SILENTLY to somewhere else in the country. resolve_tail()
-has no such loss: it tests the single nearest tile, one chance to be fooled
-rather than k.
+against the same checksum and a wrong word is caught only ((CHECK-1)/CHECK)**k
+of the time -- 95.9% at the cap of 6, against 99.31% for the full address.
+Uncapped, a window the size of Australia holds ~45 and falls to 73%, where a
+quarter of mishearings resolve SILENTLY to somewhere else in the country.
+resolve_tail() has no such loss: it tests the single nearest tile, one chance to
+be fooled rather than k.
 
 THE GRID DOES NOT DEPEND ON THE REGION. The window is used when an address is
 READ. It is not part of the address and nothing is bound to it, so a border can
@@ -60,32 +59,46 @@ needs no context at all. Each word narrows the area and the words already said
 never change, because every address is a prefix of a longer one.
 
 THE LAST WORD DOES TWO JOBS. A whole final word of position would be finer than
-anyone needs, so its 11 bits are split: 4 refine the position and 7 carry a
-checksum over it. Five words is terminal because a sixth would have to
-reinterpret the check bits.
+anyone needs, so the last word splits a cell only REFINE x REFINE and spends the
+rest of its LIST_SIZE values on a checksum over the whole position. Five words
+is terminal because a sixth would have to reinterpret the check.
 
-HOW THE PREFIX PROPERTY IS KEPT. The x and y coordinates are interleaved ONCE
-at full precision and the resulting bit string is truncated. Deriving the
-interleave order per length instead does not work: 11 bits per word is odd, so
-33 bits splits the axes 17/16 while 22 and 44 split evenly, and the three
-orders are unrelated sequences rather than prefixes of one another.
+WHY THE PREFIX PROPERTY IS FREE. Each word is one base-36 digit of x and one of
+y, so a shorter address is literally the leading digits of a longer one and the
+leading digits do not depend on the trailing ones. The binary layout this
+replaced had to interleave the coordinates ONCE at full precision and truncate
+the bit string: deriving the interleave order per length does not work, because
+11 bits per word is odd, so 33 bits splits the axes 17/16 while 22 and 44 split
+evenly, and the three orders are unrelated sequences rather than prefixes of one
+another.
 """
 import hashlib, math, os, sys
 
 R = 6371008.8               # mean earth radius, metres
-BITS_PER_WORD = 10          # log2(1024), exactly
-REFINE_BITS = 2             # of the last word's 10 bits, how many refine position
-CHECK_BITS = BITS_PER_WORD - REFINE_BITS
-WORD_MASK = 2 ** BITS_PER_WORD - 1
+# THE ADDRESS IS BASE-36, NOT BINARY. Each word subdivides a cell RADIX x RADIX,
+# so a word is one digit of x and one of y: word value = xdigit * RADIX + ydigit.
+# The list is therefore RADIX**2 words, and a power of two is not required --
+# which is the whole point. Binary forced the list to 1024 and the cell to
+# 10.8 m; 36 x 36 is 1296 words and 4.5 m, for the same five words said.
+#
+# It is also simpler. There is no bit-interleaving, no per-length axis split and
+# no question of which axis a bit refines: digits are digits, the leading ones
+# do not depend on the trailing ones, and the prefix property falls out for
+# free. The frame is square and both axes get the same splits, so every cell at
+# every length is exactly square without anyone arranging it.
+RADIX = 36                  # each word splits a cell RADIX x RADIX
+REFINE = 3                  # ...except the last, which splits only REFINE x REFINE
+LIST_SIZE = RADIX * RADIX                       # 1296 words
+CHECK = LIST_SIZE // (REFINE * REFINE)          # 144 values of checksum
 SEP = '.'
 TAIL_MARK = SEP             # a leading separator marks a context-dependent tail
 EPS = 1e-9                  # degrees of slack on a box edge, for float error
 # Searching a region trades DETECTION for a word, and this is the cap on that
 # trade. When a word is wrong the true tile is gone, so every candidate in the
-# window is a fresh lottery against the same 7 check bits and a wrong word is
-# caught only (127/128)**k of the time. Six candidates holds that at 95.4%,
-# against 99.2% for the full address; an uncapped window the size of Australia
-# holds ~70 and falls to 58%, where a third of mishearings resolve silently to
+# window is a fresh lottery against the same checksum and a wrong word is caught
+# only ((CHECK-1)/CHECK)**k of the time. Six candidates holds that at 95.9%,
+# against 99.31% for the full address; an uncapped window the size of Australia
+# holds ~35 and falls to 78%, where a fifth of mishearings resolve silently to
 # the wrong place. resolve_tail() has no such loss: it tests the single nearest
 # tile, one chance to be fooled rather than k.
 MAX_CANDIDATES = 6
@@ -95,16 +108,12 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 # Lambert equal-area, with the standard parallel chosen so the PROJECTED WORLD
 # IS SQUARE. Its aspect is pi*K^2, so K = 1/sqrt(pi) makes it exactly 1.
 #
-# That is what makes cells square. Cell aspect is the frame's aspect times
-# 2**(yb-xb), and xb+yb is fixed by the address length, so parity decides which
-# powers of two are reachable: an even bit count can only land on frame*4**k.
-# With a square frame the even lengths -- which include both terminal lengths,
-# 44 and 48 bits -- come out exactly 1:1. At 30 degrees the frame was 2.356:1
-# and the five-word cell was 1.03 x 1.75 m; now it is 1.346 m square, for the
-# same area, because the projection is equal-area and only the shape changes.
-#
-# The cost is the odd lengths, which land on frame*2*4**k and so go to 2:1.
-# No frame can square both: one exponent is odd whenever the other is even.
+# That is what makes cells square, and with base-36 digits it is the only thing
+# that has to: both axes get the same RADIX split at every word, so a square
+# frame gives a square cell at every length, full stop. Under the old binary
+# layout this took a greedy bit order and still left the odd lengths at 2:1.
+# At 30 degrees the frame was 2.356:1 and cells inherited that aspect; the
+# projection is equal-area, so fixing it changes shape and never resolution.
 _K = 1.0 / math.sqrt(math.pi)
 STD_PARALLEL = math.degrees(math.acos(_K))         # 55.654 degrees
 
@@ -113,15 +122,15 @@ class OutsideBox(ValueError):
     """Raised for a coordinate the scope's box does not cover."""
 
 
-# 1,024 words, every one graded CEFR A1-B2 -- the vocabulary a person can
+# 1,296 words, every one graded CEFR A1-B2 -- the vocabulary a person can
 # retrieve under pressure -- with everything confusable or sound-alike removed.
 # Built by tools/wordlist; see that directory's README for how and why.
 #
 # BIP-39 was here before it, and was the wrong list for this: it is designed to
 # be TYPED and checksummed, and contains pair/pear, peace/piece, right/write and
 # wear/where, with 53% of it one articulatory feature from another entry.
-WORDLIST = os.path.join(_HERE, '..', 'wordlist', 'spoken-1024-plain.txt')
-WORDLIST_SHA256 = '33fc2169cabc4ba9232cce43d015f728ab96b0acb971a402077bfb3040430c20'
+WORDLIST = os.path.join(_HERE, '..', 'wordlist', 'spoken-1296-plain.txt')
+WORDLIST_SHA256 = '6737c7c8ea7645cca2fe5534cf63de485d77be68b04a2c1df9e298082b169e37'
 
 
 def load_wordlist(path=WORDLIST):
@@ -131,7 +140,7 @@ def load_wordlist(path=WORDLIST):
     if got != WORDLIST_SHA256:
         raise ValueError(f'{path} is not the expected word list (sha256 {got})')
     words = raw.decode().split()
-    assert len(words) == 2 ** BITS_PER_WORD, len(words)
+    assert len(words) == LIST_SIZE, len(words)
     return words
 
 
@@ -159,34 +168,29 @@ def unproject(x, y):
 
 
 class Scope:
-    """A box, an address length, and the bit layout they imply.
+    """A box, an address length, and the subdivision they imply.
 
     There is one of these -- GLOBAL. It is a class rather than a handful of
-    module constants because the bit layout is DERIVED from the box: which axis
-    each bit refines depends on the box's aspect, and having that in one place
-    is what lets the tests state the derivation rather than the answer.
+    module constants because the layout is DERIVED from the box and the length,
+    and having that derivation in one place is what lets the tests state it
+    rather than restate its answer.
     """
 
     def __init__(self, key, name, box, max_words):
         self.key, self.name, self.box, self.max_words = key, name, box, max_words
-        self.position_bits = BITS_PER_WORD * (max_words - 1) + REFINE_BITS
+        # How far each word subdivides a cell, coarsest first. Every word but
+        # the last splits RADIX x RADIX; the last splits only REFINE x REFINE
+        # and spends the rest of itself on the checksum.
+        self.splits = [RADIX] * (max_words - 1) + [REFINE]
+        self.div = math.prod(self.splits)       # divisions per axis at full length
         latMin, latMax, lngMin, lngMax = box
         self.x0, self.y0 = project(latMin, lngMin)
         x1, y1 = project(latMax, lngMax)
         self.xr, self.yr = abs(x1 - self.x0), abs(y1 - self.y0)
-        # Which axis each position bit refines, coarse bit first. Not a plain
-        # alternation: a box wider than it is tall would carry that aspect down
-        # into every cell. Giving each bit to whichever axis is currently wider
-        # keeps cells near square at every length, for the same cell area --
-        # the projection is equal-area, so only the shape changes.
-        self.order, w, h = [], self.xr, self.yr
-        for _ in range(self.position_bits):
-            if w >= h:
-                self.order.append(0); w /= 2
-            else:
-                self.order.append(1); h /= 2
-        self.xb = self.order.count(0)
-        self.yb = self.position_bits - self.xb
+
+    def divisions(self, n_words):
+        """Divisions per axis for an address of this many words."""
+        return math.prod(self.splits[:n_words])
 
     def __repr__(self):
         return f'<Scope {self.key} {self.max_words} words>'
@@ -232,129 +236,91 @@ def covers(lat, lng, s=GLOBAL):
 
 
 def _indices(lat, lng, s=GLOBAL):
-    """Grid indices of a point: s.xb bits of x, s.yb bits of y."""
+    """Grid indices of a point, each in [0, s.div)."""
     s = scope(s)
     if not covers(lat, lng, s):
         raise OutsideBox(f'{lat:.5f}, {lng:.5f} is outside {s.name} '
                          f'({s.box[0]}..{s.box[1]}, {s.box[2]}..{s.box[3]})')
     x, y = project(lat, normalise_lng(lng, s))
     # Both ends are clamped. The top saturates a point on the boundary -- the
-    # poles, the antimeridian, a box edge -- into the last cell. The bottom is
-    # only reachable by floating-point slop, but an unclamped negative index
-    # would sign-extend under >> and mint a plausible address for the wrong
-    # place, so it is clamped rather than trusted.
-    def cell(v, lo, span, bits):
-        return min(max(int((v - lo) / span * 2 ** bits), 0), 2 ** bits - 1)
-    return cell(x, s.x0, s.xr, s.xb), cell(y, s.y0, s.yr, s.yb)
+    # poles, the antimeridian -- into the last cell; the bottom is only
+    # reachable by floating-point slop, but an unclamped negative index would
+    # mint a plausible address for the wrong place.
+    def cell(v, lo, span):
+        return min(max(int((v - lo) / span * s.div), 0), s.div - 1)
+    return cell(x, s.x0, s.xr), cell(y, s.y0, s.yr)
 
 
-def _interleave(xi, yi, s=GLOBAL):
-    s = scope(s)
-    v, xa, ya = 0, s.xb, s.yb
-    for axis in s.order:
-        if axis == 0:
-            xa -= 1; v = (v << 1) | ((xi >> xa) & 1)
-        else:
-            ya -= 1; v = (v << 1) | ((yi >> ya) & 1)
-    return v
-
-
-def _spread(val, axis, s=GLOBAL):
-    """One axis's bits placed at their positions in the interleaved value, with
-    the other axis's positions left zero.
-
-    Interleaving is bit-disjoint between the axes -- every output bit belongs to
-    exactly one of them -- so _interleave(xi, yi) is exactly
-    _spread(xi, 0) | _spread(yi, 1). Searching a box exploits that: the two axes
-    are spread once each and OR-ed per candidate, which is what makes the search
-    O(nx + ny) interleaves rather than O(nx * ny).
-    """
-    s = scope(s)
-    out, a = 0, (s.xb if axis == 0 else s.yb)
-    for ax in s.order:
-        out <<= 1
-        if ax == axis:
-            a -= 1
-            out |= (val >> a) & 1
+def _digits(i, splits):
+    """One index as per-word digits, coarsest first."""
+    out, rem = [], i
+    for k in range(len(splits)):
+        period = math.prod(splits[k + 1:])
+        out.append(rem // period)
+        rem %= period
     return out
 
 
-def _deinterleave(v, bits, s=GLOBAL):
-    s = scope(s)
-    xi = yi = 0
-    for i, axis in enumerate(s.order[:bits]):
-        bit = (v >> (bits - 1 - i)) & 1
-        if axis == 0:
-            xi = (xi << 1) | bit
-        else:
-            yi = (yi << 1) | bit
-    return xi, yi
-
-
-def _position_bits(n_words, s=GLOBAL):
-    """Position bits an n-word address carries. The last word contributes only
-    REFINE_BITS, the rest all 10."""
-    s = scope(s)
-    if n_words < s.max_words:
-        return BITS_PER_WORD * n_words
-    return s.position_bits
-
-
-def _axis_bits(n_words, s=GLOBAL):
-    s = scope(s)
-    bits = _position_bits(n_words, s)
-    xb = s.order[:bits].count(0)
-    return xb, bits - xb
+def _undigits(digits, splits):
+    """Digits back to an index. The inverse of _digits for the same splits."""
+    i = 0
+    for d, sp in zip(digits, splits):
+        i = i * sp + d
+    return i
 
 
 def cell_size(n_words, s=GLOBAL):
-    """(width, height) in metres of the cell an n-word address names."""
+    """Metres on the ground for an address of this many words."""
     s = scope(s)
-    xb, yb = _axis_bits(n_words, s)
-    return s.xr / 2 ** xb, s.yr / 2 ** yb
+    d = s.divisions(n_words)
+    return s.xr / d, s.yr / d
 
 
 def tile_size(n_said, s=GLOBAL):
-    """(width, height) of the ambiguity left when an address is given as its
-    last n_said words, the leading ones dropped."""
+    """The ambiguity left by dropping the LEADING words: how far apart the
+    candidates sit, and so how close a reference has to be."""
     s = scope(s)
     return cell_size(s.max_words - n_said, s) if n_said < s.max_words else (s.xr, s.yr)
 
 
-def _checksum(position, s=GLOBAL):
-    """Seven bits over the whole position -- which is what makes both kinds of
-    shortening safe, since a reconstruction that guesses wrong fails it."""
-    payload = position.to_bytes(8, 'big')
-    return int.from_bytes(hashlib.sha256(payload).digest()[:2], 'big') >> (16 - CHECK_BITS)
+def _checksum(xi, yi, s=GLOBAL):
+    """One of CHECK values over the whole position -- which is what makes both
+    kinds of shortening safe, since a reconstruction that guesses wrong fails
+    it."""
+    payload = xi.to_bytes(8, 'big') + yi.to_bytes(8, 'big')
+    return int.from_bytes(hashlib.sha256(payload).digest()[:8], 'big') % CHECK
 
 
-def _value(lat, lng, s=GLOBAL):
-    """The full address value: position bits then CHECK_BITS of checksum."""
+def _word_values(xi, yi, s=GLOBAL):
+    """The value of each word of the full address, coarsest first."""
     s = scope(s)
-    position = _interleave(*_indices(lat, lng, s), s)
-    return (position << CHECK_BITS) | _checksum(position, s)
+    xd, yd = _digits(xi, s.splits), _digits(yi, s.splits)
+    out = [xd[k] * RADIX + yd[k] for k in range(s.max_words - 1)]
+    last = xd[-1] * REFINE + yd[-1]
+    return out + [last * CHECK + _checksum(xi, yi, s)]
 
 
 def encode(lat, lng, words, n_words=None, s=GLOBAL):
     """The first n_words of the address. Coarser as n_words falls; needs no
-    context at any length."""
+    context at any length.
+
+    The leading digits do not depend on the trailing ones, so a shorter address
+    is literally a prefix of the longer one -- no truncation subtlety, unlike
+    the interleaved binary layout this replaced.
+    """
     s = scope(s)
     n_words = s.max_words if n_words is None else n_words
     if not 1 <= n_words <= s.max_words:
         raise ValueError(f'1..{s.max_words} words in {s.name}')
-    value = _value(lat, lng, s)
-    if n_words < s.max_words:
-        # Truncate the position; the check bits are not part of a short form.
-        value >>= BITS_PER_WORD * (s.max_words - n_words)
-    return [words[(value >> (BITS_PER_WORD * (n_words - 1 - i))) & WORD_MASK]
-            for i in range(n_words)]
+    return [words[v] for v in _word_values(*_indices(lat, lng, s), s)[:n_words]]
 
 
-def _from_position(position, s=GLOBAL):
+def _from_indices(xi, yi, n_words, s=GLOBAL):
+    """The centre of the cell those indices name, at that address length."""
     s = scope(s)
-    xi, yi = _deinterleave(position, s.position_bits, s)
-    return _wrap(unproject(s.x0 + (xi + 0.5) / 2 ** s.xb * s.xr,
-                           s.y0 + (yi + 0.5) / 2 ** s.yb * s.yr))
+    d = s.divisions(n_words)
+    return _wrap(unproject(s.x0 + (xi + 0.5) / d * s.xr,
+                           s.y0 + (yi + 0.5) / d * s.yr))
 
 
 def decode(spoken, words, s=GLOBAL):
@@ -366,68 +332,79 @@ def decode(spoken, words, s=GLOBAL):
     index = _index(words)
     unknown = [w for w in spoken if w not in index]
     if unknown:
-        raise ValueError(f'not BIP-39 words: {unknown}')
-    if not 1 <= len(spoken) <= s.max_words:
+        raise ValueError(f'not on the word list: {unknown}')
+    n = len(spoken)
+    if not 1 <= n <= s.max_words:
         raise ValueError(f'1..{s.max_words} words in {s.name}')
-    value = 0
-    for w in spoken:
-        value = (value << BITS_PER_WORD) | index[w]
-    if len(spoken) < s.max_words:
-        prefix = value
-    else:
-        prefix = value >> CHECK_BITS
-        if (value & (2 ** CHECK_BITS - 1)) != _checksum(prefix, s):
-            raise ValueError('checksum failed - a word is wrong')
-    bits = _position_bits(len(spoken), s)
-    xb, yb = _axis_bits(len(spoken), s)
-    xi, yi = _deinterleave(prefix, bits, s)
-    return _wrap(unproject(s.x0 + (xi + 0.5) / 2 ** xb * s.xr,
-                           s.y0 + (yi + 0.5) / 2 ** yb * s.yr))
+    xd, yd, check = [], [], None
+    for k, w in enumerate(spoken):
+        v = index[w]
+        if k == s.max_words - 1:
+            pos, check = divmod(v, CHECK)
+            xd.append(pos // REFINE); yd.append(pos % REFINE)
+        else:
+            xd.append(v // RADIX); yd.append(v % RADIX)
+    splits = s.splits[:n]
+    xi, yi = _undigits(xd, splits), _undigits(yd, splits)
+    if check is not None and _checksum(xi, yi, s) != check:
+        raise ValueError('checksum failed - a word is wrong')
+    return _from_indices(xi, yi, n, s)
 
 
-def _known_low(n_said, s=GLOBAL):
-    """How many low bits of each axis index a tail of n_said words pins down."""
+def _known_period(n_said, s=GLOBAL):
+    """The spacing of the candidates a tail of n_said words leaves.
+
+    The words said fix the TRAILING digits, so the candidates are every index
+    congruent to them modulo the product of those digits' places.
+    """
     s = scope(s)
-    dropped = BITS_PER_WORD * (s.max_words - n_said)
-    dx = s.order[:dropped].count(0)
-    return s.xb - dx, s.yb - (dropped - dx)
+    dropped = s.max_words - n_said
+    return math.prod(s.splits[dropped:])
+
+
+def _tail_position(spoken, words, s=GLOBAL):
+    """(known_x, known_y, check, period) for an address missing its leading
+    words. The known digits are the low ones; the period is how far apart the
+    candidates sit."""
+    s = scope(s)
+    index = _index(words)
+    unknown = [w for w in spoken if w not in index]
+    if unknown:
+        raise ValueError(f'not on the word list: {unknown}')
+    n = len(spoken)
+    if not 1 <= n <= s.max_words:
+        raise ValueError(f'1..{s.max_words} words in {s.name}')
+    dropped = s.max_words - n
+    xd, yd, check = [], [], None
+    for k, w in enumerate(spoken):
+        v = index[w]
+        if dropped + k == s.max_words - 1:
+            pos, check = divmod(v, CHECK)
+            xd.append(pos // REFINE); yd.append(pos % REFINE)
+        else:
+            xd.append(v // RADIX); yd.append(v % RADIX)
+    tail_splits = s.splits[dropped:]
+    return (_undigits(xd, tail_splits), _undigits(yd, tail_splits), check,
+            math.prod(tail_splits))
 
 
 def resolve_tail(spoken, words, near_lat, near_lng, s=GLOBAL):
     """Resolve an address given only its last words, plus a reference point.
 
     The dropped words are the coarse ones, so the reference supplies them: for
-    each axis, take the candidate matching the known low bits that is nearest
+    each axis, take the candidate matching the known low digits that is nearest
     the reference. The checksum then covers the whole reconstruction, so a
-    reference too far off to pick the right tile is caught 99.2% of the time
-    rather than resolving quietly to the wrong place.
+    reference too far off to pick the right tile is caught rather than resolving
+    quietly to the wrong place.
     """
     s = scope(s)
-    index = _index(words)
-    unknown = [w for w in spoken if w not in index]
-    if unknown:
-        raise ValueError(f'not BIP-39 words: {unknown}')
-    n = len(spoken)
-    if not 1 <= n <= s.max_words:
-        raise ValueError(f'1..{s.max_words} words in {s.name}')
-    value_low = 0
-    for w in spoken:
-        value_low = (value_low << BITS_PER_WORD) | index[w]
-    check = value_low & (2 ** CHECK_BITS - 1)
-    known_bits = BITS_PER_WORD * n - CHECK_BITS
-    pos_low = value_low >> CHECK_BITS
-    cx, cy = _known_low(n, s)
-    known_x = known_y = 0
-    for i in range(known_bits):
-        seq = s.position_bits - known_bits + i
-        bit = (pos_low >> (known_bits - 1 - i)) & 1
-        if s.order[seq] == 0:
-            known_x = (known_x << 1) | bit
-        else:
-            known_y = (known_y << 1) | bit
+    known_x, known_y, check, period = _tail_position(spoken, words, s)
+    if check is None:
+        raise ValueError('a tail must include the last word, which carries the '
+                         'checksum')
     xi_ref, yi_ref = _indices(near_lat, near_lng, s)
 
-    def nearest_x(known, count, ref):
+    def nearest_x(known, ref):
         """The candidate nearest the reference, going the short way round.
 
         Global x wraps: the projection is a cylinder, so a reference a few
@@ -435,31 +412,23 @@ def resolve_tail(spoken, words, near_lat, near_lng, s=GLOBAL):
         index terms while being next door on the ground. A partial box does not
         wrap, so it is clamped like y.
         """
-        period = 2 ** count
         if s is GLOBAL:
-            total = 2 ** s.xb
-            k = round(((ref - known) % total) / period) % (total // period)
-            return (known + k * period) % total
-        return _clamp_lattice(known, period, ref, s.xb)
+            k = round(((ref - known) % s.div) / period) % (s.div // period)
+            return (known + k * period) % s.div
+        return _clamp_lattice(known, period, ref, s.div)
 
-    def nearest_y(known, count, ref):
-        """y never wraps -- latitude ends at the poles -- so it is clamped, but
-        to the last point ON the lattice: clamping to the last index would
-        leave a value the known bits do not match."""
-        return _clamp_lattice(known, 2 ** count, ref, s.yb)
-
-    xi = nearest_x(known_x, cx, xi_ref)
-    yi = nearest_y(known_y, cy, yi_ref)
-    position = _interleave(xi, yi, s)
-    if _checksum(position, s) != check:
+    xi = nearest_x(known_x, xi_ref)
+    yi = _clamp_lattice(known_y, period, yi_ref, s.div)
+    if _checksum(xi, yi, s) != check:
         raise ValueError('checksum failed - a word is wrong, or the reference '
                          'point is too far away to fill in the missing words')
-    return _from_position(position, s)
+    return _from_indices(xi, yi, s.max_words, s)
 
 
-def _clamp_lattice(known, period, ref, bits):
+def _clamp_lattice(known, period, ref, div):
+    """The lattice point nearest the reference, kept inside [0, div)."""
     v = known + round((ref - known) / period) * period
-    return min(max(v, known), known + (2 ** bits - 1 - known) // period * period)
+    return min(max(v, known), known + (div - 1 - known) // period * period)
 
 
 def candidates_in_box(spoken, words, box, s=GLOBAL, limit=20000):
@@ -476,53 +445,25 @@ def candidates_in_box(spoken, words, box, s=GLOBAL, limit=20000):
     too big to pin these words down; none means the words do not belong in it.
     """
     s = scope(s)
-    index = _index(words)
-    unknown = [w for w in spoken if w not in index]
-    if unknown:
-        raise ValueError(f'not BIP-39 words: {unknown}')
-    n = len(spoken)
-    if not 1 <= n <= s.max_words:
-        raise ValueError(f'1..{s.max_words} words in {s.name}')
-    value = 0
-    for w in spoken:
-        value = (value << BITS_PER_WORD) | index[w]
-    check = value & (2 ** CHECK_BITS - 1)
-    known_bits = BITS_PER_WORD * n - CHECK_BITS
-    pos_low = value >> CHECK_BITS
-    cx, cy = _known_low(n, s)
-    known_x = known_y = 0
-    for i in range(known_bits):
-        seq = s.position_bits - known_bits + i
-        bit = (pos_low >> (known_bits - 1 - i)) & 1
-        if s.order[seq] == 0:
-            known_x = (known_x << 1) | bit
-        else:
-            known_y = (known_y << 1) | bit
+    known_x, known_y, check, period = _tail_position(spoken, words, s)
+    if check is None:
+        return [], 0
     # The window, clipped to the scope's own box.
     latMin, latMax, lngMin, lngMax = box
     x0, y0 = project(latMin, normalise_lng(lngMin, s))
     x1, y1 = project(latMax, normalise_lng(lngMax, s))
-    to_i = lambda v, lo, span, bits: int((v - lo) / span * 2 ** bits)
-    lo_x = max(0, to_i(min(x0, x1), s.x0, s.xr, s.xb))
-    hi_x = min(2 ** s.xb - 1, to_i(max(x0, x1), s.x0, s.xr, s.xb))
-    lo_y = max(0, to_i(min(y0, y1), s.y0, s.yr, s.yb))
-    hi_y = min(2 ** s.yb - 1, to_i(max(y0, y1), s.y0, s.yr, s.yb))
-    px, py = 2 ** cx, 2 ** cy
-    xs = range(known_x + -(-(lo_x - known_x) // px) * px, hi_x + 1, px)
-    ys = range(known_y + -(-(lo_y - known_y) // py) * py, hi_y + 1, py)
+    to_i = lambda v, lo, span: int((v - lo) / span * s.div)
+    lo_x = max(0, to_i(min(x0, x1), s.x0, s.xr))
+    hi_x = min(s.div - 1, to_i(max(x0, x1), s.x0, s.xr))
+    lo_y = max(0, to_i(min(y0, y1), s.y0, s.yr))
+    hi_y = min(s.div - 1, to_i(max(y0, y1), s.y0, s.yr))
+    xs = range(known_x + -(-(lo_x - known_x) // period) * period, hi_x + 1, period)
+    ys = range(known_y + -(-(lo_y - known_y) // period) * period, hi_y + 1, period)
     count = len(xs) * len(ys)
     if count > limit:
         return None, count                  # too many to be worth enumerating
-    # See _spread(): the axes occupy disjoint bits, so each is spread once and
-    # the candidates are an OR of the two, not an interleave apiece.
-    ys_spread = [_spread(yi, 1, s) for yi in ys]
-    out = []
-    for xi in xs:
-        xv = _spread(xi, 0, s)
-        for yv in ys_spread:
-            position = xv | yv
-            if _checksum(position, s) == check:
-                out.append(_from_position(position, s))
+    out = [_from_indices(xi, yi, s.max_words, s)
+           for xi in xs for yi in ys if _checksum(xi, yi, s) == check]
     return out, count
 
 
@@ -563,7 +504,7 @@ def decode_in_box(spoken, words, box, s=GLOBAL):
     if searched > MAX_CANDIDATES:
         raise ValueError(
             f'{searched} candidates in this region, more than the {MAX_CANDIDATES} '
-            f'a 7-bit check can screen - say the whole address')
+            f'a {CHECK}-value check can screen - say the whole address')
     if not got:
         raise ValueError('checksum failed - a word is wrong, or this address '
                          'does not belong in this region')
@@ -588,7 +529,7 @@ def words_needed(lat, lng, near_lat, near_lng, words, s=GLOBAL):
 
 
 def format_address(spoken, tail=False):
-    """'leg.tunnel.slam' absolute, '.slam.subway.gown' for a tail."""
+    """'above.hollow.eager' absolute, '.hollow.eager' for a tail."""
     return (TAIL_MARK if tail else '') + SEP.join(spoken)
 
 

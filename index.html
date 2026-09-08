@@ -69,9 +69,9 @@
 <header>
   <div class="wrap">
     <h1>WordMapper</h1>
-    <p class="tagline">Five everyday words name any point on earth to about ten metres. Say fewer for a coarser place &mdash; or, if whoever is listening already knows which country you are in, drop the leading word and keep every metre.</p>
-    <div class="addr">laptop<span>.</span>tournament<span>.</span>simply<span>.</span>govern<span>.</span>outdo</div>
-    <p class="note">Big Ben, to 10.8&nbsp;m and checksummed. Every word is graded
+    <p class="tagline">Five everyday words name any point on earth to four and a half metres. Say fewer for a coarser place &mdash; or, if whoever is listening already knows which country you are in, drop the leading word and keep every metre.</p>
+    <div class="addr">kangaroo<span>.</span>wagon<span>.</span>machine<span>.</span>structure<span>.</span>science</div>
+    <p class="note">Big Ben, to 4.48&nbsp;m and checksummed. Every word is graded
     CEFR&nbsp;A1&ndash;B2 &mdash; everyday English, nothing you would have to spell out.
     One grid over the whole earth, so this is <em>the</em> address for that spot; in the
     UK the first word can go unsaid.</p>
@@ -101,7 +101,7 @@
 
   <p><strong>And every box gave a place a second address.</strong> A box was also
   <em>coarser</em> than the global grid it stood in for: four words over Britain was
-  2.66&nbsp;m, against 10.8&nbsp;m for five words anywhere &mdash; and one word shorter. What the box was really
+  2.66&nbsp;m, against 4.48&nbsp;m for five words anywhere &mdash; and one word shorter. What the box was really
   selling was the leading word &mdash; and a country supplies that just as well,
   without a rectangle drawn by hand. That is further down.</p>
 
@@ -113,11 +113,11 @@
   <table>
     <thead><tr><th>Words</th><th>Big Ben</th><th>Cell</th></tr></thead>
     <tbody>
-      <tr><td class="num">1</td><td class="num">laptop</td><td class="num">706 &times; 706 km</td></tr>
-      <tr><td class="num">2</td><td class="num">laptop.tournament</td><td class="num">22.1 &times; 22.1 km</td></tr>
-      <tr><td class="num">3</td><td class="num">laptop.tournament.simply</td><td class="num">689 &times; 689 m</td></tr>
-      <tr><td class="num">4</td><td class="num">laptop.tournament.simply.govern</td><td class="num">21.5 &times; 21.5 m</td></tr>
-      <tr><td class="num">5</td><td class="num">laptop.tournament.simply.govern.outdo</td><td class="num">10.8 &times; 10.8 m &mdash; and verified</td></tr>
+      <tr><td class="num">1</td><td class="num">kangaroo</td><td class="num">627 &times; 627 km</td></tr>
+      <tr><td class="num">2</td><td class="num">kangaroo.wagon</td><td class="num">17.4 &times; 17.4 km</td></tr>
+      <tr><td class="num">3</td><td class="num">kangaroo.wagon.machine</td><td class="num">484 &times; 484 m</td></tr>
+      <tr><td class="num">4</td><td class="num">kangaroo.wagon.machine.structure</td><td class="num">13.45 &times; 13.45 m</td></tr>
+      <tr><td class="num">5</td><td class="num">kangaroo.wagon.machine.structure.science</td><td class="num">4.48 &times; 4.48 m &mdash; and verified</td></tr>
     </tbody>
   </table>
   </div>
@@ -133,18 +133,18 @@
   <table>
     <thead><tr><th>Said</th><th>Written</th><th>Ambiguity</th><th>Needs the listener to know</th></tr></thead>
     <tbody>
-      <tr><td class="num">4</td><td class="num">.tournament.simply.govern.outdo</td><td class="num">706 &times; 706 km</td><td class="num">353 km &mdash; which country</td></tr>
-      <tr><td class="num">3</td><td class="num">.simply.govern.outdo</td><td class="num">22.1 &times; 22.1 km</td><td class="num">11 km &mdash; which town</td></tr>
-      <tr><td class="num">2</td><td class="num">.govern.outdo</td><td class="num">689 &times; 689 m</td><td class="num">345 m &mdash; which street</td></tr>
-      <tr><td class="num">1</td><td class="num">.outdo</td><td class="num">21.5 &times; 21.5 m</td><td class="num">11 m &mdash; which building</td></tr>
+      <tr><td class="num">4</td><td class="num">.wagon.machine.structure.science</td><td class="num">627 &times; 627 km</td><td class="num">314 km &mdash; which country</td></tr>
+      <tr><td class="num">3</td><td class="num">.machine.structure.science</td><td class="num">17.4 &times; 17.4 km</td><td class="num">8.7 km &mdash; which town</td></tr>
+      <tr><td class="num">2</td><td class="num">.structure.science</td><td class="num">484 &times; 484 m</td><td class="num">242 m &mdash; which street</td></tr>
+      <tr><td class="num">1</td><td class="num">.science</td><td class="num">13.45 &times; 13.45 m</td><td class="num">6.7 m &mdash; which building</td></tr>
     </tbody>
   </table>
   </div>
 
-  <p>The checksum is what makes this safe rather than a leap of faith. Its seven bits
-  cover the <em>whole</em> position, so when the missing coarse words are filled in from
-  a reference point, guessing the wrong tile fails the check <strong>99.2&nbsp;%</strong>
-  of the time. A reference too far away says so, rather than answering confidently with
+  <p>The checksum is what makes this safe rather than a leap of faith. It is one of 144
+  values over the <em>whole</em> position, so when the missing coarse words are filled in
+  from a reference point, guessing the wrong tile fails the check
+  <strong>99.31&nbsp;%</strong> of the time. A reference too far away says so, rather than answering confidently with
   the wrong place.</p>
 
   <p>It falls conveniently over the UK. The whole country spans only a handful of
@@ -158,44 +158,44 @@
   <p>Filling a dropped word back in needs either a nearby <em>point</em> or a
   <em>region</em>. A point takes the nearest tile that fits. A region hands the choice to
   the checksum: every tile inside it is tried, and a wrong one survives only one time in
-  256. A country is such a region, and OpenStreetMap&rsquo;s reverse geocoder will hand you
+  144. A country is such a region, and OpenStreetMap&rsquo;s reverse geocoder will hand you
   its bounding box along with its name.</p>
 
   <p><strong>How many words a window buys is one number: how many candidate tiles it
-  holds.</strong> Each word is 10 bits, so one word fewer is 1024 times as many tiles.
-  A length works exactly when no <em>other</em> candidate survives the check &mdash; a
-  Poisson zero at rate (tiles&nbsp;&minus;&nbsp;1)/256. Nothing about countries enters
+  holds.</strong> Each word is a base-36 digit on each axis, so one word fewer is 1,296
+  times as many tiles. A length works exactly when no <em>other</em> candidate survives
+  the check &mdash; a Poisson zero at rate (tiles&nbsp;&minus;&nbsp;1)/144. Nothing about countries enters
   into it; a country is just a box someone else drew.</p>
 
   <div class="scroll">
   <table>
     <thead><tr><th>Country</th><th>Box</th><th>Tiles</th><th>Said</th><th>Wrong word caught</th></tr></thead>
     <tbody>
-      <tr><td>Luxembourg</td><td class="num">4,700 km&sup2;</td><td class="num">1.0</td><td><strong>five</strong>, always</td><td class="num">100 %</td></tr>
-      <tr><td>Switzerland</td><td class="num">76,000 km&sup2;</td><td class="num">1.0</td><td><strong>five</strong>, always</td><td class="num">100 %</td></tr>
-      <tr><td>Ireland</td><td class="num">193,000 km&sup2;</td><td class="num">1.0</td><td><strong>five</strong>, always</td><td class="num">100 %</td></tr>
-      <tr><td>United Kingdom</td><td class="num">1.3 M km&sup2;</td><td class="num">3.0</td><td><strong>five</strong>, always</td><td class="num">100 %</td></tr>
-      <tr><td>France</td><td class="num">1.28 M km&sup2;</td><td class="num">3.2</td><td><strong>five</strong>, always</td><td class="num">99 %</td></tr>
-      <tr><td>Australia</td><td class="num">17.3 M km&sup2;</td><td class="num">35</td><td>six &mdash; over the cap</td><td class="num">&mdash;</td></tr>
-      <tr><td>United States</td><td class="num">159 M km&sup2;</td><td class="num">318</td><td>six &mdash; over the cap</td><td class="num">&mdash;</td></tr>
+      <tr><td>Luxembourg</td><td class="num">4,700 km&sup2;</td><td class="num">1.0</td><td><strong>four</strong>, always</td><td class="num">100 %</td></tr>
+      <tr><td>Switzerland</td><td class="num">76,000 km&sup2;</td><td class="num">1.0</td><td><strong>four</strong>, always</td><td class="num">100 %</td></tr>
+      <tr><td>Ireland</td><td class="num">193,000 km&sup2;</td><td class="num">1.0</td><td><strong>four</strong>, always</td><td class="num">100 %</td></tr>
+      <tr><td>United Kingdom</td><td class="num">1.3 M km&sup2;</td><td class="num">3.6</td><td><strong>four</strong>, 97 % of the time</td><td class="num">98 %</td></tr>
+      <tr><td>France</td><td class="num">1.28 M km&sup2;</td><td class="num">3.5</td><td><strong>four</strong>, 98 % of the time</td><td class="num">96 %</td></tr>
+      <tr><td>Australia</td><td class="num">17.3 M km&sup2;</td><td class="num">45</td><td>five &mdash; over the cap</td><td class="num">&mdash;</td></tr>
+      <tr><td>United States</td><td class="num">159 M km&sup2;</td><td class="num">405</td><td>five &mdash; over the cap</td><td class="num">&mdash;</td></tr>
     </tbody>
   </table>
   </div>
 
   <p><strong>Shortening this way costs detection, and the cap is what bounds the
   cost.</strong> When a word is misheard the true tile no longer matches, so every
-  candidate in the window becomes a fresh lottery against the same eight check bits: a
-  wrong word is caught only (255/256)<sup>k</sup> of the time. At the cap of six candidates
-  that is 97.7&nbsp;%, against 99.61&nbsp;% for the full address &mdash; and over Britain,
-  where the window holds three, it is 100&nbsp;% in measurement. Uncapped it is far worse:
-  a window the size of the United States holds 318 candidates and falls to 29&nbsp;%, where
-  most mishearings resolve <em>silently</em> to somewhere else in the country, which is the
-  worst failure there is because it looks like an answer. So no address is shortened above
-  six candidates, and none is read that way either.</p>
+  candidate in the window becomes a fresh lottery against the same checksum: a
+  wrong word is caught only (143/144)<sup>k</sup> of the time. At the cap of six candidates
+  that is 95.9&nbsp;%, against 99.31&nbsp;% for the full address &mdash; and over Britain,
+  where the window holds about four, it measures 98&nbsp;%. Uncapped it is far worse:
+  a window the size of the United States holds 405 candidates and falls to 6&nbsp;%, where
+  nearly every mishearing resolves <em>silently</em> to somewhere else in the country, which
+  is the worst failure there is because it looks like an answer. So no address is shortened
+  above six candidates, and none is read that way either.</p>
 
   <p>Filling the word in from a nearby <em>point</em> has no such loss: it tests the single
   nearest tile &mdash; one chance to be fooled rather than <em>k</em> &mdash; and stays at
-  99.61&nbsp;%. That asymmetry is the real difference between the two ways of doing it.</p>
+  99.31&nbsp;%. That asymmetry is the real difference between the two ways of doing it.</p>
 
   <p><strong>The grid never moves.</strong> The country is consulted when the address is
   read, as a search window; it is not part of the address and nothing is bound to it. A
@@ -204,58 +204,60 @@
   always correct, and are shown straight away, before any network call.</p>
 
   <h2>Cells are square</h2>
-  <p>Cell aspect is the projected frame&rsquo;s aspect times a power of two, and the
-  address length fixes the exponent&rsquo;s parity &mdash; so an even bit count can only
-  land on <em>frame</em>&nbsp;&times;&nbsp;4<sup>k</sup>. The standard parallel is
-  therefore chosen to make the projected world <strong>exactly square</strong>: its
-  aspect is &pi;K&sup2;, so K&nbsp;=&nbsp;1/&radic;&pi; gives 1, at
-  55.654&deg;.</p>
-  <p>Ten bits to a word makes <strong>every</strong> length an even bit count, so every
-  length lands exactly square &mdash; 706&nbsp;km, 22.1&nbsp;km, 689&nbsp;m, 21.5&nbsp;m
-  and 10.8&nbsp;m, all of them 1:1. The projection is equal-area, so this changes
-  the shape and not the resolution. At eleven bits to a word the odd lengths paid for it
-  at 2:1; that penalty is simply gone.</p>
+  <p>Both axes get the same base-36 split at every word, so a cell&rsquo;s aspect is just
+  the projected frame&rsquo;s aspect &mdash; at every length, full stop. The standard
+  parallel is therefore chosen to make the projected world <strong>exactly square</strong>:
+  its aspect is &pi;K&sup2;, so K&nbsp;=&nbsp;1/&radic;&pi; gives 1, at 55.654&deg;.</p>
+  <p>So every length lands exactly square &mdash; 627&nbsp;km, 17.4&nbsp;km, 484&nbsp;m,
+  13.45&nbsp;m and 4.48&nbsp;m, all of them 1:1. The projection is equal-area, so this
+  changes the shape and not the resolution. Under the old binary layout this needed a
+  greedy bit order and <em>still</em> left the odd lengths at 2:1; that penalty is simply
+  gone.</p>
 
-  <h2>The part that is easy to get wrong</h2>
-  <p>Coordinates are interleaved <em>once</em> at full precision and the bit string is
-  truncated. Deriving the interleave order per length looks equivalent and is not &mdash;
-  at eleven bits to a word, 33 bits split the axes 17/16 while 22 and 44 split evenly,
-  three unrelated sequences. When I built it that way the three-word address came out
-  entirely different while the two- and four-word ones agreed with each other, so a spot
-  check on 2 and 4 would have passed.</p>
-  <p>Ten bits to a word happens to make every split even, so the bug could not bite now.
-  The code still interleaves once, because that is what is actually correct rather than
-  what happens to work at one word size. The test suite checks every length over 1,500
-  points either way.</p>
+  <h2>The part that used to be easy to get wrong</h2>
+  <p>Each word is one base-36 digit of x and one of y, so a shorter address is literally
+  the leading digits of a longer one. The leading digits do not depend on the trailing
+  ones, and there is nothing to truncate.</p>
+  <p>The binary layout had to interleave the coordinates <em>once</em> at full precision
+  and truncate the bit string. Deriving the interleave order per length looks equivalent
+  and is not &mdash; at eleven bits to a word, 33 bits split the axes 17/16 while 22 and 44
+  split evenly, three unrelated sequences. When I built it that way the three-word address
+  came out entirely different while the two- and four-word ones agreed with each other, so
+  a spot check on 2 and 4 would have passed. Base-36 removes the failure mode rather than
+  testing around it; the test suite still checks every length over 1,500 points.</p>
 
   <h2>The fifth word does two jobs</h2>
-  <p>Four words alone reach 5.4 m, which is wide. A whole fifth word of position would
-  reach 8 cm, which is finer than anyone needs. So the fifth word's eleven bits are
-  <strong>split between refinement and checksum</strong>:</p>
+  <p>Four words alone reach 13.45 m, which is wide. A whole fifth word of position would
+  reach 37 cm, which is finer than anyone needs. So the fifth word splits a cell only
+  3&nbsp;&times;&nbsp;3 and <strong>spends the rest of its 1,296 values on the
+  checksum</strong>. The two multiply out to 1,296, so any square factorisation is
+  available:</p>
 
   <div class="scroll">
   <table>
-    <thead><tr><th>Refine</th><th>Check</th><th>Cell</th><th>Wrong word caught</th></tr></thead>
+    <thead><tr><th>Refine</th><th>Check values</th><th>Cell</th><th>Wrong word caught</th></tr></thead>
     <tbody>
-      <tr><td class="num">0</td><td class="num">10</td><td class="num">21.5 m</td><td class="num">99.90 %</td></tr>
-      <tr><td class="num">2</td><td class="num">8</td><td class="num"><strong>10.8 m</strong></td><td class="num"><strong>99.61 %</strong></td></tr>
-      <tr><td class="num">4</td><td class="num">6</td><td class="num">5.4 m</td><td class="num">98.44 %</td></tr>
+      <tr><td class="num">1</td><td class="num">1,296</td><td class="num">13.45 m</td><td class="num">99.92 %</td></tr>
+      <tr><td class="num">2</td><td class="num">324</td><td class="num">6.72 m</td><td class="num">99.69 %</td></tr>
+      <tr><td class="num">3</td><td class="num">144</td><td class="num"><strong>4.48 m</strong></td><td class="num"><strong>99.31 %</strong></td></tr>
+      <tr><td class="num">4</td><td class="num">81</td><td class="num">3.36 m</td><td class="num">98.77 %</td></tr>
+      <tr><td class="num">6</td><td class="num">36</td><td class="num">2.24 m</td><td class="num">97.22 %</td></tr>
     </tbody>
   </table>
   </div>
 
-  <p>Shipped at four refine plus seven check. For comparison, what3words is 3 m with no
-  checksum at all — this is finer <em>and</em> verified.</p>
-  <p>A checksum genuinely cannot live at <em>every</em> length: its bits would sit where
-  the next word's position bits must go, and reserving eight at every length would take
-  two words from 11&nbsp;km to 176&nbsp;km. Putting it in the last word costs nothing at
-  the shorter lengths, which are simply unverified. Five words is therefore terminal
-  &mdash; a sixth would have to reinterpret the check bits.</p>
+  <p>Shipped at three refine plus a 144-value check. For comparison, what3words is 3 m
+  with no checksum at all &mdash; this is comparable <em>and</em> verified.</p>
+  <p>A checksum genuinely cannot live at <em>every</em> length: it would have to occupy
+  the values the next word needs for position, and reserving 144 of a word&rsquo;s 1,296
+  at every length would take two words from 17&nbsp;km to 209&nbsp;km. Putting it in the
+  last word costs nothing at the shorter lengths, which are simply unverified. Five words
+  is therefore terminal &mdash; a sixth would have to reinterpret the check.</p>
 
   <h2>The word list</h2>
-  <p><strong>1,024 words, every one graded CEFR&nbsp;A1&ndash;B2</strong> &mdash; the band
-  a person can retrieve under pressure, not merely recognise. Exactly 10 bits each, with
-  nothing wasted rounding to a word boundary. Generated by
+  <p><strong>1,296 words, every one graded CEFR&nbsp;A1&ndash;B2</strong> &mdash; the band
+  a person can retrieve under pressure, not merely recognise. 36&nbsp;&times;&nbsp;36, so
+  each word is one base-36 digit of x and one of y. Generated by
   <a href="https://github.com/Crunchy000/WordMapper/tree/main/tools/wordlist">tools/wordlist</a>
   from the 9,025 graded headwords of the Oxford&nbsp;5000 and the English Vocabulary
   Profile, minus names, places, offensive and vulgar words, inflections of other words,
@@ -274,14 +276,18 @@
   53&nbsp;% of its words have a same-or-one-phoneme twin. Its only guarantee is unique
   four-letter prefixes, which says nothing about what happens down a phone line.</p>
 
-  <p>1,024 is 10 bits against BIP-39&rsquo;s 11, so five words carry 50 bits rather than
-  55. That is the whole cost: 10.8&nbsp;m against 1.35&nbsp;m, for a vocabulary anyone can
-  say and a checksum that is stronger for it &mdash; 8 bits rather than 7. Ten metres is a
-  building; going to six words would reach 34&nbsp;cm if a doorstep were ever needed.</p>
+  <p><strong>The list does not have to be a power of two</strong>, and dropping that
+  assumption is what pays for the resolution. Binary forced 1,024 words and a 10.8&nbsp;m
+  cell; 36&nbsp;&times;&nbsp;36 is 1,296 words and 4.48&nbsp;m, for the same five words
+  said and a stronger check besides. 1,445 is the ceiling on A1&ndash;B2 graded
+  vocabulary, so 1,296 is close to everything the easy band has to give &mdash;
+  BIP-39&rsquo;s 2,048 would carry more per word, but the largest phonetically clean list
+  inside the top 10,000 words of English is 976. Four and a half metres is a parking
+  space; going to six words would reach 12&nbsp;cm if a doorstep were ever needed.</p>
 
   <h2>Reading</h2>
   <ul>
-    <li><a href="https://github.com/Crunchy000/WordMapper/blob/main/docs/grid-scheme.md">The scheme in full</a> — bit budget, the truncation pitfall, and what is verified.</li>
+    <li><a href="https://github.com/Crunchy000/WordMapper/blob/main/docs/grid-scheme.md">The scheme in full</a> — the base-36 layout, the truncation pitfall it retires, and what is verified.</li>
     <li><a href="https://github.com/Crunchy000/WordMapper/blob/main/docs/coverage.md">Coverage and resolution</a> — why coverage is cheap and vocabulary is not.</li>
     <li><a href="https://github.com/Crunchy000/WordMapper">Source on GitHub</a>.</li>
   </ul>

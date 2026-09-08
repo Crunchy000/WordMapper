@@ -1,11 +1,17 @@
 {
  "max_words": 5,
  "max_candidates": 6,
- "order": "xyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxy",
- "axis_bits": [
-  21,
-  21
+ "radix": 36,
+ "refine": 3,
+ "check": 144,
+ "splits": [
+  36,
+  36,
+  36,
+  36,
+  3
  ],
+ "div": 5038848,
  "box": [
   -90.0,
   90.0,
@@ -18,29 +24,29 @@
    "lng": -0.12456,
    "words": {
     "1": [
-     "laptop"
+     "kangaroo"
     ],
     "2": [
-     "laptop",
-     "tournament"
+     "kangaroo",
+     "wagon"
     ],
     "3": [
-     "laptop",
-     "tournament",
-     "simplify"
+     "kangaroo",
+     "wagon",
+     "machine"
     ],
     "4": [
-     "laptop",
-     "tournament",
-     "simplify",
-     "obtain"
+     "kangaroo",
+     "wagon",
+     "machine",
+     "structure"
     ],
     "5": [
-     "laptop",
-     "tournament",
-     "simplify",
-     "obtain",
-     "busy"
+     "kangaroo",
+     "wagon",
+     "machine",
+     "structure",
+     "science"
     ]
    }
   },
@@ -49,29 +55,29 @@
    "lng": -3.19951,
    "words": {
     "1": [
-     "large"
+     "kangaroo"
     ],
     "2": [
-     "large",
-     "novel"
+     "kangaroo",
+     "problem"
     ],
     "3": [
-     "large",
-     "novel",
-     "plural"
+     "kangaroo",
+     "problem",
+     "kangaroo"
     ],
     "4": [
-     "large",
-     "novel",
-     "plural",
-     "telephone"
+     "kangaroo",
+     "problem",
+     "kangaroo",
+     "export"
     ],
     "5": [
-     "large",
-     "novel",
-     "plural",
-     "telephone",
-     "musician"
+     "kangaroo",
+     "problem",
+     "kangaroo",
+     "export",
+     "nutrient"
     ]
    }
   },
@@ -80,29 +86,29 @@
    "lng": -5.71531,
    "words": {
     "1": [
-     "laptop"
+     "justify"
     ],
     "2": [
-     "laptop",
-     "deny"
+     "justify",
+     "hospital"
     ],
     "3": [
-     "laptop",
-     "deny",
-     "showcase"
+     "justify",
+     "hospital",
+     "humorous"
     ],
     "4": [
-     "laptop",
-     "deny",
-     "showcase",
-     "vanish"
+     "justify",
+     "hospital",
+     "humorous",
+     "dwarf"
     ],
     "5": [
-     "laptop",
-     "deny",
-     "showcase",
-     "vanish",
-     "modern"
+     "justify",
+     "hospital",
+     "humorous",
+     "dwarf",
+     "period"
     ]
    }
   },
@@ -111,29 +117,29 @@
    "lng": -6.2603,
    "words": {
     "1": [
-     "laptop"
+     "kangaroo"
     ],
     "2": [
-     "laptop",
-     "jaw"
+     "kangaroo",
+     "forecast"
     ],
     "3": [
-     "laptop",
-     "jaw",
-     "foggy"
+     "kangaroo",
+     "forecast",
+     "inflation"
     ],
     "4": [
-     "laptop",
-     "jaw",
-     "foggy",
-     "fix"
+     "kangaroo",
+     "forecast",
+     "inflation",
+     "platform"
     ],
     "5": [
-     "laptop",
-     "jaw",
-     "foggy",
-     "fix",
-     "ski"
+     "kangaroo",
+     "forecast",
+     "inflation",
+     "platform",
+     "survey"
     ]
    }
   },
@@ -142,29 +148,29 @@
    "lng": 2.3522,
    "words": {
     "1": [
-     "speculate"
+     "logic"
     ],
     "2": [
-     "speculate",
-     "analyst"
+     "logic",
+     "culture"
     ],
     "3": [
-     "speculate",
-     "analyst",
-     "shelf"
+     "logic",
+     "culture",
+     "inhabit"
     ],
     "4": [
-     "speculate",
-     "analyst",
-     "shelf",
-     "allergic"
+     "logic",
+     "culture",
+     "inhabit",
+     "stockpile"
     ],
     "5": [
-     "speculate",
-     "analyst",
-     "shelf",
-     "allergic",
-     "diet"
+     "logic",
+     "culture",
+     "inhabit",
+     "stockpile",
+     "fix"
     ]
    }
   },
@@ -173,29 +179,29 @@
    "lng": -73.9855,
    "words": {
     "1": [
-     "impartial"
+     "emperor"
     ],
     "2": [
-     "impartial",
-     "dignity"
+     "emperor",
+     "nursery"
     ],
     "3": [
-     "impartial",
-     "dignity",
-     "moment"
+     "emperor",
+     "nursery",
+     "pasta"
     ],
     "4": [
-     "impartial",
-     "dignity",
-     "moment",
-     "section"
+     "emperor",
+     "nursery",
+     "pasta",
+     "initial"
     ],
     "5": [
-     "impartial",
-     "dignity",
-     "moment",
-     "section",
-     "stop"
+     "emperor",
+     "nursery",
+     "pasta",
+     "initial",
+     "equal"
     ]
    }
   },
@@ -204,29 +210,29 @@
    "lng": -122.4786,
    "words": {
     "1": [
-     "fix"
+     "chimney"
     ],
     "2": [
-     "fix",
-     "fact"
+     "chimney",
+     "retrospect"
     ],
     "3": [
-     "fix",
-     "fact",
-     "stage"
+     "chimney",
+     "retrospect",
+     "assist"
     ],
     "4": [
-     "fix",
-     "fact",
-     "stage",
-     "obey"
+     "chimney",
+     "retrospect",
+     "assist",
+     "rocket"
     ],
     "5": [
-     "fix",
-     "fact",
-     "stage",
-     "obey",
-     "dose"
+     "chimney",
+     "retrospect",
+     "assist",
+     "rocket",
+     "undergo"
     ]
    }
   },
@@ -235,29 +241,29 @@
    "lng": 37.6173,
    "words": {
     "1": [
-     "spy"
+     "objective"
     ],
     "2": [
-     "spy",
-     "cinema"
+     "objective",
+     "scientist"
     ],
     "3": [
-     "spy",
-     "cinema",
-     "afternoon"
+     "objective",
+     "scientist",
+     "honeymoon"
     ],
     "4": [
-     "spy",
-     "cinema",
-     "afternoon",
-     "expect"
+     "objective",
+     "scientist",
+     "honeymoon",
+     "completion"
     ],
     "5": [
-     "spy",
-     "cinema",
-     "afternoon",
-     "expect",
-     "drink"
+     "objective",
+     "scientist",
+     "honeymoon",
+     "completion",
+     "calendar"
     ]
    }
   },
@@ -266,29 +272,29 @@
    "lng": 151.2093,
    "words": {
     "1": [
-     "policeman"
+     "tulip"
     ],
     "2": [
-     "policeman",
-     "coat"
+     "tulip",
+     "captain"
     ],
     "3": [
-     "policeman",
-     "coat",
-     "elephant"
+     "tulip",
+     "captain",
+     "ferryboat"
     ],
     "4": [
-     "policeman",
-     "coat",
-     "elephant",
-     "decisive"
+     "tulip",
+     "captain",
+     "ferryboat",
+     "reinforce"
     ],
     "5": [
-     "policeman",
-     "coat",
-     "elephant",
-     "decisive",
-     "historic"
+     "tulip",
+     "captain",
+     "ferryboat",
+     "reinforce",
+     "except"
     ]
    }
   },
@@ -297,29 +303,29 @@
    "lng": 103.8501,
    "words": {
     "1": [
-     "suspend"
+     "shiny"
     ],
     "2": [
-     "suspend",
-     "bone"
+     "shiny",
+     "footnote"
     ],
     "3": [
-     "suspend",
-     "bone",
-     "happy"
+     "shiny",
+     "footnote",
+     "stove"
     ],
     "4": [
-     "suspend",
-     "bone",
-     "happy",
-     "statue"
+     "shiny",
+     "footnote",
+     "stove",
+     "vowel"
     ],
     "5": [
-     "suspend",
-     "bone",
-     "happy",
-     "statue",
-     "child"
+     "shiny",
+     "footnote",
+     "stove",
+     "vowel",
+     "appearance"
     ]
    }
   },
@@ -328,29 +334,29 @@
    "lng": 178.4419,
    "words": {
     "1": [
-     "rebuild"
+     "wax"
     ],
     "2": [
-     "rebuild",
-     "ozone"
+     "wax",
+     "statue"
     ],
     "3": [
-     "rebuild",
-     "ozone",
-     "romantic"
+     "wax",
+     "statue",
+     "gift"
     ],
     "4": [
-     "rebuild",
-     "ozone",
-     "romantic",
-     "entrance"
+     "wax",
+     "statue",
+     "gift",
+     "assurance"
     ],
     "5": [
-     "rebuild",
-     "ozone",
-     "romantic",
-     "entrance",
-     "phrase"
+     "wax",
+     "statue",
+     "gift",
+     "assurance",
+     "plan"
     ]
    }
   },
@@ -359,29 +365,29 @@
    "lng": -179.9,
    "words": {
     "1": [
-     "attempt"
+     "accurate"
     ],
     "2": [
-     "attempt",
-     "banana"
+     "accurate",
+     "age"
     ],
     "3": [
-     "attempt",
-     "banana",
-     "giraffe"
+     "accurate",
+     "age",
+     "fictional"
     ],
     "4": [
-     "attempt",
-     "banana",
-     "giraffe",
-     "emperor"
+     "accurate",
+     "age",
+     "fictional",
+     "vanish"
     ],
     "5": [
-     "attempt",
-     "banana",
-     "giraffe",
-     "emperor",
-     "compare"
+     "accurate",
+     "age",
+     "fictional",
+     "vanish",
+     "leopard"
     ]
    }
   },
@@ -390,29 +396,29 @@
    "lng": -21.9426,
    "words": {
     "1": [
-     "latecomer"
+     "husband"
     ],
     "2": [
-     "latecomer",
-     "balcony"
+     "husband",
+     "sociable"
     ],
     "3": [
-     "latecomer",
-     "balcony",
-     "solution"
+     "husband",
+     "sociable",
+     "absent"
     ],
     "4": [
-     "latecomer",
-     "balcony",
-     "solution",
-     "mirror"
+     "husband",
+     "sociable",
+     "absent",
+     "crazy"
     ],
     "5": [
-     "latecomer",
-     "balcony",
-     "solution",
-     "mirror",
-     "photo"
+     "husband",
+     "sociable",
+     "absent",
+     "crazy",
+     "noisy"
     ]
    }
   },
@@ -421,29 +427,29 @@
    "lng": 0.0,
    "words": {
     "1": [
-     "research"
+     "liar"
     ],
     "2": [
-     "research",
+     "liar",
      "abandon"
     ],
     "3": [
-     "research",
+     "liar",
      "abandon",
      "abandon"
     ],
     "4": [
-     "research",
+     "liar",
      "abandon",
      "abandon",
      "abandon"
     ],
     "5": [
-     "research",
+     "liar",
      "abandon",
      "abandon",
      "abandon",
-     "country"
+     "amaze"
     ]
    }
   },
@@ -452,29 +458,29 @@
    "lng": -40.0,
    "words": {
     "1": [
-     "haunt"
+     "fragment"
     ],
     "2": [
-     "haunt",
-     "depend"
+     "fragment",
+     "work"
     ],
     "3": [
-     "haunt",
-     "depend",
-     "brush"
+     "fragment",
+     "work",
+     "work"
     ],
     "4": [
-     "haunt",
-     "depend",
-     "brush",
-     "beauty"
+     "fragment",
+     "work",
+     "work",
+     "wallet"
     ],
     "5": [
-     "haunt",
-     "depend",
-     "brush",
-     "beauty",
-     "slice"
+     "fragment",
+     "work",
+     "work",
+     "wallet",
+     "various"
     ]
    }
   },
@@ -483,29 +489,29 @@
    "lng": 0.0,
    "words": {
     "1": [
-     "laziness"
+     "kitchen"
     ],
     "2": [
-     "laziness",
+     "kitchen",
      "abandon"
     ],
     "3": [
-     "laziness",
+     "kitchen",
      "abandon",
      "abandon"
     ],
     "4": [
-     "laziness",
+     "kitchen",
      "abandon",
      "abandon",
      "abandon"
     ],
     "5": [
-     "laziness",
+     "kitchen",
      "abandon",
      "abandon",
      "abandon",
-     "atomic"
+     "bakery"
     ]
    }
   },
@@ -514,29 +520,29 @@
    "lng": 0.0,
    "words": {
     "1": [
-     "spider"
+     "loyalty"
     ],
     "2": [
-     "spider",
-     "faulty"
+     "loyalty",
+     "airport"
     ],
     "3": [
-     "spider",
-     "faulty",
-     "faulty"
+     "loyalty",
+     "airport",
+     "airport"
     ],
     "4": [
-     "spider",
-     "faulty",
-     "faulty",
-     "faulty"
+     "loyalty",
+     "airport",
+     "airport",
+     "airport"
     ],
     "5": [
-     "spider",
-     "faulty",
-     "faulty",
-     "faulty",
-     "interrupt"
+     "loyalty",
+     "airport",
+     "airport",
+     "airport",
+     "excursion"
     ]
    }
   },
@@ -545,29 +551,29 @@
    "lng": 180.0,
    "words": {
     "1": [
-     "tournament"
+     "widespread"
     ],
     "2": [
-     "tournament",
-     "picture"
+     "widespread",
+     "volume"
     ],
     "3": [
-     "tournament",
-     "picture",
-     "picture"
+     "widespread",
+     "volume",
+     "volume"
     ],
     "4": [
-     "tournament",
-     "picture",
-     "picture",
-     "picture"
+     "widespread",
+     "volume",
+     "volume",
+     "volume"
     ],
     "5": [
-     "tournament",
-     "picture",
-     "picture",
-     "picture",
-     "punctual"
+     "widespread",
+     "volume",
+     "volume",
+     "volume",
+     "purify"
     ]
    }
   },
@@ -576,29 +582,29 @@
    "lng": -180.0,
    "words": {
     "1": [
-     "disposal"
+     "actress"
     ],
     "2": [
-     "disposal",
+     "actress",
      "abandon"
     ],
     "3": [
-     "disposal",
+     "actress",
      "abandon",
      "abandon"
     ],
     "4": [
-     "disposal",
+     "actress",
      "abandon",
      "abandon",
      "abandon"
     ],
     "5": [
-     "disposal",
+     "actress",
      "abandon",
      "abandon",
      "abandon",
-     "astronaut"
+     "agency"
     ]
    }
   },
@@ -629,7 +635,7 @@
      "zoom",
      "zoom",
      "zoom",
-     "sneeze"
+     "mosquito"
     ]
    }
   }
@@ -644,12 +650,12 @@
     -0.1246
    ],
    "words": [
-    "obtain",
-    "busy"
+    "structure",
+    "science"
    ],
    "resolved": [
-    51.50073462692618,
-    -0.12454032897949219
+    51.50072067083656,
+    -0.12456418609966136
    ]
   },
   {
@@ -661,13 +667,13 @@
     -0.125
    ],
    "words": [
-    "simplify",
-    "obtain",
-    "busy"
+    "machine",
+    "structure",
+    "science"
    ],
    "resolved": [
-    51.50073462692618,
-    -0.12454032897949219
+    51.50072067083656,
+    -0.12456418609966136
    ]
   },
   {
@@ -679,14 +685,14 @@
     -0.14
    ],
    "words": [
-    "tournament",
-    "simplify",
-    "obtain",
-    "busy"
+    "wagon",
+    "machine",
+    "structure",
+    "science"
    ],
    "resolved": [
-    51.50073462692618,
-    -0.12454032897949219
+    51.50072067083656,
+    -0.12456418609966136
    ]
   },
   {
@@ -698,13 +704,13 @@
     -179.97
    ],
    "words": [
-    "dolphin",
-    "tuition",
-    "apron"
+    "argue",
+    "dynamic",
+    "merchant"
    ],
    "resolved": [
-    -16.499990079005034,
-    -179.98995780944827
+    -16.50001006095903,
+    -179.99003343621402
    ]
   },
   {
@@ -716,13 +722,13 @@
     179.99
    ],
    "words": [
-    "dolphin",
-    "tuition",
-    "apron"
+    "argue",
+    "dynamic",
+    "merchant"
    ],
    "resolved": [
-    -16.499990079005034,
-    -179.98995780944827
+    -16.50001006095903,
+    -179.99003343621402
    ]
   }
  ],
@@ -734,9 +740,9 @@
     -74.006
    ],
    "words": [
-    "simplify",
-    "obtain",
-    "busy"
+    "machine",
+    "structure",
+    "science"
    ]
   },
   {
@@ -746,8 +752,8 @@
     2.3522
    ],
    "words": [
-    "obtain",
-    "busy"
+    "structure",
+    "science"
    ]
   }
  ],
@@ -767,8 +773,8 @@
      "said": 4,
      "search": {
       "3": {
-       "hits": 11,
-       "searched": 2668
+       "hits": 34,
+       "searched": 4234
       },
       "4": {
        "hits": 1,
@@ -786,12 +792,12 @@
      "said": 4,
      "search": {
       "3": {
-       "hits": 10,
-       "searched": 2622
+       "hits": 25,
+       "searched": 4234
       },
       "4": {
        "hits": 1,
-       "searched": 2
+       "searched": 4
       },
       "5": {
        "hits": 1,
@@ -805,12 +811,12 @@
      "said": 4,
      "search": {
       "3": {
-       "hits": 14,
-       "searched": 2565
+       "hits": 32,
+       "searched": 4234
       },
       "4": {
        "hits": 1,
-       "searched": 1
+       "searched": 2
       },
       "5": {
        "hits": 1,
@@ -835,8 +841,8 @@
      "said": 4,
      "search": {
       "3": {
-       "hits": 3,
-       "searched": 391
+       "hits": 5,
+       "searched": 660
       },
       "4": {
        "hits": 1,
@@ -865,8 +871,8 @@
      "said": 4,
      "search": {
       "3": {
-       "hits": 1,
-       "searched": 156
+       "hits": 2,
+       "searched": 240
       },
       "4": {
        "hits": 1,
@@ -896,11 +902,11 @@
      "search": {
       "3": {
        "hits": null,
-       "searched": 35632
+       "searched": 57104
       },
       "4": {
        "hits": 1,
-       "searched": 36
+       "searched": 40
       },
       "5": {
        "hits": 1,
@@ -925,12 +931,12 @@
      "said": 5,
      "search": {
       "3": {
-       "hits": 8,
-       "searched": 2580
+       "hits": 30,
+       "searched": 4235
       },
       "4": {
-       "hits": 0,
-       "searched": 1
+       "hits": 1,
+       "searched": 2
       },
       "5": {
        "hits": 0,
@@ -956,11 +962,11 @@
      "search": {
       "3": {
        "hits": null,
-       "searched": 70700
+       "searched": 113742
       },
       "4": {
        "hits": 1,
-       "searched": 62
+       "searched": 70
       },
       "5": {
        "hits": 0,

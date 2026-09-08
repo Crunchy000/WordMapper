@@ -6,7 +6,7 @@ Setup: `npm install --prefix tools/gridcode`.
 
 ## One grid
 
-**Five everyday words name any point on earth to 10.8 m**, and that is the whole scheme.
+**Five everyday words name any point on earth to 4.48 m**, and that is the whole scheme.
 There is one grid, one address for a place, no scope to choose and nothing to
 switch.
 
@@ -25,8 +25,8 @@ the Tiwi Islands and the Torres Strait — because Papua New Guinea reaches
 tip at 10.05° S.
 
 **A box was coarser than the grid it stood in for.** Four words over Britain was
-2.66 m; five words anywhere is 10.8 m, one word shorter. The continental boxes were worse still —
-Asia came out at 31.6 m.
+2.66 m; five words anywhere is 4.48 m, one word shorter. The continental boxes
+were worse still — Asia came out at 31.6 m.
 
 **And a box gave a place a second address.** Two addresses for one spot is a
 liability whatever the resolution, and it needed a scope tag bound into every
@@ -44,11 +44,14 @@ address is a prefix of a longer one.
 
 | Words | Big Ben | Cell |
 |---|---|---|
-| 1 | `laptop` | 706 km square |
-| 2 | `laptop.tournament` | 22.1 km square |
-| 3 | `laptop.tournament.simply` | 689 m square |
-| 4 | `laptop.tournament.simply.govern` | 21.5 m square |
-| 5 | `laptop.tournament.simply.govern.outdo` | **10.8 m square, verified** |
+| 1 | `kangaroo` | 627 km square |
+| 2 | `kangaroo.wagon` | 17.4 km square |
+| 3 | `kangaroo.wagon.machine` | 484 m square |
+| 4 | `kangaroo.wagon.machine.structure` | 13.45 m square |
+| 5 | `kangaroo.wagon.machine.structure.science` | **4.48 m square, verified** |
+
+Every cell at every length is exactly square, because both axes get the same
+base-36 split at every word. Nothing arranges that; see *Why cells are square*.
 
 ## Drop leading words: same precision, fewer words, needs context
 
@@ -59,11 +62,11 @@ of exactly one tile, and any accuracy better than half a tile pins it down.
 
 | Words said | Written | Ambiguity | Usable if the listener knows your position within |
 |---|---|---|---|
-| 5 | `leaf.step.cruel.tomato.unable` | none | nothing at all |
-| 4 | `.step.cruel.tomato.unable` | 353 × 706 km | 176 km — which country |
-| 3 | `.cruel.tomato.unable` | 11.0 km square | 5.5 km — which town |
-| 2 | `.tomato.unable` | 172 × 345 m | 86 m — which street |
-| 1 | `.unable` | 5.38 m square | 2.7 m — you can already see them |
+| 5 | `kangaroo.wagon.machine.structure.science` | none | nothing at all |
+| 4 | `.wagon.machine.structure.science` | 627 km square | 314 km — which country |
+| 3 | `.machine.structure.science` | 17.4 km square | 8.7 km — which town |
+| 2 | `.structure.science` | 484 m square | 242 m — which street |
+| 1 | `.science` | 13.45 m square | 6.7 m — you can already see them |
 
 The leading separator is the whole notation: it says the coarse words are
 missing and context must supply them. That is the difference between an address
@@ -74,11 +77,11 @@ same words become a global address the moment the context is written down.
 
 ### The checksum verifies the reconstruction
 
-This is what makes shortening safe rather than a leap of faith. The 7 check
-bits cover the *whole* position, so when the missing coarse words are filled in
-from a reference point, guessing the wrong tile fails the check **99.2 %** of
-the time. Measured at 99.4 % against references chosen at random from anywhere
-on earth.
+This is what makes shortening safe rather than a leap of faith. The checksum —
+one of 144 values — covers the *whole* position, so when the missing coarse
+words are filled in from a reference point, guessing the wrong tile fails the
+check **99.31 %** of the time. Measured at 99.2 % against references chosen at
+random from anywhere on earth.
 
 So a tail that resolves is almost certainly the place meant, and a reference
 too far away to fill in the gap says so rather than answering confidently with
@@ -96,15 +99,15 @@ The two are the same information in different shapes. Both are a search window;
 one is centred on a point, the other is a rectangle someone else drew.
 
 **How many words a window buys is one number: how many candidate tiles it
-holds.** Each word is 10 bits, so one word fewer is 1024 times as many tiles,
-and the 7 check bits leave one in 128 standing. A length works exactly when no
-*other* candidate survives — a Poisson zero at rate `(tiles − 1)/256`. Over
-Britain:
+holds.** Each word is a base-36 digit on each axis, so one word fewer is 1,296
+times as many tiles, and the check leaves one in 144 standing. A length works
+exactly when no *other* candidate survives — a Poisson zero at rate
+`(tiles − 1)/144`. Over Britain:
 
 | Said | Tiles in the box | Survive the check |
 |---|---|---|
-| 3 | ~10,600 | ~80 |
-| 4 | 6 | 1 |
+| 3 | 4,234 | 34 |
+| 4 | 4 | 1 |
 | 5 | 1 | 1 |
 
 Nothing about countries enters into it; a country is just a box someone else
@@ -114,21 +117,21 @@ returns:
 | country | box | tiles in the window | said | wrong word caught |
 |---|---|---|---|---|
 | Luxembourg | 4,700 km² | 1.0 | **four**, always | 100 % |
-| Switzerland | 76,000 km² | 1.0 | **four**, always | 99 % |
-| Ireland | 193,000 km² | 1.1 | **four**, always | 100 % |
-| United Kingdom | 1.3 M km² | 5.5 | **four**, 97 % of the time | 96 % |
-| France | 1.28 M km² | 5.5 | **four**, 97 % of the time | 94 % |
-| Australia | 17.3 M km² | 71 | five — over the cap | — |
-| United States | 159 M km² | 638 | five — over the cap | — |
+| Switzerland | 76,000 km² | 1.0 | **four**, always | 100 % |
+| Ireland | 193,000 km² | 1.0 | **four**, always | 100 % |
+| United Kingdom | 1.3 M km² | 3.6 | **four**, 97 % of the time | 98 % |
+| France | 1.28 M km² | 3.5 | **four**, 98 % of the time | 96 % |
+| Australia | 17.3 M km² | 45 | five — over the cap | — |
+| United States | 159 M km² | 405 | five — over the cap | — |
 
 **Shortening this way costs detection, and the cap is what bounds the cost.**
 When a word is misheard the true tile no longer matches, so every candidate in
-the window becomes a fresh lottery against the same 7 check bits: a wrong word
-is caught only `(255/256)^k` of the time. At k = 6 that is 97.7 %, against
-99.2 % for the full address. Uncapped it was far worse — a window the size of
-Australia holds ~70 candidates and falls to 58 %, where a third of mishearings
-resolve *silently* to somewhere else in the country, which is the worst failure
-there is because it looks like an answer.
+the window becomes a fresh lottery against the same checksum: a wrong word is
+caught only `(143/144)^k` of the time. At k = 6 that is 95.9 %, against 99.31 %
+for the full address. Uncapped it was far worse — a window the size of Australia
+holds ~45 candidates and falls to 73 %, where a quarter of mishearings resolve
+*silently* to somewhere else in the country, which is the worst failure there is
+because it looks like an answer.
 
 So `shortest_in_box()` refuses to buy a word above `MAX_CANDIDATES = 6`, and
 `decode_in_box()` refuses to read one. Australia and the United States say all
@@ -137,7 +140,7 @@ where in the country you happened to be.
 
 `resolve_tail()` has no such loss: it takes the single nearest tile to the
 reference and tests that one candidate — one chance to be fooled rather than k —
-so it stays at 99.2 %. That asymmetry is the real difference between the two
+so it stays at 99.31 %. That asymmetry is the real difference between the two
 ways of filling a dropped word back in.
 
 The tests assert the measured uniqueness against that Poisson prediction for
@@ -159,103 +162,106 @@ the planet — a useless window, and a safe one.
 ## How the grid falls over the UK
 
 Luck rather than design, but useful luck: the whole UK bounding box spans only
-**six** distinct first words — `leader`, `leaf`, `learn`, `leave`, `staff`,
-`stairs` — and most of Great Britain is `leaf`.
+**nine** distinct first words, and everywhere below is `kangaroo` except the
+south-west corner.
 
 ```
-London      leaf.step.cube.bubble.explain
-Manchester  leaf.toilet.garden.cable.voice
-Cardiff     leaf.nerve.proud.tube.vapor
-Plymouth    leaf.craft.hospital.exile.evidence
-Edinburgh   leave.crowd.response.purpose.outdoor
-Belfast     learn.few.gold.fury.hip
-Dublin      leader.wage.hair.shy.ask
+London      kangaroo.wagon.machine.structure.science
+Manchester  kangaroo.rule.unfold.farthest.virtual
+Cardiff     kangaroo.poetry.lucky.volume.objective
+Plymouth    justify.obey.balloon.bartender.reprint
+Edinburgh   kangaroo.problem.kangaroo.dolphin.music
+Belfast     kangaroo.grateful.peaceful.increase.minimum
+Dublin      kangaroo.forecast.inflation.platform.survey
 ```
 
 So a British conversation drops the first word almost for free, and four words
-reach anywhere in the country. It also shows the catch: Edinburgh, Belfast and
-Dublin fall on the other side of a seam, and near a seam the dropped word is not
+reach anywhere in the country. It also shows the catch: Plymouth falls on the
+other side of a seam, and near a seam the dropped word is not
 predictable from "we are both in Britain". That is precisely the case the
 checksum catches, rather than resolving quietly to the wrong place — and
 precisely why the country box search is the more reliable of the two ways to
 fill a dropped word back in, since it tries every candidate rather than
 assuming the nearest.
 
-## Why the prefix property needs care
+## Why the prefix property is free
 
-Coordinates are interleaved **once at full precision** and the resulting bit
-string is truncated. Deriving the interleave order per length does not work, and
-fails in a way that was easy to miss when a word was 11 bits: 33 bits splits
-the axes 17/16 while 22 and 44 split evenly. Those are unrelated sequences, not
-prefixes of one another. Measured, the three-word address came out completely
-different from the two- and four-word ones, which agreed with each other — so a
-spot check on 2 and 4 would have passed.
+Each word is one base-36 digit of x and one of y — `value = xdigit × 36 +
+ydigit` — so a shorter address is literally the leading digits of a longer one.
+The leading digits do not depend on the trailing ones, and there is nothing to
+truncate.
 
-The tests check this at every length over 1,500 points.
+This used to take care. The binary layout interleaved the two coordinates
+**once at full precision** and truncated the bit string, because deriving the
+interleave order per length does not work: at 11 bits a word, 33 bits splits the
+axes 17/16 while 22 and 44 split evenly, and those are unrelated sequences
+rather than prefixes of one another. Measured then, the three-word address came
+out completely different from the two- and four-word ones, which agreed with
+each other — so a spot check on 2 and 4 would have passed. Base-36 removes the
+whole failure mode rather than testing around it.
+
+The tests still check the property at every length over 1,500 points.
 
 ## Why cells are square
 
-Cell aspect is the projected frame's aspect times `2**(yb - xb)`, and `xb + yb`
-is fixed by the address length. So **parity decides which aspects are
-reachable**: an even bit count can only land on `frame × 4ᵏ`, an odd one only on
-`frame × 2 × 4ᵏ`.
+Both axes get the same split at every word, so a cell's aspect is the projected
+frame's aspect, at every length, full stop. Make the frame square and every cell
+is square.
 
-The projection's standard parallel is therefore chosen to make the projected
-world **exactly square**. Its aspect is `πK²`, so `K = 1/√π` gives 1 — a
-standard parallel of 55.654°.
+The projection's standard parallel is chosen for exactly that. The frame's
+aspect is `πK²`, so `K = 1/√π` gives 1 — a standard parallel of 55.654°.
 
 | | 30° (before) | 55.654° (now) |
 |---|---|---|
 | frame | 34,667 × 14,713 km | 22,585 × 22,585 km |
-| 5-word cell | 1.03 × 1.75 m — 1.70 : 1 | **1.346 × 1.346 m — 1.00 : 1** |
-| 4-word cell | 4.13 × 7.02 m — 1.70 : 1 | **5.385 m square** |
+| 5-word cell | 3.43 × 5.83 m — 1.70 : 1 | **4.48 m square** |
+| 4-word cell | 10.3 × 17.5 m — 1.70 : 1 | **13.45 m square** |
 
 Cell *area* is untouched — the projection is equal-area, so only the shape
 changes and the resolution figures are the same.
 
-The terminal length is an even bit count (48), which is why it lands exactly
-square. The cost falls on the odd lengths, which go to 2 : 1 —
-a 3-word global cell is 172 × 345 m rather than 264 × 225 m. No frame can square
-both: one exponent is odd whenever the other is even. The best compromise that
-squares *nothing* but evens everything out is a √2 frame (47.86°), which puts
-every length at 1.414 : 1; squaring the lengths that people actually say is
-worth more.
-
-The bits are handed to whichever axis is currently wider at each step rather
-than alternating, which is what keeps the odd lengths at 2 : 1 rather than
-carrying the frame's aspect down into every cell. With a square frame the two
-rules agree; the machinery is kept because the aspect is *derived* from the box
-rather than written down.
+This used to be much harder. Under the binary layout cell aspect was the frame's
+aspect times `2**(yb − xb)` with `xb + yb` fixed by the length, so parity decided
+what was reachable: an even bit count could only land on `frame × 4ᵏ` and an odd
+one on `frame × 2 × 4ᵏ`. A square frame squared the even lengths and left the odd
+ones at 2 : 1, and no frame could square both. It also needed a greedy bit order
+— hand each bit to whichever axis is currently wider — to stop the frame's aspect
+propagating into every cell. Base-36 needs none of it: there is no bit order,
+no per-length axis split, and no odd lengths to lose.
 
 ## The last word does two jobs
 
-A whole fifth word of position would reach 8 cm, finer than anyone needs. So its
-10 bits are split between refinement and checksum:
+A whole fifth word of position would reach 37 cm, finer than anyone needs. So
+the last word splits a cell only `REFINE × REFINE` and spends the rest of its
+1,296 values on the checksum — `word = (xd × REFINE + yd) × CHECK + checksum`.
+The two multiply out to 1,296, so any square factorisation is available:
 
-| Refine | Check | Cell | Wrong word caught |
+| Refine | Check values | Cell | Wrong word caught |
 |---|---|---|---|
-| 0 | 10 | 21.5 m | 99.90 % |
-| **2** | **8** | **10.8 m** | **99.61 %** |
-| 4 | 6 | 5.4 m | 98.44 % |
+| 1 | 1,296 | 13.45 m | 99.92 % |
+| 2 | 324 | 6.72 m | 99.69 % |
+| **3** | **144** | **4.48 m** | **99.31 %** |
+| 4 | 81 | 3.36 m | 98.77 % |
+| 6 | 36 | 2.24 m | 97.22 % |
 
-Shipped at **4 refine + 7 check**. For comparison, what3words is 3 m with no
-checksum at all — this is finer *and* verified.
+Shipped at **3 refine + 144 check**. For comparison, what3words is 3 m with no
+checksum at all — this is comparable *and* verified.
 
-A checksum genuinely cannot live at *every* length: its bits would sit exactly
-where the next word's position bits must go. Reserving 8 bits at every length
-would take 2 words from 11 km to 177 km. Putting it in the last word instead
-costs nothing at the shorter lengths, which are simply unverified.
+A checksum genuinely cannot live at *every* length: it would have to occupy the
+values the next word needs for position. Reserving 144 of a word's 1,296 values
+at every length would take 2 words from 17 km to 209 km. Putting it in the last
+word instead costs nothing at the shorter lengths, which are simply unverified.
 
 Five words is terminal for the same reason — a sixth would have to reinterpret
-the check bits. The 7 bits cover the *whole* position, which is what makes both
+the check. The checksum covers the *whole* position, which is what makes both
 kinds of shortening safe: a reconstruction that guesses wrong fails the check,
 whether the guess came from a reference point or from a box search.
 
 ## The word list
 
-1,024 words, every one graded **CEFR A1–B2** — the band a person can retrieve
-under pressure, not merely recognise — so exactly 10 bits each, with nothing
-wasted rounding to a word boundary. Generated by `tools/wordlist` from the 9,025
+1,296 words, every one graded **CEFR A1–B2** — the band a person can retrieve
+under pressure, not merely recognise. 36 × 36, so each word is one base-36 digit
+of x and one of y. Generated by `tools/wordlist` from the 9,025
 graded headwords of the Oxford 5000 and the English Vocabulary Profile, minus
 names, places, offensive and vulgar words, inflections of other words, words
 spelled two ways, and then everything confusable or sound-alike. **Zero
@@ -268,21 +274,26 @@ to be *typed and checksummed*: it holds `pair`/`pear`, `peace`/`piece`,
 twin, and its only guarantee is unique four-letter prefixes, which says nothing
 about a phone line.
 
-10 bits against 11 means five words carry 50 rather than 55, so the cell is
-10.8 m instead of 1.35 m. That is the cost, and it buys a vocabulary anyone can
-say, an 8-bit checksum instead of 7, and every address length landing exactly
-square where 11 bits put the odd lengths at 2:1.
+**The list does not have to be a power of two**, and dropping that assumption is
+what pays for the resolution. Binary forced 1,024 words and a 10.8 m cell;
+36 × 36 is 1,296 words and 4.48 m, for the same five words said and a stronger
+check than the 8 bits 1,024 could spare. 1,445 is the ceiling on A1–B2 graded
+vocabulary, so 1,296 is close to everything the easy band has to give.
+
+BIP-39's 2,048 would carry more per word, but not from words anyone can say
+under pressure: the largest phonetically clean list inside the top 10,000 words
+of English is 976, and 2,048 needs roughly the top 30,000.
 
 ## Projection
 
-Lambert cylindrical equal-area, standard parallel 30°. Area-true, so every cell
-at a given length has the same area anywhere on earth.
+Lambert cylindrical equal-area, standard parallel 55.654°. Area-true, so every
+cell at a given length has the same area anywhere on earth.
 
 Shape is not preserved. Cells stretch with latitude, so a five-word cell that is
-1.03 × 1.75 m in the tropics is the same area but much taller on the ground near
-the poles — up to about 100 m at extreme latitude. The tests measure round-trip
-error in the projection for that reason: ground distance is the wrong ruler for
-a claim about cells.
+4.48 m square in the projection is the same area but much taller on the ground
+near the poles — up to about 100 m at extreme latitude. The tests measure
+round-trip error in the projection for that reason: ground distance is the wrong
+ruler for a claim about cells.
 
 ## Verified
 
@@ -292,11 +303,11 @@ Every point on earth encodes, poles and both sides of the antimeridian
 included; every address is a prefix of the next longer one; round trip inside
 one cell diagonal at every length; no repeats at 2 and 3 words; dropping
 leading words and filling them back in from a reference inside the tile
-reconstructs exactly; a reference too far away is caught 99.4 %; a wrong word
-is rejected 99.1 %; no cell worse than 2 : 1, and exactly square at even
-lengths. An index is never negative and never past the end — the clamp is at
-both ends, since an unclamped negative would sign-extend under `>>` and mint a
-plausible address for the wrong place.
+reconstructs exactly; a reference too far away is caught 99.2 %; a wrong word
+is rejected 99.2 % against a theoretical 99.31 %; every cell exactly square at
+every length. An index is never negative and never past the end — the clamp is
+at both ends, since an unclamped negative would mint a plausible address for the
+wrong place.
 
 **Shortening against a country box** — the true point is never lost from the
 search; uniqueness matches the Poisson law box by box; **no address is ever
