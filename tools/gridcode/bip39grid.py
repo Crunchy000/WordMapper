@@ -554,7 +554,8 @@ def encode_city_phrase(lat, lng, words, cities, city_radius_m=50000, max_city_ra
 
 def decode_city_phrase(city_name, spoken, words, cities, city_radius_m=50000):
     """Decode 3 trailing words inside the named city's radius box."""
-    matches = [_city(c) for c in cities if _city(c).name.lower() == city_name.lower()]
+    parsed = [_city(c) for c in cities]
+    matches = [c for c in parsed if c.name.lower() == city_name.lower()]
     if not matches:
         raise ValueError(f'unknown city: {city_name}')
     if len(matches) > 1:
