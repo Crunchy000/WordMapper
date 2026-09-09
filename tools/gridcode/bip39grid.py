@@ -116,6 +116,7 @@ STD_PARALLEL = math.degrees(math.acos(_K))         # 55.654 degrees
 
 
 Tail = collections.namedtuple('Tail', 'known_x known_y check modulus divisor period')
+City = collections.namedtuple('City', 'name lat lng')
 
 
 class OutsideBox(ValueError):
@@ -484,6 +485,82 @@ def words_needed(lat, lng, near_lat, near_lng, words, s=GLOBAL):
         if _indices(*got, s) == _indices(lat, lng, s):
             return n
     return s.max_words
+
+
+def _city(value):
+    """City(name, lat, lng) from a mapping, tuple or City."""
+    if isinstance(value, City):
+        return value
+    if isinstance(value, dict):
+        return City(value['name'], float(value['lat']), float(value['lng']))
+    if isinstance(value, (list, tuple)) and len(value) == 3:
+        return City(value[0], float(value[1]), float(value[2]))
+    raise TypeError('city entries must be City, dict(name/lat/lng) or (name, lat, lng)')
+
+
+def _haversine_m(lat1, lng1, lat2, lng2):
+    """Great-circle distance in metres."""
+    p1, p2 = math.radians(lat1), math.radians(lat2)
+    dp, dl = p2 - p1, math.radians(lng2 - lng1)
+    h = math.sin(dp / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
+    return 2 * R * math.asin(min(1.0, math.sqrt(h)))
+
+
+def nearest_city(lat, lng, cities, max_radius_m=None):
+    """Nearest city to this point; optionally require it within max_radius_m."""
+    best_city, best_dist = None, None
+    for item in cities:
+        city = _city(item)
+        d = _haversine_m(lat, lng, city.lat, city.lng)
+        if best_dist is None or d < best_dist:
+            best_city, best_dist = city, d
+    if best_city is None:
+        raise ValueError('cities is empty')
+    if max_radius_m is not None and best_dist > max_radius_m:
+        raise ValueError('no city within max radius')
+    return best_city, best_dist
+
+
+def _city_bounds(lat, lng, radius_m):
+    """Square lat/lng box around a city, allowing antimeridian crossing."""
+    if radius_m <= 0:
+        raise ValueError('radius_m must be positive')
+    dlat = math.degrees(radius_m / R)
+    lat_min, lat_max = max(-90.0, lat - dlat), min(90.0, lat + dlat)
+    cos_lat = abs(math.cos(math.radians(lat)))
+    dlng = 180.0 if cos_lat < 1e-12 else math.degrees(radius_m / (R * cos_lat))
+    lng_norm = (lng + 180.0) % 360.0 - 180.0
+    return lat_min, lat_max, lng_norm - dlng, lng_norm + dlng
+
+
+def city_phrase_scope(city, radius_m, n_words=3):
+    """Scope centred on a city, intended for city-name + N word phrases."""
+    if n_words < 1 or n_words > len(SPLITS):
+        raise ValueError(f'n_words must be 1..{len(SPLITS)}')
+    city = _city(city)
+    key = f'city:{city.name.lower().replace(" ", "_")}'
+    return Scope(key, f'City {city.name}', _city_bounds(city.lat, city.lng, radius_m),
+                 splits=SPLITS[:n_words])
+
+
+def encode_city_phrase(lat, lng, words, cities, city_radius_m=50000, max_city_radius_m=None):
+    """(city_name, [word, ...]) using nearest city as root + 3 grid words."""
+    city, _ = nearest_city(lat, lng, cities, max_radius_m=max_city_radius_m)
+    s = city_phrase_scope(city, city_radius_m, n_words=3)
+    if not covers(lat, lng, s):
+        raise ValueError('point falls outside the chosen city radius')
+    return city.name, encode(lat, lng, words, n_words=3, s=s)
+
+
+def decode_city_phrase(city_name, spoken, words, cities, city_radius_m=50000):
+    """Decode 3 trailing words inside the named city's radius box."""
+    matches = [_city(c) for c in cities if _city(c).name.lower() == city_name.lower()]
+    if not matches:
+        raise ValueError(f'unknown city: {city_name}')
+    if len(matches) > 1:
+        raise ValueError(f'city name is ambiguous: {city_name}')
+    s = city_phrase_scope(matches[0], city_radius_m, n_words=3)
+    return decode(spoken, words, s=s)
 
 
 def format_address(spoken, tail=False):

@@ -300,6 +300,38 @@ check('the full address is checked to one in CHECK', _m.prod(g.GLOBAL.checks), g
 check('no box search survives',
       [n for n in dir(g) if 'box' in n or n in ('MAX_CANDIDATES', 'FLOOR')], [])
 
+print('\ncity-root phrases (experimental)')
+CITIES = [
+    ('London', 51.5074, -0.1278),
+    ('Paris', 48.8566, 2.3522),
+    ('New York', 40.7128, -74.0060),
+]
+BIG_BEN = (51.50072, -0.12456)
+root, tail = g.encode_city_phrase(*BIG_BEN, WORDS, CITIES, city_radius_m=30000)
+check('closest city is the phrase root', root, 'London')
+city_scope = g.city_phrase_scope(CITIES[0], 30000, n_words=3)
+got = g.decode_city_phrase(root, tail, WORDS, CITIES, city_radius_m=30000)
+check('city root + 3 words round-trips to the same local cell',
+      g._indices(*got, city_scope) == g._indices(*BIG_BEN, city_scope), True)
+try:
+    g.encode_city_phrase(51.40, -0.50, WORDS, CITIES, city_radius_m=2000)
+    ok = False
+except ValueError:
+    ok = True
+check('too-small city radius is rejected', ok, True)
+try:
+    g.encode_city_phrase(-55.0, -140.0, WORDS, CITIES, max_city_radius_m=1000)
+    ok = False
+except ValueError:
+    ok = True
+check('max city search radius is enforced', ok, True)
+try:
+    g.decode_city_phrase('Atlantis', tail, WORDS, CITIES, city_radius_m=30000)
+    ok = False
+except ValueError:
+    ok = True
+check('unknown city names are rejected', ok, True)
+
 print()
 w, h = g.cell_size(g.GLOBAL.max_words)
 print(f'  ----  {g.GLOBAL.max_words} words is {w:.2f} x {h:.2f} m; '
