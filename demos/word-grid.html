@@ -32,8 +32,26 @@
   #addr .w.chk { color: #1a5c4a; font-style: italic;
                  border-bottom: 2px dotted #4f9481; padding-bottom: 1px; }
   #note { font-size: 12px; color: #4a4a44; margin-top: 5px; font-weight: 600;
+          max-width: 44ch; line-height: 1.45;
           text-shadow: 0 1px 3px #fff, 0 0 8px #fff, 1px 0 3px #fff, -1px 0 3px #fff; }
   #note .dim { color: #8a8a82; font-weight: 400; }
+  /* The mock is labelled in the loudest thing on the page after the address
+     itself, because a public demo that implies short links resolve when nothing
+     stores them is just a lie with a nice typeface. */
+  #note .mock { color: #a8322a; font-weight: 700; }
+  /* #hud is pointer-events:none so clicks fall through to the map; the controls
+     have to opt back in, and stop their own clicks reaching it. */
+  #controls { margin-top: 9px; pointer-events: auto; display: flex; gap: 6px;
+              align-items: center; }
+  #controls button { font: inherit; font-size: 11px; font-weight: 600;
+                     padding: 4px 9px; border: 1px solid #c9c9c0; background: #ffffffdd;
+                     color: #4a4a44; border-radius: 999px; cursor: pointer;
+                     backdrop-filter: blur(2px); }
+  #controls button:hover { border-color: #8a8a82; color: #16171a; }
+  #controls button[aria-pressed="true"] { background: #1a5c4a; border-color: #1a5c4a;
+                                          color: #fff; }
+  #controls #refresh[disabled] { opacity: .35; cursor: default; }
+  #controls .gap { width: 5px; }
   @media (max-width: 480px) {
     #hud { top: 12px; left: 12px; }
     #addr { font-size: 17px; }
@@ -46,6 +64,12 @@
 <div id="hud">
   <div id="addr"></div>
   <div id="note">Click anywhere</div>
+  <div id="controls">
+    <button id="m-offline" aria-pressed="true">Offline &middot; 6 words</button>
+    <button id="m-online" aria-pressed="false">Online &middot; 3 words</button>
+    <span class="gap"></span>
+    <button id="refresh" disabled title="Issue another short code for this place">&#8635;</button>
+  </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -432,8 +456,12 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 const addrEl = document.getElementById('addr');
 const noteEl = document.getElementById('note');
+const offlineEl = document.getElementById('m-offline');
+const onlineEl = document.getElementById('m-online');
+const refreshEl = document.getElementById('refresh');
 const scope = GLOBAL;
 let marker = null, cellBox = null;
+let here = [53.3498, -6.2603];         // the point the address is currently for
 
 const fmt = (m) => m >= 1000 ? `${(m / 1000).toFixed(1)} km`
   : m >= 1 ? `${m.toFixed(2)} m` : `${(m * 100).toFixed(0)} cm`;
@@ -447,25 +475,56 @@ function gridHint() {
   return fmt(Math.sqrt(w * h));
 }
 
-// Six words, always. Nothing is ever dropped, so nothing is greyed and there is
-// no network call to wait for: the address is drawn the instant you click.
-function draw(lat, lng) {
-  const full = encode(lat, lng, scope.maxWords, scope);
+// --- the short-code mock ----------------------------------------------------
+// NOTHING IS STORED. This is a sketch of what a lookup service would give you,
+// drawn so the shape can be argued about before anything is built. Two words of
+// key is 1,296**2 = 1,679,616 short codes; the third is a check word over them,
+// computed exactly the way the address's own checksum is, so a misheard code
+// fails locally before any lookup happens -- which is the one property worth
+// keeping if this ever becomes real.
+//
+// The key itself is RANDOM, not derived from the position, because that is what
+// a real shortener would do: the code is a row in a database, not an encoding
+// of anywhere. That is the whole difference the toggle exists to show.
+const SHORT_KEY_WORDS = 2;
+
+function shortCheckWord(key) {
+  const p = new Uint8Array(8 * key.length);
+  const dv = new DataView(p.buffer);
+  key.forEach((k, i) => dv.setUint32(i * 8 + 4, k));
+  const h = sha256(p);
+  return Number(((BigInt(h[0] >>> 0) << 32n) | BigInt(h[1] >>> 0)) % BigInt(LIST_SIZE));
+}
+
+function shortCode() {
+  const key = [];
+  for (let i = 0; i < SHORT_KEY_WORDS; i++)
+    key.push(Math.floor(Math.random() * LIST_SIZE));
+  return key.concat([shortCheckWord(key)]).map((i) => WORDS[i]);
+}
+
+// --- drawing ----------------------------------------------------------------
+// Two words to a line either way, so the two modes are directly comparable and
+// the last word lands alone in both -- it is the check word in both, doing the
+// same job for the same reason.
+function drawWords(words) {
   addrEl.textContent = '';
   let row;
-  full.forEach((w, i) => {
+  words.forEach((w, i) => {
     if (i % 2 === 0) { row = document.createElement('div'); row.className = 'row';
                        addrEl.appendChild(row); }
     const el = document.createElement('span');
-    el.className = 'w' + (i === full.length - 1 ? ' chk' : '');
+    el.className = 'w' + (i === words.length - 1 ? ' chk' : '');
     // The separator stays on the word it follows, so a line that continues ends
     // in a dot and the address is still correct if it is copied.
-    el.textContent = w + (i < full.length - 1 ? SEP : '');
+    el.textContent = w + (i < words.length - 1 ? SEP : '');
     row.appendChild(el);
   });
 }
 
 function show(lat, lng) {
+  here = [lat, lng];
+  code = shortCode();          // a new place would be a new row, so a new code
   if (marker) map.removeLayer(marker);
   marker = L.circleMarker([lat, lng],
     { radius: 5, color: '#a8322a', weight: 2, fillOpacity: .9 }).addTo(map);
@@ -477,10 +536,48 @@ function show(lat, lng) {
   const sw = unproject(cx, cy), ne = unproject(cx + w, cy + h);
   cellBox = L.rectangle([[sw[0], wrapLng(sw[1])], [ne[0], wrapLng(sw[1]) + (ne[1] - sw[1])]],
     { color: '#1a5c4a', weight: 2, fill: false }).addTo(map);
-  draw(lat, lng);
-  noteEl.innerHTML = `${gridHint()}<span class="dim"> &mdash; a wrong word caught `
-    + `${(100 * (1 - 1 / CHECK)).toFixed(4)}% of the time</span>`;
+  render();
 }
+
+// The two modes, and the reason both exist. Offline is the address itself: it
+// decodes in this page with nothing else involved, and it says where you are.
+// Online is a short CODE: fewer words to read out, but it is a row in a
+// database somewhere, it means nothing on its own, and it stops working the day
+// that database does.
+let mode = 'offline';
+let code = null;                       // the current mock short code
+
+function render() {
+  const wrong = (n) => `${(100 * (1 - 1 / n)).toFixed(4)}% of the time`;
+  if (mode === 'offline') {
+    drawWords(encode(here[0], here[1], scope.maxWords, scope));
+    noteEl.innerHTML = `${gridHint()} &middot; says where you are`
+      + `<span class="dim"> &mdash; decodes in this page, a wrong word caught `
+      + `${wrong(CHECK)}</span>`;
+  } else {
+    drawWords(code);
+    noteEl.innerHTML =
+        `short code &middot; ${(LIST_SIZE ** SHORT_KEY_WORDS).toLocaleString()} of them`
+      + `<span class="dim"> &mdash; a wrong word caught ${wrong(LIST_SIZE)}, but it `
+      + `needs a lookup: it does not say where you are. </span>`
+      + `<span class="mock">MOCK &mdash; nothing is stored, refresh gives another.</span>`;
+  }
+  refreshEl.disabled = mode !== 'online';
+}
+
+function setMode(next) {
+  mode = next;
+  offlineEl.setAttribute('aria-pressed', String(next === 'offline'));
+  onlineEl.setAttribute('aria-pressed', String(next === 'online'));
+  if (next === 'online' && !code) code = shortCode();
+  render();
+}
+
+offlineEl.addEventListener('click', (e) => { e.stopPropagation(); setMode('offline'); });
+onlineEl.addEventListener('click', (e) => { e.stopPropagation(); setMode('online'); });
+refreshEl.addEventListener('click', (e) => {
+  e.stopPropagation(); code = shortCode(); render();
+});
 
 
 map.on('click', (e) => show(e.latlng.lat, wrapLng(e.latlng.lng)));

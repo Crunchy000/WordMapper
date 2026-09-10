@@ -46,6 +46,20 @@ cannot predict is worse than one that is always six words.
 **And it needed a network call**, to a rate-limited service with a usage policy,
 for a scheme that otherwise works entirely offline.
 
+**There is an online/offline toggle, and the online half is a mock.** Flip it and
+the address becomes a three-word *short code* — two words of key, giving
+1,679,616 of them, plus a check word computed the same way the address's own
+checksum is, so a misheard code fails in the page before any lookup. Refresh
+issues another. Nothing is stored anywhere and the page says so in red: it is a
+sketch of what a lookup service would give you, drawn so the shape can be argued
+about before anything is built.
+
+The point of the toggle is the difference, not the word count. Six words *say
+where you are* and decode with the network down. Three words are a row in a
+database: fewer to read out, meaningless on their own, and dead the day that
+database is. Roughly four syllables separate them — which is worth knowing
+before paying for a service, since a short domain saves nearly thirty.
+
 Dropping *trailing* words still works and needs no context at all — each word
 narrows the area and the words already said never change. So does filling in
 dropped *leading* words from a nearby reference point, which tests exactly one
