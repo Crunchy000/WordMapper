@@ -46,19 +46,35 @@ cannot predict is worse than one that is always six words.
 **And it needed a network call**, to a rate-limited service with a usage policy,
 for a scheme that otherwise works entirely offline.
 
-**There is an online/offline toggle, and the online half is a mock.** Flip it and
-the address becomes a three-word *short code* — two words of key, giving
-1,679,616 of them, plus a check word computed the same way the address's own
-checksum is, so a misheard code fails in the page before any lookup. Refresh
-issues another. Nothing is stored anywhere and the page says so in red: it is a
-sketch of what a lookup service would give you, drawn so the shape can be argued
-about before anything is built.
+**There is an online/offline switch**, and flipping it turns the address into a
+three-word *short code*. Refresh issues another. Nothing is stored — the code is
+random, which is what a real shortener would do, since a short code is a row in a
+database and not an encoding of anywhere.
 
-The point of the toggle is the difference, not the word count. Six words *say
-where you are* and decode with the network down. Three words are a row in a
-database: fewer to read out, meaningless on their own, and dead the day that
-database is. Roughly four syllables separate them — which is worth knowing
-before paying for a service, since a short domain saves nearly thirty.
+**All three words are key, and none of them is a checksum, because the database
+already is one.** A code either was issued or it was not, so a wrong word names a
+code nobody was ever given and is caught — and the three words are one word away
+from only 3 × 1295 = 3,885 other codes, so the service can look at all of them
+and *repair* the wrong word from the one that exists rather than merely refusing
+it. Spending a word on a check instead is strictly worse: it costs 1,296× the
+code space, gives a flat 1-in-1,296, and cannot repair anything.
+
+| codes issued | wrong word caught | repair unambiguous |
+|---|---|---|
+| 1,000 | 99.99995 % | 99.8 % |
+| 10,000 | 99.9995 % | 98.2 % |
+| 100,000 | 99.995 % | 83.7 % |
+| 1,000,000 | 99.954 % | 16.8 % |
+
+It gets *better* the emptier the space is, which is the opposite of how a
+checksum behaves.
+
+The point of the switch is the difference, not the word count. Six words *say
+where you are* and decode with the network down. Three words resolve to the same
+exact place, but they are a database row: fewer to read out, meaningless on their
+own, and dead the day that database is. Roughly four syllables separate them —
+worth knowing before paying for a service, since a short domain saves nearly
+thirty.
 
 Dropping *trailing* words still works and needs no context at all — each word
 narrows the area and the words already said never change. So does filling in

@@ -35,23 +35,31 @@
           max-width: 44ch; line-height: 1.45;
           text-shadow: 0 1px 3px #fff, 0 0 8px #fff, 1px 0 3px #fff, -1px 0 3px #fff; }
   #note .dim { color: #8a8a82; font-weight: 400; }
-  /* The mock is labelled in the loudest thing on the page after the address
-     itself, because a public demo that implies short links resolve when nothing
-     stores them is just a lie with a nice typeface. */
-  #note .mock { color: #a8322a; font-weight: 700; }
   /* #hud is pointer-events:none so clicks fall through to the map; the controls
      have to opt back in, and stop their own clicks reaching it. */
-  #controls { margin-top: 9px; pointer-events: auto; display: flex; gap: 6px;
+  #controls { margin-top: 10px; pointer-events: auto; display: flex; gap: 8px;
               align-items: center; }
-  #controls button { font: inherit; font-size: 11px; font-weight: 600;
-                     padding: 4px 9px; border: 1px solid #c9c9c0; background: #ffffffdd;
-                     color: #4a4a44; border-radius: 999px; cursor: pointer;
-                     backdrop-filter: blur(2px); }
-  #controls button:hover { border-color: #8a8a82; color: #16171a; }
-  #controls button[aria-pressed="true"] { background: #1a5c4a; border-color: #1a5c4a;
-                                          color: #fff; }
-  #controls #refresh[disabled] { opacity: .35; cursor: default; }
-  #controls .gap { width: 5px; }
+  #controls .lbl { font-size: 11px; font-weight: 600; color: #b9b9b2;
+                   transition: color .18s; user-select: none; }
+  #controls .lbl.on { color: #16171a; }
+  /* A real switch rather than two buttons: the two modes are one choice with a
+     side, not two things you might both want. */
+  #sw { width: 38px; height: 21px; flex: none; padding: 0; position: relative;
+        border: 1px solid #c9c9c0; border-radius: 999px; background: #ffffffdd;
+        cursor: pointer; transition: background .18s, border-color .18s;
+        backdrop-filter: blur(2px); }
+  #sw .knob { position: absolute; top: 2px; left: 2px; width: 15px; height: 15px;
+              border-radius: 50%; background: #8a8a82;
+              transition: transform .18s, background .18s; }
+  #sw[aria-checked="true"] { background: #1a5c4a; border-color: #1a5c4a; }
+  #sw[aria-checked="true"] .knob { transform: translateX(19px); background: #fff; }
+  #sw:focus-visible, #refresh:focus-visible { outline: 2px solid #4f9481;
+                                              outline-offset: 2px; }
+  #refresh { font: inherit; font-size: 12px; line-height: 1; padding: 4px 8px;
+             border: 1px solid #c9c9c0; background: #ffffffdd; color: #4a4a44;
+             border-radius: 999px; cursor: pointer; backdrop-filter: blur(2px); }
+  #refresh:hover { border-color: #8a8a82; color: #16171a; }
+  #refresh[disabled] { opacity: .3; cursor: default; }
   @media (max-width: 480px) {
     #hud { top: 12px; left: 12px; }
     #addr { font-size: 17px; }
@@ -65,10 +73,11 @@
   <div id="addr"></div>
   <div id="note">Click anywhere</div>
   <div id="controls">
-    <button id="m-offline" aria-pressed="true">Offline &middot; 6 words</button>
-    <button id="m-online" aria-pressed="false">Online &middot; 3 words</button>
-    <span class="gap"></span>
-    <button id="refresh" disabled title="Issue another short code for this place">&#8635;</button>
+    <span class="lbl on" id="lbl-off">offline &middot; 6 words</span>
+    <button id="sw" role="switch" aria-checked="false"
+            aria-label="Switch between the offline six-word address and an online three-word code"><span class="knob"></span></button>
+    <span class="lbl" id="lbl-on">online &middot; 3 words</span>
+    <button id="refresh" disabled title="Issue another code for this place">&#8635;</button>
   </div>
 </div>
 
@@ -456,8 +465,9 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 const addrEl = document.getElementById('addr');
 const noteEl = document.getElementById('note');
-const offlineEl = document.getElementById('m-offline');
-const onlineEl = document.getElementById('m-online');
+const swEl = document.getElementById('sw');
+const offLblEl = document.getElementById('lbl-off');
+const onLblEl = document.getElementById('lbl-on');
 const refreshEl = document.getElementById('refresh');
 const scope = GLOBAL;
 let marker = null, cellBox = null;
@@ -475,46 +485,39 @@ function gridHint() {
   return fmt(Math.sqrt(w * h));
 }
 
-// --- the short-code mock ----------------------------------------------------
-// NOTHING IS STORED. This is a sketch of what a lookup service would give you,
-// drawn so the shape can be argued about before anything is built. Two words of
-// key is 1,296**2 = 1,679,616 short codes; the third is a check word over them,
-// computed exactly the way the address's own checksum is, so a misheard code
-// fails locally before any lookup happens -- which is the one property worth
-// keeping if this ever becomes real.
+// --- the short code --------------------------------------------------------
+// THE LOOKUP IS THE CHECK. All three words are key -- 1296**3 =
+// 2,176,782,336 codes -- and none of them is a checksum, because the database
+// already is one: a code either was issued or it was not.
 //
-// The key itself is RANDOM, not derived from the position, because that is what
-// a real shortener would do: the code is a row in a database, not an encoding
-// of anywhere. That is the whole difference the toggle exists to show.
-const SHORT_KEY_WORDS = 2;
+// That is strictly better than spending a word on a check, which is what this
+// first did. A wrong word names a code nobody was ever given, so it is caught
+// unless it collides with a live one -- and the emptier the space, the better
+// that gets, where a checksum is flat at 1 in 1296 forever. Better still, the
+// three words are one word away from only 3 x 1295 = 3,885 other codes, so the
+// service can look at all of them and REPAIR a single wrong word from the one
+// that exists, rather than merely refusing it.
+//
+// Nothing is stored here: the key is random, which is what a real shortener
+// would do, since the code is a row in a database and not an encoding of
+// anywhere. That is the whole difference the switch exists to show.
+const SHORT_WORDS = 3;
 
-function shortCheckWord(key) {
-  const p = new Uint8Array(8 * key.length);
-  const dv = new DataView(p.buffer);
-  key.forEach((k, i) => dv.setUint32(i * 8 + 4, k));
-  const h = sha256(p);
-  return Number(((BigInt(h[0] >>> 0) << 32n) | BigInt(h[1] >>> 0)) % BigInt(LIST_SIZE));
-}
-
-function shortCode() {
-  const key = [];
-  for (let i = 0; i < SHORT_KEY_WORDS; i++)
-    key.push(Math.floor(Math.random() * LIST_SIZE));
-  return key.concat([shortCheckWord(key)]).map((i) => WORDS[i]);
-}
+const shortCode = () => Array.from({ length: SHORT_WORDS },
+  () => WORDS[Math.floor(Math.random() * LIST_SIZE)]);
 
 // --- drawing ----------------------------------------------------------------
-// Two words to a line either way, so the two modes are directly comparable and
-// the last word lands alone in both -- it is the check word in both, doing the
-// same job for the same reason.
-function drawWords(words) {
+// Two words to a line either way, so the two modes are directly comparable.
+function drawWords(words, lastIsCheck) {
   addrEl.textContent = '';
   let row;
   words.forEach((w, i) => {
     if (i % 2 === 0) { row = document.createElement('div'); row.className = 'row';
                        addrEl.appendChild(row); }
     const el = document.createElement('span');
-    el.className = 'w' + (i === words.length - 1 ? ' chk' : '');
+    // Only the address has a check word to set apart. A short code has none --
+    // all three words are key, and the lookup does that job.
+    el.className = 'w' + (lastIsCheck && i === words.length - 1 ? ' chk' : '');
     // The separator stays on the word it follows, so a line that continues ends
     // in a dot and the address is still correct if it is copied.
     el.textContent = w + (i < words.length - 1 ? SEP : '');
@@ -545,36 +548,34 @@ function show(lat, lng) {
 // database somewhere, it means nothing on its own, and it stops working the day
 // that database does.
 let mode = 'offline';
-let code = null;                       // the current mock short code
+let code = null;                       // the current short code
 
 function render() {
-  const wrong = (n) => `${(100 * (1 - 1 / n)).toFixed(4)}% of the time`;
   if (mode === 'offline') {
-    drawWords(encode(here[0], here[1], scope.maxWords, scope));
-    noteEl.innerHTML = `${gridHint()} &middot; says where you are`
-      + `<span class="dim"> &mdash; decodes in this page, a wrong word caught `
-      + `${wrong(CHECK)}</span>`;
+    drawWords(encode(here[0], here[1], scope.maxWords, scope), true);
+    noteEl.innerHTML = `${gridHint()} &middot; <strong>says where you are</strong>`
+      + `<span class="dim"> &mdash; decodes in this page with nothing else `
+      + `involved, and a wrong word is caught `
+      + `${(100 * (1 - 1 / CHECK)).toFixed(4)}% of the time.</span>`;
   } else {
-    drawWords(code);
-    noteEl.innerHTML =
-        `short code &middot; ${(LIST_SIZE ** SHORT_KEY_WORDS).toLocaleString()} of them`
-      + `<span class="dim"> &mdash; a wrong word caught ${wrong(LIST_SIZE)}, but it `
-      + `needs a lookup: it does not say where you are. </span>`
-      + `<span class="mock">MOCK &mdash; nothing is stored, refresh gives another.</span>`;
+    drawWords(code, false);
+    noteEl.innerHTML = `${gridHint()} &middot; <strong>the same exact place</strong>`
+      + `<span class="dim"> &mdash; one of `
+      + `${(LIST_SIZE ** SHORT_WORDS).toLocaleString()} codes, and the lookup is `
+      + `the check: a wrong word names a code nobody was issued, so it is caught `
+      + `&mdash; or repaired from the one live code a single word away.</span>`;
   }
+  swEl.setAttribute('aria-checked', String(mode === 'online'));
+  offLblEl.classList.toggle('on', mode === 'offline');
+  onLblEl.classList.toggle('on', mode === 'online');
   refreshEl.disabled = mode !== 'online';
 }
 
-function setMode(next) {
-  mode = next;
-  offlineEl.setAttribute('aria-pressed', String(next === 'offline'));
-  onlineEl.setAttribute('aria-pressed', String(next === 'online'));
-  if (next === 'online' && !code) code = shortCode();
+swEl.addEventListener('click', (e) => {
+  e.stopPropagation();
+  mode = mode === 'offline' ? 'online' : 'offline';
   render();
-}
-
-offlineEl.addEventListener('click', (e) => { e.stopPropagation(); setMode('offline'); });
-onlineEl.addEventListener('click', (e) => { e.stopPropagation(); setMode('online'); });
+});
 refreshEl.addEventListener('click', (e) => {
   e.stopPropagation(); code = shortCode(); render();
 });
