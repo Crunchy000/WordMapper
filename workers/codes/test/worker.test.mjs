@@ -91,7 +91,16 @@ console.log('\nrepair: one wrong word, found in three reads');
     if (res.status === 404 && j.didYouMean.includes(body.code)) repaired++;
   }
   check('a wrong word in any of the three positions is offered back', repaired, 3);
-  const two = [WORDS[0], WORDS[1], words[2]];
+  // Both replacements must actually DIFFER from what was issued. Picking
+  // WORDS[0] and WORDS[1] does not guarantee that: if the issued code already
+  // started with WORDS[0] only one word changed, repair rightly found it, and
+  // the test failed at 1 in 1,296. CI drew that on the first run.
+  const other = (i) => {
+    let w; do { w = WORDS[Math.floor(Math.random() * WORDS.length)]; }
+    while (w === words[i]);
+    return w;
+  };
+  const two = [other(0), other(1), words[2]];
   const far = await (await call(e, `/c/${two.join('.')}`)).json();
   check('two wrong words is not repaired, and says so', far.didYouMean, []);
   check('each code costs 4 writes: itself and three partials', e.CODES._size(), 4);
