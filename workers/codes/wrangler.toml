@@ -1,0 +1,21 @@
+name = "wordmapper-codes"
+main = "src/index.js"
+compatibility_date = "2025-09-01"
+
+# The store. Create it once and paste the ids it prints:
+#   npx wrangler kv namespace create CODES
+#   npx wrangler kv namespace create CODES --preview
+#
+# KV is EVENTUALLY CONSISTENT, which is fine here and would not be everywhere.
+# Reserving a code tolerates it because two reservations colliding is a
+# 1-in-2.18-billion event, not because the read-then-write is safe. If you add a
+# one-shot claim -- consume the code, refuse the second claimant -- that races
+# for real, and it belongs in a Durable Object rather than here.
+[[kv_namespaces]]
+binding = "CODES"
+id = "REPLACE_ME"
+preview_id = "REPLACE_ME"
+
+[vars]
+CODE_TTL_SECONDS = "900"      # 15 minutes. Shorter is safer: see README.
+RATE_LIMIT_PER_MINUTE = "30"  # best-effort only; real limiting goes in WAF

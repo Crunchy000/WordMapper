@@ -93,6 +93,26 @@ entirely offline — nothing about it depends on the network.
 
 [bip39]: https://github.com/bitcoin/bips/blob/master/bip-0039/bip-0039-wordlists.md
 
+## Code backend
+
+[`workers/codes`](workers/codes) is a Cloudflare Worker that issues and resolves
+the three-word codes — the real version of what the demo's switch mocks. It is
+KV-backed, dependency-free, and its tests run on plain node with a `Map` for a
+KV, so CI checks it without a Cloudflare account or a network.
+
+```
+POST /new   {"lat":51.50072,"lng":-0.12456}  ->  {"code":"apron.trophy.export"}
+GET  /c/<code>                               ->  {"lat":...,"lng":...}
+```
+
+Two things in it are worth knowing even if you never deploy it. **A short TTL is
+the safety property**: a misheard code collides with a live one at exactly
+`live ÷ 2,176,782,336`, so codes held for a job and released give 1 in 1.7
+million, while a code assigned per handset would give 1 in 36. And **repair
+costs three reads, not 3,885** — each code is also written under three partial
+keys, one per word left out, so a code with one wrong word still matches on the
+two that were heard correctly.
+
 ## Publishing
 
 `index.html` and `demos/` are deployed to GitHub Pages by
