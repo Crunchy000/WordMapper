@@ -114,9 +114,17 @@ export default {
     const perMinute = num(env.RATE_LIMIT_PER_MINUTE, 30);
     const ip = request.headers.get('cf-connecting-ip') || 'unknown';
 
+    // The very first deploy can land before the KV namespace is connected, so
+    // say which binding is missing rather than throwing a stack trace at
+    // whoever has just imported the repo and is wondering what they broke.
+    const store = env.CODES;
     if (path === '/' || path === '/health')
-      return json({ ok: true, words: WORDS.length, wordsPerCode: WORDS_PER_CODE,
-                    codeSpace: WORDS.length ** WORDS_PER_CODE, ttl });
+      return json({ ok: Boolean(store), words: WORDS.length,
+                    wordsPerCode: WORDS_PER_CODE,
+                    codeSpace: WORDS.length ** WORDS_PER_CODE, ttl,
+                    ...(store ? {} : { error: 'no KV namespace bound to CODES' }) },
+                  store ? 200 : 503);
+    if (!store) return json({ error: 'no KV namespace bound to CODES' }, 503);
 
     // Issue a code for a place. The body is stored as given and handed back on
     // resolve; keep it small and keep it boring.

@@ -57,18 +57,44 @@ that *fails* rather than one that misleads.
 Each code therefore costs **four writes** — itself and three partials. Budget
 accordingly; KV free tiers are generous on reads and much less so on writes.
 
-## Setting it up
+## Importing it from the Cloudflare dashboard
+
+This repo is meant to be connected to Workers Builds and deployed without
+editing anything first. **Workers & Pages → Create → Workers → Import a
+repository**, pick this repo, and set:
+
+| field | value |
+|---|---|
+| Root directory | `workers/codes` |
+| Build command | *(leave empty)* |
+| Deploy command | `npx wrangler deploy` |
+
+`package-lock.json` is committed and wrangler is pinned as a devDependency, so
+the build installs the same version every time rather than whatever is newest.
+There is no build step: `src/words.js` is generated but committed.
+
+**The KV binding has no `id` on purpose.** Wrangler treats a binding with no id
+as a resource to provision or connect at deploy time; a placeholder id would be
+a valid-looking lie that fails the first real deploy. If the dashboard asks you
+to pick or create a namespace for `CODES`, that is this working as intended.
+
+To pin an existing namespace instead, let wrangler write the id in for you:
 
 ```sh
-npm install -g wrangler          # or use npx
-wrangler login
+npx wrangler kv namespace create CODES --binding CODES --update-config
+```
 
-wrangler kv namespace create CODES
-wrangler kv namespace create CODES --preview
-# paste both ids into wrangler.toml
+If the first deploy lands before the namespace is connected, every endpoint
+returns **503 `no KV namespace bound to CODES`** rather than a stack trace, and
+`/health` reports `ok: false`. Connect it and it starts working; nothing needs
+redeploying.
 
-npm test                         # no account or network needed
-npm run dev                      # local, at 127.0.0.1:8787
+## Running it locally
+
+```sh
+npm ci
+npm test          # no Cloudflare account and no network needed
+npm run dev       # 127.0.0.1:8787
 npm run deploy
 ```
 

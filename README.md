@@ -105,6 +105,11 @@ POST /new   {"lat":51.50072,"lng":-0.12456}  ->  {"code":"apron.trophy.export"}
 GET  /c/<code>                               ->  {"lat":...,"lng":...}
 ```
 
+Connect it from the Cloudflare dashboard with **Import a repository**, root
+directory `workers/codes`, deploy command `npx wrangler deploy` — the KV binding
+carries no id so the first deploy provisions or connects one rather than failing
+on a placeholder.
+
 Two things in it are worth knowing even if you never deploy it. **A short TTL is
 the safety property**: a misheard code collides with a live one at exactly
 `live ÷ 2,176,782,336`, so codes held for a job and released give 1 in 1.7

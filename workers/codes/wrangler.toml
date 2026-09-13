@@ -2,20 +2,26 @@ name = "wordmapper-codes"
 main = "src/index.js"
 compatibility_date = "2025-09-01"
 
-# The store. Create it once and paste the ids it prints:
-#   npx wrangler kv namespace create CODES
-#   npx wrangler kv namespace create CODES --preview
+# NO `id` HERE ON PURPOSE, so this repo can be imported from the Cloudflare
+# dashboard and deployed without editing anything first. Wrangler treats a
+# binding with no id as a resource to provision or connect at deploy time; a
+# placeholder id would be a valid-looking lie that fails the first real deploy.
 #
-# KV is EVENTUALLY CONSISTENT, which is fine here and would not be everywhere.
+# If you would rather pin an existing namespace, create it and let wrangler
+# write the id in for you:
+#   npx wrangler kv namespace create CODES --binding CODES --update-config
+#
+# KV IS EVENTUALLY CONSISTENT, which is fine here and would not be everywhere.
 # Reserving a code tolerates it because two reservations colliding is a
-# 1-in-2.18-billion event, not because the read-then-write is safe. If you add a
-# one-shot claim -- consume the code, refuse the second claimant -- that races
-# for real, and it belongs in a Durable Object rather than here.
+# 1-in-2.18-billion event, not because read-then-write is safe. A one-shot claim
+# -- consume the code, refuse the second claimant -- races for real and belongs
+# in a Durable Object.
 [[kv_namespaces]]
 binding = "CODES"
-id = "REPLACE_ME"
-preview_id = "REPLACE_ME"
 
 [vars]
 CODE_TTL_SECONDS = "900"      # 15 minutes. Shorter is safer: see README.
 RATE_LIMIT_PER_MINUTE = "30"  # best-effort only; real limiting goes in WAF
+
+[observability]
+enabled = true
