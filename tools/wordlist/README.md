@@ -262,6 +262,10 @@ The ceiling from this base is **1,311** at A1–B2. Similarity is what binds:
 over half the pool goes to it — 1,000 words on sound, 675 on a shared piece,
 160 on a shared root and 100 on containment.
 
+*This section was written for the square grid. The grid is now H3 — see
+[`docs/grid-scheme.md`](../../docs/grid-scheme.md) — where the list no longer
+needs to be a square, and 1,296 stays because it is close to the A1–B2 ceiling.*
+
 **The list does not have to be a power of two.** A list of *s*² words lets each
 word subdivide a cell *s* × *s*, so it is one base-36 digit of x and one of y —
 no bit interleaving, no per-length axis split, and the prefix property for free.

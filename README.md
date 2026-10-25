@@ -9,55 +9,57 @@ Experiments in encoding geographic coordinates as short, memorable word sequence
 ### `demos/word-grid.html`
 
 The scheme, live and deliberately bare: click anywhere on earth and the address
-sits on the map, nothing else. **Six everyday words name any point to 2.99 m,
-and catch a misheard one 99.9988 % of the time** — two words to a line, with the
-last set apart because it does a different job: it moves the position not at all
-and is nothing but checksum.
+sits on the map, with its hexagon drawn round the point. **Six everyday words
+name any point on earth to one [H3] hexagon about three metres across, and catch
+a misheard one at least 99.9945 % of the time.** Two words to a line.
+
+```
+attempt.clean.
+kangaroo.professor.
+retina.menu          <- Big Ben
+```
+
+**The grid is Uber's H3**, at resolution 14: 2.7 m across the flats, 6.3 m² on
+average. It replaced a square grid on a cylindrical equal-area projection, whose
+squares were square only at 55.65° and 1.7 × 5.3 m at the equator. H3 puts
+hexagons on an icosahedron, so a cell is close to a regular hexagon everywhere.
+The trade is area, which H3 does not keep equal: cells run 3.8–7.6 m².
+
+**The address is H3's own hierarchy.** A cell is a base cell (one of 122) and
+fourteen base-7 digits. Each word carries a few of those digits plus a digit of
+checksum. Word one is the base cell and one digit, words two to four three
+digits each, and words five and six two each:
+
+| Word | 1 | 2 | 3 | 4 | 5 | 6 |
+|---|---|---|---|---|---|---|
+| H3 digits | base + 1 | 3 | 3 | 3 | 2 | 2 |
+| Check | 1 | 3 | 3 | 3 | 26 | 26 |
+| Reaches | res 1, 483 km | res 4, 26 km | res 7, 1.4 km | res 10, 76 m | res 12, 11 m | **res 14, 1.5 m** |
+
+Edges are H3's averages. The checks multiply to 18,252.
+
+**Base 7 does not pack evenly into 1,296-word slots**, and that is the cost of
+the move. Six words on the square grid were checked 1 in 82,944; on H3 they are
+1 in 18,252, for a finer and rounder cell. Resolution 13 would have kept a
+strong check (1 in 104,976), but at 44 m² a cell is a house rather than a
+doorstep. The leftover values are not wasted: a misheard word that lands on one,
+or on a pentagon's missing child, is refused outright.
 
 **One grid, one address for a place, one length.** There are no regional boxes
-and no scope to switch — there used to be, around Britain and Ireland and around
-Australia, and they are gone: a box has to be a rectangle, most of the world
-cannot be boxed without swallowing a neighbour, and each one gave a place a
-*second* address.
-
-**And six words, always.** There is nothing to shorten against: no country to
-consult, no region to search, and so no network call at all — the address is
-drawn the instant you click.
-
-```
-kilo.waitress.
-maintain.table.
-glint.export     <- set apart: pure checksum
-```
-
-There used to be a country search, where a reverse geocoder's bounding box
-bought the leading word. It is gone, for three reasons that stack up.
-
-**It cost detection, which is the one thing worth protecting.** A misheard word
-removes the true tile, so every candidate the box left was a fresh lottery
-against the same checksum, and a wrong word was caught `(1 − 1/CHECK)^k` of the
-time rather than `1 − 1/CHECK`. Saying the sixth word costs less than that.
-
-**It made the word count inconsistent** — the same country giving four words in
-one place and five in another, and the largest countries sitting right on the
-cap, shortening most of the time but not always. An address whose length you
-cannot predict is worse than one that is always six words.
-
-**And it needed a network call**, to a rate-limited service with a usage policy,
-for a scheme that otherwise works entirely offline.
+and no scope to switch. There is no country search either: it cost detection, it
+made the word count unpredictable, and it needed a network call.
 
 **There is an online/offline switch**, and flipping it turns the address into a
-three-word *short code*. Refresh issues another. Nothing is stored — the code is
+three-word *short code*. Refresh issues another. Nothing is stored. The code is
 random, which is what a real shortener would do, since a short code is a row in a
 database and not an encoding of anywhere.
 
 **All three words are key, and none of them is a checksum, because the database
 already is one.** A code either was issued or it was not, so a wrong word names a
-code nobody was ever given and is caught — and the three words are one word away
-from only 3 × 1295 = 3,885 other codes, so the service can look at all of them
-and *repair* the wrong word from the one that exists rather than merely refusing
-it. Spending a word on a check instead is strictly worse: it costs 1,296× the
-code space, gives a flat 1-in-1,296, and cannot repair anything.
+code nobody was ever given and is caught. The three words are one word away from
+only 3 × 1295 = 3,885 other codes, so the service can look at all of them and
+*repair* the wrong word from the one that exists, rather than merely refusing
+it.
 
 | codes issued | wrong word caught | repair unambiguous |
 |---|---|---|
@@ -66,32 +68,30 @@ code space, gives a flat 1-in-1,296, and cannot repair anything.
 | 100,000 | 99.995 % | 83.7 % |
 | 1,000,000 | 99.954 % | 16.8 % |
 
-It gets *better* the emptier the space is, which is the opposite of how a
-checksum behaves.
-
 The point of the switch is the difference, not the word count. Six words *say
 where you are* and decode with the network down. Three words resolve to the same
 exact place, but they are a database row: fewer to read out, meaningless on their
-own, and dead the day that database is. Roughly four syllables separate them —
-worth knowing before paying for a service, since a short domain saves nearly
-thirty.
+own, and dead the day that database is.
 
-Dropping *trailing* words still works and needs no context at all — each word
-narrows the area and the words already said never change. So does filling in
-dropped *leading* words from a nearby reference point, which tests exactly one
-candidate and so costs no detection at all. Only the region search is gone.
+**Dropping trailing words still works** and needs no context at all. An H3
+cell's parent is its index with the last digits removed, so every address is a
+prefix of a longer one. H3 nests only approximately, so the point is not always
+inside the coarse hexagon *as drawn*, but it is always within 1.1 cell radii of
+its centre.
 
-Cells are square at every length: both axes get the same split at every word, so
-a cell's aspect is just the frame's, and the projection's standard parallel is
-chosen to make the projected world exactly square (`K = 1/√π`, 55.654°).
-Equal-area throughout, so this is shape, not resolution.
+**Dropping leading words works too**, given a nearby reference point. The
+reference's surrounding H3 cells supply the missing words, and the one nearest
+candidate is tested against the checksum. A tail keeps only the check its own
+words carry, which is why the checksum is weighted to the last two words: five
+words said keep all 18,252, three keep 2,028, and one keeps only 26.
 
-Open the file directly in a browser: no build step, and no secure-context
-requirement, since SHA-256 is plain JavaScript rather than `crypto.subtle`. It
-loads Leaflet and map tiles from a CDN, but the address itself is computed
-entirely offline — nothing about it depends on the network.
+Open the file directly in a browser: no build step. It loads Leaflet, h3-js and
+map tiles from a CDN, and once loaded the address is computed entirely in the
+page. SHA-256 is plain JavaScript rather than `crypto.subtle`, which is missing
+outside a secure context.
 
 [bip39]: https://github.com/bitcoin/bips/blob/master/bip-0039/bip-0039-wordlists.md
+[H3]: https://h3geo.org/
 
 ## Code backend
 
@@ -133,11 +133,10 @@ re-run the workflow and it will publish.
 
 ## Docs
 
-- [`docs/grid-scheme.md`](docs/grid-scheme.md) — the scheme: both directions of
-  shortening, why the checksum makes shortening safe, how many words a search
-  why the prefix property is free in base-36 and was not in binary, why every
-  word can carry check and the checks multiply, and why a checksum cannot be
-  verified until the whole position is known.
+- [`docs/grid-scheme.md`](docs/grid-scheme.md) — the scheme: why H3 replaced the
+  square grid, how H3's base-7 digits are packed into words, what the resolution
+  cost in checksum strength, both directions of shortening, and why the check is
+  weighted to the last words.
 - [`docs/coverage.md`](docs/coverage.md) — the square-root law relating area to
   resolution, and the word-list vs address-length trade. Written for an earlier,
   UK-only version of the scheme; the arithmetic still holds.
@@ -147,8 +146,7 @@ re-run the workflow and it will publish.
 ## Word list
 
 **1,296 words, every one graded CEFR A1–B2** — the band a person can retrieve
-under pressure, not merely recognise. 36 × 36, so each word is one base-36 digit
-of x and one of y. Generated by [`tools/wordlist`](tools/wordlist)
+under pressure, not merely recognise. Generated by [`tools/wordlist`](tools/wordlist)
 from the 9,025 graded headwords of the Oxford 5000 and the English Vocabulary
 Profile, minus names, places, offensive and vulgar words, inflections of other
 words, words spelled two ways — and then everything confusable or sound-alike.
@@ -161,28 +159,27 @@ checksummed*, not spoken: it contains `pair`/`pear`, `peace`/`piece`,
 twin, and its only guarantee is unique four-letter prefixes — which says nothing
 about a phone line.
 
-**The list does not have to be a power of two**, and dropping that assumption is
-what pays for the resolution. Binary forced 1,024 words and a 10.8 m cell;
-36 × 36 is 1,296 words and 2.99 m at six words, checked to one part in 82,944.
-1,311 is the ceiling on A1–B2 graded vocabulary, so 1,296 is
-close to everything the easy band has to give — BIP-39's 2,048 would carry more
-per word, but the largest phonetically clean list inside the top 10,000 words of
-English is 976, and 2,048 needs roughly the top 30,000. Four and a half metres
-is a parking space; a sixth word would reach 12 cm if a doorstep were ever
-needed.
+**The list does not have to be a power of two.** It is 1,296 because that was
+36 × 36 on the square grid, where each word was one base-36 digit of x and one
+of y. H3 does not need that, but 1,311 is the ceiling on A1–B2 graded
+vocabulary, so 1,296 is close to everything the easy band has to give.
+BIP-39's 2,048 would carry more per word, but the largest phonetically clean
+list inside the top 10,000 words of English is 976, and 2,048 needs roughly the
+top 30,000.
 
 ## Tools
 
 ```
-npm install --prefix tools/gridcode
+pip install -r tools/gridcode/requirements.txt   # h3, the Python bindings
+npm ci --prefix tools/gridcode                   # h3-js, for the cross-check
 python3 tools/gridcode/test_bip39grid.py      # the scheme: round trip, checksums, uniqueness
 node    tools/gridcode/check-demo.mjs         # the demo's JS against the Python reference
 python3 tools/gridcode/build_fixture.py       # regenerate the cross-check fixture
 ```
 
 The last two exist because the codec is implemented twice — once in Python as
-the reference, once in JavaScript inside the demo. The cross-check runs on every
-push so they cannot drift apart.
+the reference, once in JavaScript inside the demo. Both sit on the same H3 core,
+4.5.0, and the cross-check runs on every push so they cannot drift apart.
 
 ## Licence
 

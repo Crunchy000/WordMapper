@@ -23,9 +23,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # No setup-node: the runner ships one, and the check is plain ESM with no
-      # dependencies. No npm install either -- the word list is a file in the
-      # repo, checked against the SHA-256 pinned in the reference codec.
+      # The grid is H3, so both ports need it -- h3 for the Python reference,
+      # h3-js for the demo's port -- pinned to the same 4.5.0 core so they
+      # agree cell for cell. setup-python because the runner's system Python
+      # refuses pip installs; node is the runner's own.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install H3
+        run: |
+          python3 -m pip install -r tools/gridcode/requirements.txt
+          npm ci --prefix tools/gridcode
 
       # The demo carries its own JavaScript port of the codec. Fail the build if
       # it stops agreeing with the Python reference, or stops round-tripping.
