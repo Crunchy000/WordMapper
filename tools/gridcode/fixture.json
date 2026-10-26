@@ -1,690 +1,855 @@
 {
- "res": 8,
- "check": 3,
- "half": 46656,
+ "res": 12,
+ "check": 1,
+ "half": 1679616,
  "rounds": 6,
  "scramble": [
   [
    0,
-   331096943
+   2005106382490
   ],
   [
    1,
-   568448479
+   1810354902431
   ],
   [
-   46655,
-   858306133
+   1679615,
+   85955853903
   ],
   [
-   46656,
-   1263017570
+   1679616,
+   573154587520
   ],
   [
-   2176782335,
-   1432849238
+   2821109907455,
+   2571740166639
   ],
   [
-   577090037,
-   938830449
+   2500248056309,
+   254707208833
   ],
   [
-   271041745,
-   629482997
+   278158293956,
+   2292472650419
   ],
   [
-   1095513148,
-   1481943787
+   516491588668,
+   577451564505
   ],
   [
-   506456969,
-   2117806262
+   2076399753379,
+   1198524262570
   ],
   [
-   2127877499,
-   142418325
+   1669245881371,
+   1983880275898
   ],
   [
-   1930549411,
-   2085321962
+   922510542358,
+   670229992914
   ],
   [
-   2028277857,
-   90265719
+   2143591804556,
+   2377216852844
   ],
   [
-   1630434966,
-   1710918559
+   1717281534898,
+   379821452911
   ],
   [
-   901749037,
-   1861475124
+   2673328378502,
+   2248767862426
   ],
   [
-   403123852,
-   1260930897
+   1170144027949,
+   456556398717
   ],
   [
-   2095328386,
-   1038453190
+   2599437740337,
+   735283072380
   ],
   [
-   121751464,
-   801483745
+   450736505506,
+   1228905902134
   ],
   [
-   1674216077,
-   1709502438
+   1399735972665,
+   297673525456
   ],
   [
-   1858720390,
-   518329694
+   94620663516,
+   278320792762
   ],
   [
-   9045414,
-   930652027
+   40980054558,
+   2324257834810
   ],
   [
-   1912923437,
-   615392206
+   2319407069063,
+   191410884451
   ],
   [
-   1143881027,
-   1927199404
+   2433080986900,
+   469387480046
   ],
   [
-   982526257,
-   1867233690
+   1517124545593,
+   1791581653058
   ],
   [
-   439062303,
-   1615839427
+   1829748365685,
+   353547953782
   ],
   [
-   1363349907,
-   2056352367
+   440845297491,
+   1299331495172
   ],
   [
-   131383004,
-   863271102
+   2766757399943,
+   2792873477368
   ],
   [
-   95872739,
-   1014357582
+   1305068532925,
+   1591500081642
   ],
   [
-   109289145,
-   966574170
+   2202077800951,
+   1305199622116
   ],
   [
-   39534911,
-   1250475401
+   2230900962393,
+   1538093093324
   ],
   [
-   1637259727,
-   870100412
+   836102595914,
+   2166294060781
   ],
   [
-   930287327,
-   1273318485
+   1246843473693,
+   829915192246
   ],
   [
-   1812976885,
-   1892404802
+   2198518506692,
+   2333507610332
   ],
   [
-   124729223,
-   728414987
+   1728747030469,
+   2029135531206
   ],
   [
-   952158461,
-   1102659077
+   2108977229655,
+   48670601882
   ],
   [
-   1880712864,
-   768096579
+   1777246318424,
+   351158315125
   ],
   [
-   2129497364,
-   1268781527
+   1611355797144,
+   654561491908
   ],
   [
-   1001090105,
-   1366732449
+   379566459279,
+   753807380046
   ],
   [
-   1484771968,
-   1055443951
+   474630077717,
+   2487939443213
   ],
   [
-   991564255,
-   514425152
+   720602924003,
+   2643842583592
   ],
   [
-   939657385,
-   619136194
+   1629481622969,
+   22567993283
   ],
   [
-   1973981844,
-   1357226512
+   2061711325574,
+   1270865748801
   ],
   [
-   1244602538,
-   1861842991
+   1353101474732,
+   1459992353735
   ],
   [
-   92297589,
-   469258502
+   2705757188283,
+   2488569500689
   ],
   [
-   1787479226,
-   737869520
+   2545168343949,
+   2171672359092
   ],
   [
-   429497919,
-   998772614
+   739466019150,
+   391174338692
   ]
  ],
  "points": [
   {
    "lat": 51.50072,
    "lng": -0.12456,
-   "cell": "88194ad14dfffff",
+   "cell": "8c194ad14c255ff",
    "words": [
-    "film",
-    "balloon",
-    "tourism"
+    "pattern",
+    "revolve",
+    "inch",
+    "partner"
    ]
   },
   {
    "lat": 55.94859,
    "lng": -3.19951,
-   "cell": "8819727657fffff",
+   "cell": "8c19727657583ff",
    "words": [
-    "certify",
-    "extent",
-    "abroad"
+    "opponent",
+    "exceed",
+    "scuba",
+    "coastal"
    ]
   },
   {
    "lat": 50.06569,
    "lng": -5.71531,
-   "cell": "881870cb69fffff",
+   "cell": "8c1870cb6d69dff",
    "words": [
-    "observe",
-    "radium",
-    "nearby"
+    "sneeze",
+    "corona",
+    "regard",
+    "severe"
    ]
   },
   {
    "lat": 53.3498,
    "lng": -6.2603,
-   "cell": "88182c1749fffff",
+   "cell": "8c182c1749895ff",
    "words": [
-    "company",
-    "beneath",
-    "isolate"
+    "replica",
+    "ambulance",
+    "uneven",
+    "modern"
    ]
   },
   {
    "lat": 48.8566,
    "lng": 2.3522,
-   "cell": "881fb46625fffff",
+   "cell": "8c1fb46625551ff",
    "words": [
-    "farewell",
-    "camp",
-    "balloon"
+    "sugar",
+    "axis",
+    "provide",
+    "confuse"
    ]
   },
   {
    "lat": 40.758,
    "lng": -73.9855,
-   "cell": "882a100d67fffff",
+   "cell": "8c2a100d67939ff",
    "words": [
-    "pasta",
-    "wondrous",
-    "brainstorm"
+    "mutual",
+    "name",
+    "slice",
+    "supportive"
    ]
   },
   {
    "lat": 37.8199,
    "lng": -122.4786,
-   "cell": "8828308703fffff",
+   "cell": "8c28308702285ff",
    "words": [
-    "analyst",
-    "famous",
-    "substance"
+    "salsa",
+    "upward",
+    "juicy",
+    "greedy"
    ]
   },
   {
    "lat": 55.7558,
    "lng": 37.6173,
-   "cell": "8811aa7abdfffff",
+   "cell": "8c11aa7abdadbff",
    "words": [
-    "tremble",
-    "lady",
-    "exquisite"
+    "leg",
+    "persuasive",
+    "hasty",
+    "glorious"
    ]
   },
   {
    "lat": -33.8688,
    "lng": 151.2093,
-   "cell": "88be0e35cbfffff",
+   "cell": "8cbe0e35cbad1ff",
    "words": [
-    "yummy",
-    "inch",
-    "cheap"
+    "stylish",
+    "synonym",
+    "world",
+    "ambition"
    ]
   },
   {
    "lat": 1.2897,
    "lng": 103.8501,
-   "cell": "886520db33fffff",
+   "cell": "8c6520db321ddff",
    "words": [
-    "equity",
-    "yummy",
-    "unafraid"
+    "component",
+    "immigrant",
+    "fashion",
+    "ferryboat"
    ]
   },
   {
    "lat": -18.1416,
    "lng": 178.4419,
-   "cell": "889b41b2b1fffff",
+   "cell": "8c9b41b2b0011ff",
    "words": [
-    "haunt",
-    "clarify",
-    "book"
+    "ignorance",
+    "decent",
+    "wealthy",
+    "jade"
    ]
   },
   {
    "lat": -16.5,
    "lng": -179.9,
-   "cell": "889b5dc199fffff",
+   "cell": "8c9b5dc1989d3ff",
    "words": [
-    "extreme",
-    "arrive",
-    "feedback"
+    "command",
+    "quality",
+    "embarrass",
+    "coherent"
    ]
   },
   {
    "lat": 64.1466,
    "lng": -21.9426,
-   "cell": "88075dd4bdfffff",
+   "cell": "8c075dd4b890dff",
    "words": [
-    "office",
-    "garden",
-    "prospect"
+    "uneven",
+    "guitar",
+    "grandma",
+    "breakfast"
    ]
   },
   {
    "lat": 0.0,
    "lng": 0.0,
-   "cell": "88754e6499fffff",
+   "cell": "8c754e649929dff",
    "words": [
-    "coastal",
-    "transient",
-    "gradual"
+    "negative",
+    "reclaim",
+    "paddle",
+    "peaceful"
    ]
   },
   {
    "lat": 12.0,
    "lng": -40.0,
-   "cell": "8856aad029fffff",
+   "cell": "8c56aad0290e7ff",
    "words": [
-    "shrimp",
-    "rainfall",
-    "vacant"
+    "obtain",
+    "country",
+    "single",
+    "sensible"
    ]
   },
   {
    "lat": -90.0,
    "lng": 0.0,
-   "cell": "88f29380e1fffff",
+   "cell": "8cf29380e0d0dff",
    "words": [
-    "greedy",
-    "nuclear",
-    "tolerant"
+    "mustard",
+    "jump",
+    "yogurt",
+    "spray"
    ]
   },
   {
    "lat": 90.0,
    "lng": 0.0,
-   "cell": "880326233bfffff",
+   "cell": "8c0326233ab03ff",
    "words": [
-    "untidy",
-    "retrospect",
-    "midnight"
+    "farewell",
+    "clerk",
+    "comprise",
+    "nature"
    ]
   },
   {
    "lat": 0.0,
    "lng": 180.0,
-   "cell": "887eb57221fffff",
+   "cell": "8c7eb57221a2bff",
    "words": [
-    "argument",
-    "split",
-    "inspire"
+    "rainfall",
+    "tiptoe",
+    "institute",
+    "signpost"
    ]
   },
   {
    "lat": 0.0,
    "lng": -180.0,
-   "cell": "887eb57221fffff",
+   "cell": "8c7eb57221a2bff",
    "words": [
-    "argument",
-    "split",
-    "inspire"
+    "rainfall",
+    "tiptoe",
+    "institute",
+    "signpost"
    ]
   },
   {
    "lat": 89.9999,
    "lng": 179.9999,
-   "cell": "880326233bfffff",
+   "cell": "8c0326233ab07ff",
    "words": [
-    "untidy",
-    "retrospect",
-    "midnight"
+    "elective",
+    "lengthy",
+    "superstar",
+    "dreamy"
    ]
   },
   {
    "lat": 23.717925271222974,
    "lng": -67.13232636643566,
-   "cell": "884c000001fffff",
+   "cell": "8c4c000000001ff",
    "words": [
-    "fume",
-    "dictator",
-    "equip"
+    "parade",
+    "tramp",
+    "doubtful",
+    "dilemma"
    ]
   }
  ],
  "wrong": [
   {
    "words": [
-    "period",
-    "balloon",
-    "tourism"
-   ],
-   "cell": null
-  },
-  {
-   "words": [
-    "film",
-    "avoid",
-    "tourism"
-   ],
-   "cell": null
-  },
-  {
-   "words": [
-    "film",
-    "balloon",
-    "fun"
-   ],
-   "cell": null
-  },
-  {
-   "words": [
-    "external",
-    "extent",
-    "abroad"
-   ],
-   "cell": null
-  },
-  {
-   "words": [
-    "certify",
-    "submit",
-    "abroad"
-   ],
-   "cell": null
-  },
-  {
-   "words": [
-    "certify",
-    "extent",
-    "simply"
-   ],
-   "cell": "88846cd5edfffff"
-  },
-  {
-   "words": [
-    "donation",
-    "radium",
-    "nearby"
-   ],
-   "cell": null
-  },
-  {
-   "words": [
-    "observe",
-    "literal",
-    "nearby"
-   ],
-   "cell": null
-  },
-  {
-   "words": [
-    "observe",
-    "radium",
-    "teach"
-   ],
-   "cell": null
-  },
-  {
-   "words": [
-    "picture",
-    "beneath",
-    "isolate"
-   ],
-   "cell": null
-  },
-  {
-   "words": [
-    "company",
-    "memory",
-    "isolate"
-   ],
-   "cell": null
-  },
-  {
-   "words": [
-    "company",
-    "beneath",
-    "half"
-   ],
-   "cell": "8808980a41fffff"
-  },
-  {
-   "words": [
-    "carnival",
-    "camp",
-    "balloon"
-   ],
-   "cell": null
-  },
-  {
-   "words": [
-    "farewell",
-    "tulip",
-    "balloon"
-   ],
-   "cell": null
-  },
-  {
-   "words": [
-    "farewell",
-    "camp",
-    "provide"
-   ],
-   "cell": null
-  },
-  {
-   "words": [
-    "motorbike",
-    "wondrous",
-    "brainstorm"
-   ],
-   "cell": null
-  },
-  {
-   "words": [
-    "pasta",
-    "applicant",
-    "brainstorm"
-   ],
-   "cell": null
-  },
-  {
-   "words": [
-    "pasta",
-    "wondrous",
-    "survey"
-   ],
-   "cell": null
-  },
-  {
-   "words": [
-    "haunt",
-    "famous",
-    "substance"
-   ],
-   "cell": "88323309b5fffff"
-  },
-  {
-   "words": [
-    "analyst",
-    "wax",
-    "substance"
-   ],
-   "cell": null
-  },
-  {
-   "words": [
-    "analyst",
-    "famous",
-    "lightning"
-   ],
-   "cell": null
-  },
-  {
-   "words": [
-    "concern",
-    "lady",
-    "exquisite"
-   ],
-   "cell": "8884493221fffff"
-  },
-  {
-   "words": [
-    "tremble",
-    "balcony",
-    "exquisite"
-   ],
-   "cell": "88a88626e3fffff"
-  },
-  {
-   "words": [
-    "tremble",
-    "lady",
-    "consider"
-   ],
-   "cell": "88a9b201dbfffff"
-  },
-  {
-   "words": [
-    "negative",
+    "humane",
+    "revolve",
     "inch",
-    "cheap"
+    "partner"
    ],
-   "cell": null
+   "cell": "8c45930ee6885ff"
   },
   {
    "words": [
-    "yummy",
-    "neutral",
-    "cheap"
-   ],
-   "cell": "88296c0583fffff"
-  },
-  {
-   "words": [
-    "yummy",
+    "pattern",
+    "boyfriend",
     "inch",
-    "stepfather"
+    "partner"
+   ],
+   "cell": "8c4660d59d42dff"
+  },
+  {
+   "words": [
+    "pattern",
+    "revolve",
+    "institute",
+    "partner"
+   ],
+   "cell": "8cee5a680842bff"
+  },
+  {
+   "words": [
+    "pattern",
+    "revolve",
+    "inch",
+    "upward"
+   ],
+   "cell": "8cec75d1d4437ff"
+  },
+  {
+   "words": [
+    "inquire",
+    "exceed",
+    "scuba",
+    "coastal"
    ],
    "cell": null
   },
   {
    "words": [
-    "boyfriend",
-    "yummy",
-    "unafraid"
+    "opponent",
+    "companion",
+    "scuba",
+    "coastal"
+   ],
+   "cell": "8c109d323585dff"
+  },
+  {
+   "words": [
+    "opponent",
+    "exceed",
+    "certify",
+    "coastal"
+   ],
+   "cell": "8ccc8da566569ff"
+  },
+  {
+   "words": [
+    "opponent",
+    "exceed",
+    "scuba",
+    "sociable"
+   ],
+   "cell": "8c0ac6aa41421ff"
+  },
+  {
+   "words": [
+    "opponent",
+    "corona",
+    "regard",
+    "severe"
    ],
    "cell": null
   },
   {
    "words": [
-    "equity",
-    "coherent",
-    "unafraid"
+    "sneeze",
+    "risk",
+    "regard",
+    "severe"
+   ],
+   "cell": "8cbba16052e47ff"
+  },
+  {
+   "words": [
+    "sneeze",
+    "corona",
+    "penguin",
+    "severe"
    ],
    "cell": null
   },
   {
    "words": [
-    "equity",
-    "yummy",
-    "conclude"
+    "sneeze",
+    "corona",
+    "regard",
+    "farewell"
    ],
    "cell": null
   },
   {
    "words": [
-    "deny",
-    "clarify",
-    "book"
+    "inject",
+    "ambulance",
+    "uneven",
+    "modern"
    ],
-   "cell": "883eac941dfffff"
+   "cell": "8c36c802d6811ff"
   },
   {
    "words": [
-    "haunt",
-    "sequence",
-    "book"
-   ],
-   "cell": "8842db970dfffff"
-  },
-  {
-   "words": [
-    "haunt",
-    "clarify",
-    "professor"
-   ],
-   "cell": "8808844155fffff"
-  },
-  {
-   "words": [
-    "boyfriend",
-    "arrive",
-    "feedback"
+    "replica",
+    "infant",
+    "uneven",
+    "modern"
    ],
    "cell": null
   },
   {
    "words": [
-    "extreme",
-    "blossom",
-    "feedback"
+    "replica",
+    "ambulance",
+    "smoke",
+    "modern"
+   ],
+   "cell": "8c7ac45b46529ff"
+  },
+  {
+   "words": [
+    "replica",
+    "ambulance",
+    "uneven",
+    "loyalty"
    ],
    "cell": null
   },
   {
    "words": [
-    "extreme",
-    "arrive",
-    "bench"
+    "swarm",
+    "axis",
+    "provide",
+    "confuse"
    ],
-   "cell": "886c98b911fffff"
+   "cell": "8c5eae6e1d35bff"
+  },
+  {
+   "words": [
+    "sugar",
+    "presence",
+    "provide",
+    "confuse"
+   ],
+   "cell": "8c56364d99545ff"
+  },
+  {
+   "words": [
+    "sugar",
+    "axis",
+    "liberate",
+    "confuse"
+   ],
+   "cell": "8c14d06108555ff"
+  },
+  {
+   "words": [
+    "sugar",
+    "axis",
+    "provide",
+    "gossip"
+   ],
+   "cell": null
+  },
+  {
+   "words": [
+    "goalkeeper",
+    "name",
+    "slice",
+    "supportive"
+   ],
+   "cell": "8cd299b5dcd81ff"
+  },
+  {
+   "words": [
+    "mutual",
+    "input",
+    "slice",
+    "supportive"
+   ],
+   "cell": "8c70f4b5b361dff"
+  },
+  {
+   "words": [
+    "mutual",
+    "name",
+    "cake",
+    "supportive"
+   ],
+   "cell": null
+  },
+  {
+   "words": [
+    "mutual",
+    "name",
+    "slice",
+    "memory"
+   ],
+   "cell": "8cbc708edca31ff"
+  },
+  {
+   "words": [
+    "strengthen",
+    "upward",
+    "juicy",
+    "greedy"
+   ],
+   "cell": null
+  },
+  {
+   "words": [
+    "salsa",
+    "quotation",
+    "juicy",
+    "greedy"
+   ],
+   "cell": "8c50d540c76b5ff"
+  },
+  {
+   "words": [
+    "salsa",
+    "upward",
+    "attempt",
+    "greedy"
+   ],
+   "cell": null
+  },
+  {
+   "words": [
+    "salsa",
+    "upward",
+    "juicy",
+    "essence"
+   ],
+   "cell": "8c4923a1114b7ff"
+  },
+  {
+   "words": [
+    "gangster",
+    "persuasive",
+    "hasty",
+    "glorious"
+   ],
+   "cell": "8c07a02046f23ff"
+  },
+  {
+   "words": [
+    "leg",
+    "volcano",
+    "hasty",
+    "glorious"
+   ],
+   "cell": "8c2d1db301637ff"
+  },
+  {
+   "words": [
+    "leg",
+    "persuasive",
+    "crucial",
+    "glorious"
+   ],
+   "cell": null
+  },
+  {
+   "words": [
+    "leg",
+    "persuasive",
+    "hasty",
+    "area"
+   ],
+   "cell": "8c0193b260ce3ff"
+  },
+  {
+   "words": [
+    "outrageous",
+    "synonym",
+    "world",
+    "ambition"
+   ],
+   "cell": "8c84d9c866d93ff"
+  },
+  {
+   "words": [
+    "stylish",
+    "illustrate",
+    "world",
+    "ambition"
+   ],
+   "cell": "8ca54cd5c2949ff"
+  },
+  {
+   "words": [
+    "stylish",
+    "synonym",
+    "perception",
+    "ambition"
+   ],
+   "cell": "8c530b8190287ff"
+  },
+  {
+   "words": [
+    "stylish",
+    "synonym",
+    "world",
+    "name"
+   ],
+   "cell": "8c4173d0e06d9ff"
+  },
+  {
+   "words": [
+    "concept",
+    "immigrant",
+    "fashion",
+    "ferryboat"
+   ],
+   "cell": "8c3253bb4b869ff"
+  },
+  {
+   "words": [
+    "component",
+    "enforce",
+    "fashion",
+    "ferryboat"
+   ],
+   "cell": null
+  },
+  {
+   "words": [
+    "component",
+    "immigrant",
+    "constitute",
+    "ferryboat"
+   ],
+   "cell": "8c8b5472b11c5ff"
+  },
+  {
+   "words": [
+    "component",
+    "immigrant",
+    "fashion",
+    "eyesight"
+   ],
+   "cell": null
+  },
+  {
+   "words": [
+    "guitar",
+    "decent",
+    "wealthy",
+    "jade"
+   ],
+   "cell": null
+  },
+  {
+   "words": [
+    "ignorance",
+    "romance",
+    "wealthy",
+    "jade"
+   ],
+   "cell": null
+  },
+  {
+   "words": [
+    "ignorance",
+    "decent",
+    "pupil",
+    "jade"
+   ],
+   "cell": null
+  },
+  {
+   "words": [
+    "ignorance",
+    "decent",
+    "wealthy",
+    "humbug"
+   ],
+   "cell": "8c0e8eb46501bff"
+  },
+  {
+   "words": [
+    "cucumber",
+    "quality",
+    "embarrass",
+    "coherent"
+   ],
+   "cell": null
+  },
+  {
+   "words": [
+    "command",
+    "audio",
+    "embarrass",
+    "coherent"
+   ],
+   "cell": null
+  },
+  {
+   "words": [
+    "command",
+    "quality",
+    "move",
+    "coherent"
+   ],
+   "cell": "8c54598a475c3ff"
+  },
+  {
+   "words": [
+    "command",
+    "quality",
+    "embarrass",
+    "angry"
+   ],
+   "cell": "8cf1b595982d3ff"
   }
  ]
 }

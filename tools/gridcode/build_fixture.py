@@ -29,7 +29,7 @@ if __name__ == '__main__':
     wrong = []
     for la, lo in POINTS[:12]:
         a = g.encode(la, lo, words)
-        for k in range(3):
+        for k in range(g.N_WORDS):
             b = list(a)
             b[k] = words[(words.index(a[k]) + 1 + rng.randrange(1295)) % 1296]
             try:

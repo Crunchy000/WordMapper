@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>WordMapper — locations as memorable words</title>
-<meta name="description" content="Three everyday words name any place on earth to one H3 hexagon, 531 m on an edge, decoded offline.">
+<meta name="description" content="Four everyday words name any place on earth to one house-sized H3 hexagon, decoded offline.">
 <style>
   :root {
     --bg: #fbfbf9; --fg: #1c1c1a; --muted: #5c5c56; --rule: #e2e2dc;
@@ -69,12 +69,12 @@
 <header>
   <div class="wrap">
     <h1>WordMapper</h1>
-    <p class="tagline">Three everyday words name any place on earth to one hexagon, 531&nbsp;m on an edge. Nothing else is needed to decode them &mdash; no reference point, no network, no database.</p>
-    <div class="addr">film<span>.</span>balloon<span>.</span>tourism</div>
-    <p class="note">Westminster, around Big Ben: one resolution-8 hexagon of Uber&rsquo;s
-    <a href="https://h3geo.org/">H3</a> grid, 0.74&nbsp;km&sup2; on average. Every word is
-    graded CEFR&nbsp;A1&ndash;B2 &mdash; everyday English, nothing you would have to spell
-    out.</p>
+    <p class="tagline">Four everyday words name any place on earth to one hexagon about the size of a house. Nothing else is needed to decode them &mdash; no reference point, no network, no database.</p>
+    <div class="addr">pattern<span>.</span>revolve<span>.</span>inch<span>.</span>partner</div>
+    <p class="note">Big Ben: one resolution-12 hexagon of Uber&rsquo;s
+    <a href="https://h3geo.org/">H3</a> grid, 10.8&nbsp;m on an edge, about 19&nbsp;m across
+    and 307&nbsp;m&sup2; on average. Every word is graded CEFR&nbsp;A1&ndash;B2 &mdash;
+    everyday English, nothing you would have to spell out.</p>
   </div>
 </header>
 
@@ -82,41 +82,40 @@
 
   <h2>Try it</h2>
   <p><a href="demos/word-grid.html">Open the grid</a> &mdash; click anywhere on earth and
-  the address appears with its hexagon drawn round the point, or type three words to go to
+  the address appears with its hexagon drawn round the point, or type four words to go to
   them. It is all computed in the page.</p>
 
-  <h2>Why resolution 8</h2>
-  <p>Three words from a 1,296-word list are 1,296&sup3; &asymp; 2.18&nbsp;billion
-  combinations. H3 has 122&nbsp;&times;&nbsp;7<sup>8</sup> &asymp; 703&nbsp;million
-  resolution-8 slots, which fits about three times over; resolution 9 would need
-  4.9&nbsp;billion. No grid of any shape could do much better: earth split 2.18&nbsp;billion
-  ways is 0.23&nbsp;km&sup2; each.</p>
+  <h2>Why resolution 12</h2>
+  <p>Four words from a 1,296-word list are 1,296<sup>4</sup> &asymp; 2.82&nbsp;trillion
+  combinations. H3 has 122&nbsp;&times;&nbsp;7<sup>12</sup> &asymp; 1.69&nbsp;trillion
+  resolution-12 slots, which fits 1.67 times over; resolution 13 would need
+  11.8&nbsp;trillion. Three words were tried first, and reach only resolution 8: a
+  0.74&nbsp;km&sup2; hexagon, a whole village.</p>
   <p>H3 is there for shape. It lays hexagons on an icosahedron, so a cell is close to a
   regular hexagon everywhere on earth, and every neighbour is the same distance away. It is
-  not equal-area: resolution-8 cells vary by about 2:1 across the globe.</p>
+  not equal-area: resolution-12 cells vary by about 2:1 across the globe.</p>
 
-  <h2>Three words, one number</h2>
+  <h2>Four words, one number</h2>
   <p>A word cannot hold four of H3&rsquo;s base-7 digits (7<sup>4</sup> = 2,401), so one
-  word per level would stop at resolution 7. Instead the three words are one number:</p>
+  word per level would stop at resolution 10. Instead the four words are one number:</p>
 
-  <pre style="font-size:13px;overflow-x:auto">ordinal = base cell &times; 7&#8312; + its eight digits in base 7
-value   = ordinal &times; 3 + check          check = sha256(cell) mod 3
-number  = scramble(value)              a permutation of all 1,296&sup3;
+  <pre style="font-size:13px;overflow-x:auto">ordinal = base cell &times; 7&sup1;&sup2; + its twelve digits in base 7
+number  = scramble(ordinal)            a permutation of all 1,296&#8308;
 words   = number in base 1,296</pre>
 
   <h2>A wrong word</h2>
-  <p>The spare factor of three is all the checking there is room for. A misheard word is
-  refused about <strong>68&nbsp;%</strong> of the time: it lands past the last value that
-  names a cell, on a pentagon&rsquo;s missing child, or fails the check. The rest decode to a
-  real place.</p>
+  <p>1.67&times; is not a whole factor, so there is no room for a check digit. A misheard
+  word is refused only when it lands past the last value that names a cell, or on a
+  pentagon&rsquo;s missing child: about <strong>40&nbsp;%</strong> of the time. The rest
+  decode to a real place.</p>
   <p><strong>So the scramble makes those obvious.</strong> Without it, neighbouring places
-  would share leading words, and a wrong last word would land a plausible few kilometres
-  away. With it, changing any word sends the address somewhere unrelated. In the tests the
-  median miss is about <strong>9,900&nbsp;km</strong>, and none of about 6,000 landed within
-  100&nbsp;km. It is a six-round Feistel network, and 1,296&sup3; is exactly 46,656&sup2;,
-  so it is a bijection on every three-word combination with nothing left over.</p>
-  <p>The price: neighbouring places share no words, and there is no shorter form &mdash; two
-  words do not name a bigger area.</p>
+  would share leading words, and a wrong last word would land next door. With it, changing
+  any word sends the address somewhere unrelated. In the tests the median miss is about
+  <strong>10,000&nbsp;km</strong>, and none of about 11,000 landed within 100&nbsp;km. It is
+  a six-round Feistel network, and 1,296<sup>4</sup> is exactly 1,679,616&sup2;, so it is a
+  bijection on every four-word combination with nothing left over.</p>
+  <p>The price: neighbouring places share no words, and there is no shorter form &mdash;
+  three words do not name a bigger area.</p>
 
   <h2>The word list</h2>
   <p><strong>1,296 words, every one graded CEFR&nbsp;A1&ndash;B2</strong> &mdash; the band
@@ -127,7 +126,7 @@ words   = number in base 1,296</pre>
   words spelled two ways &mdash; and then everything confusable or sound-alike.</p>
 
   <p><strong>No two words are within one phoneme error of each other.</strong> Zero
-  homophones, zero pairs one articulatory feature apart. With only a light check, the list
+  homophones, zero pairs one articulatory feature apart. With no check digit, the list
   is the first defence against a misheard word, and the scramble the second.</p>
 
   <p><strong>BIP-39 was here first and was the wrong list.</strong> It is designed to be
@@ -138,7 +137,7 @@ words   = number in base 1,296</pre>
 
   <h2>Reading</h2>
   <ul>
-    <li><a href="https://github.com/Crunchy000/WordMapper/blob/main/docs/grid-scheme.md">The scheme in full</a> — why resolution 8, the numbering, the check, the scramble, and what is verified.</li>
+    <li><a href="https://github.com/Crunchy000/WordMapper/blob/main/docs/grid-scheme.md">The scheme in full</a> — why resolution 12, the numbering, why there is no check, the scramble, and what is verified.</li>
     <li><a href="https://github.com/Crunchy000/WordMapper/blob/main/docs/coverage.md">Coverage and resolution</a> — why coverage is cheap and vocabulary is not.</li>
     <li><a href="https://github.com/Crunchy000/WordMapper">Source on GitHub</a>.</li>
   </ul>
