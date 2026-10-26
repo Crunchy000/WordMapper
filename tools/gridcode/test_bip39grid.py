@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Checks for the four-word H3 grid. Run: python3 tools/gridcode/test_bip39grid.py"""
+"""Checks for the five-word H3 grid. Run: python3 tools/gridcode/test_bip39grid.py"""
 import math, random, sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import bip39grid as g
@@ -43,9 +43,13 @@ SEAMS = [(lat, lng) for lat in (-90, -89.999, 0, 89.999, 90)
          for lng in (-180, -179.999, 0, 179.999, 180)]
 
 print('\nthe layout')
-check('four words are 1296 to the fourth', g.SPACE, 2_821_109_907_456)
-check('resolution 12 fits, with no whole factor to spare', (g.CELLS <= g.SPACE, g.CHECK), (True, 1))
-check('resolution 13 would not fit', g.BASE_CELLS * g.APERTURE ** 13 > g.SPACE, True)
+check('five words are 1296 to the fifth', g.SPACE, 3_656_158_440_062_976)
+check('resolution 14 fits 44 times over, and 44 is the check', g.CHECK, 44)
+check('resolution 15 would leave a check of only 6',
+      g.SPACE // (g.BASE_CELLS * g.APERTURE ** 15), 6)
+# The demo's port does its arithmetic in doubles, so every value has to be an
+# exact integer there.
+check('the whole space is exact in a double', g.SPACE < 2 ** 53, True)
 check('the Feistel halves cover the space exactly', g.HALF ** 2, g.SPACE)
 check('ordinals round-trip through cells',
       all(g.cell_to_ordinal(g.ordinal_to_cell(x)) == x
@@ -66,8 +70,8 @@ check('the ends of the space map inside it',
           for v in (0, 1, g.HALF - 1, g.HALF, g.SPACE - 1)), True)
 
 print('\nthe grid')
-check('every point on earth encodes to four words',
-      all(len(g.encode(la, lo, WORDS)) == 4 for la, lo in PTS), True)
+check('every point on earth encodes to five words',
+      all(len(g.encode(la, lo, WORDS)) == 5 for la, lo in PTS), True)
 check('an address decodes to the cell it came from',
       all(g.decode_cell(g.encode(la, lo, WORDS), WORDS) == g.cell_at(la, lo)
           for la, lo in PTS + SEAMS), True)
@@ -97,9 +101,9 @@ print(f'  ----  a neighbour shares a word in the same place {shared/tot*100:.3f}
 check('neighbours share words no more than chance', shared / tot < 3 / 1296, True)
 
 print('\na wrong word')
-# Caught when it lands past the last value that names a cell or on a pentagon's
-# missing child -- there is no check at resolution 12. Otherwise it decodes,
-# somewhere unrelated.
+# Caught when it lands past the last value that names a cell, on a pentagon's
+# missing child, or fails the 1-in-44 check. Otherwise it decodes -- somewhere
+# unrelated.
 spare = 1 - g.USED / g.SPACE
 theory = (spare + (1 - spare) * (1 - 1 / g.CHECK)) * 100
 caught, tot, landed = 0, 20000, []
@@ -132,14 +136,14 @@ def refused(spoken):
     return False
 
 
-# 40 % of values name no cell; find some by unscrambling and check they are
+# 0.4 % of values name no cell; find some by unscrambling and check they are
 # refused outright.
-past = [n for n in (random.randrange(g.SPACE) for _ in range(2000))
+past = [n for n in (random.randrange(g.SPACE) for _ in range(50000))
         if g.unscramble(n) >= g.USED]
 check('a value past the last cell is refused',
       bool(past) and all(refused(g.number_to_words(n, WORDS)) for n in past), True)
-check('three words or five are refused',
-      refused(BIG_BEN[:3]) and refused(BIG_BEN + ['zoom']), True)
+check('four words or six are refused',
+      refused(BIG_BEN[:4]) and refused(BIG_BEN + ['zoom']), True)
 
 print('\naddress strings')
 full = g.encode(51.50072, -0.12456, WORDS)
@@ -149,9 +153,9 @@ check('parse accepts spaces, commas and case',
       g.parse_address('  LEG, tunnel Slam '), ['leg', 'tunnel', 'slam'])
 
 print()
-print(f'  ----  four words: H3 res {g.RES}, '
-      f'{h3.average_hexagon_edge_length(g.RES, "m"):.1f} m edge, '
-      f'{h3.average_hexagon_area(g.RES, "m^2"):.0f} m^2')
+print(f'  ----  five words: H3 res {g.RES}, '
+      f'{h3.average_hexagon_edge_length(g.RES, "m"):.2f} m edge, '
+      f'{h3.average_hexagon_area(g.RES, "m^2"):.1f} m^2')
 print(f'  ----  Big Ben is {g.format_address(full)}')
 print()
 if fails:

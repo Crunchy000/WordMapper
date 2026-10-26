@@ -1,4 +1,4 @@
-# Four words on H3
+# Five words on H3
 
 Reference: [`tools/gridcode/bip39grid.py`](../tools/gridcode/bip39grid.py),
 tests in [`test_bip39grid.py`](../tools/gridcode/test_bip39grid.py).
@@ -7,104 +7,102 @@ Setup: `pip install -r tools/gridcode/requirements.txt` and
 
 ## The scheme
 
-**Four everyday words name one hexagon of Uber's [H3] grid at resolution 12**:
-10.8 m on an edge, about 19 m across and 307 m² on average, roughly a house.
-They decode with nothing else involved: no reference point, no network and no
-database.
+**Five everyday words name one hexagon of Uber's [H3] grid at resolution 14**:
+1.5 m on an edge, about 2.7 m across and 6.3 m² on average. That is smaller than
+a what3words square, which is 9 m². A misheard word is refused about 98 % of the
+time. The words decode with nothing else involved: no reference point, no
+network and no database.
 
 ```
-pattern.revolve.inch.partner      Big Ben
+sufficient.twist.recommend.apron.paradox      Big Ben
 ```
 
-## Why resolution 12
+## Why five words and resolution 14
 
 | | Count |
 |---|---|
-| Four words, 1,296⁴ | 2,821,109,907,456 |
-| H3 resolution-12 slots, 122 × 7¹² | 1,688,637,038,522 |
-| H3 resolution-13 slots, 122 × 7¹³ | 11,820,459,269,654 |
+| Five words, 1,296⁵ | 3,656,158,440,062,976 |
+| H3 resolution-14 slots, 122 × 7¹⁴ | 82,743,214,887,578 |
+| H3 resolution-15 slots, 122 × 7¹⁵ | 579,202,504,213,046 |
 
-Resolution 12 fits 1.67 times over, and resolution 13 does not fit. Any grid at
-all is bounded by earth's area over 2.82 trillion, which is 181 m², so H3 gives
-up a factor of 1.7 to keep its hexagons.
+| Words | H3 resolution | Hexagon | Spare | Check | Misheard word refused |
+|---|---|---|---|---|---|
+| 3 | res 8 | 531 m edge, 0.74 km² | 3.1× | 1 in 3 | 68 % |
+| 4 | res 12 | 10.8 m edge, 307 m² | 1.67× | none | 40 % |
+| **5** | **res 14** | **1.5 m edge, 6.3 m²** | **44.2×** | **1 in 44** | **97.7 %** |
+| 5 | res 15 | 0.6 m edge, 0.9 m² | 6.3× | 1 in 6 | 84 % |
 
-| Words | Finest H3 that fits | Hexagon | Spare | Check |
-|---|---|---|---|---|
-| 3 | res 8 | 531 m edge, 0.74 km² | 3.1× | 1 in 3 |
-| **4** | **res 12** | **10.8 m edge, 307 m²** | **1.67×** | **none** |
-| 4 | res 11 | 28.7 m edge, 2,150 m² | 11.7× | 1 in 11 |
-
-Three words came first. A 0.74 km² hexagon is a whole village, so a fourth word
-was added. Resolution 11 would have kept a 1-in-11 check, but at about 50 m
-across it names a building rather than a house, and the house won.
+Three words was a whole village and four a house. Five words reach H3's finest
+level, but only six times over. Resolution 14 leaves a factor of 44 for the
+check, and a hexagon 2.7 m across is already finer than anyone can point.
 
 H3 is there for shape. It lays hexagons on an icosahedron, so a cell is close to
 a regular hexagon everywhere, every neighbour is equidistant, and a point is
-never more than one edge from its cell's centre. It is not equal-area:
-resolution-12 cells vary by about 2:1 across the globe.
+never more than one edge from its cell's centre. It is not equal-area: cells
+vary by about 2:1 across the globe.
 
-## The four words are one number
+## The five words are one number
 
 Each word cannot carry its own H3 levels. 7⁴ = 2,401 does not fit in a word, so
-four words of whole digits would reach only resolution 10. Reading all four
-words as one number in base 1,296 gets the last two levels:
+five words of whole digits would reach only resolution 13. Reading all five
+words as one number in base 1,296 gets the last level and leaves room for the
+check:
 
 ```
-ordinal = base cell × 7¹² + its twelve digits read in base 7    [0, 1.69 trillion)
-value   = ordinal × CHECK + check      CHECK = 1, so value = ordinal
-number  = scramble(value)              a permutation of [0, 1,296⁴)
-words   = number in base 1,296, four digits
+ordinal = base cell × 7¹⁴ + its fourteen digits read in base 7   [0, 82.7 trillion)
+value   = ordinal × 44 + check     check = sha256(cell) mod 44
+number  = scramble(value)          a permutation of [0, 1,296⁵)
+words   = number in base 1,296, five digits
 ```
 
-The check slot stays in the code. `CHECK` is the whole factor to spare,
-`⌊1,296⁴ / cells⌋`, which is 1 here, so the check is always 0. A coarser
-resolution or a longer list would fill it without other changes.
+`CHECK` is the whole factor to spare, `⌊1,296⁵ / slots⌋ = 44`. The ordinal
+counts slots, not cells. A pentagon has no children on one axis, so some
+ordinals name no cell, and the decoder refuses them.
 
-The ordinal counts slots, not cells. A pentagon has no children on one axis, so
-some ordinals name no cell, and the decoder refuses them.
+Every value is below 2⁵³, so the demo's JavaScript does all of this exactly in
+ordinary numbers, with BigInt only to unpack H3 indexes.
 
 ## A wrong word
 
-There is no check digit. A misheard word gives a random value, and it is
-refused only when it lands:
+A misheard word gives a random value, and it is refused when it:
 
-- past the last value that names a cell (40.1 % of values), or
-- on a pentagon's missing child.
+- fails the 1-in-44 check,
+- lands past the last value that names a cell (0.4 % of values), or
+- lands on a pentagon's missing child.
 
-That comes to about **40 %**, measured at 41 %. The other 60 % decode to a real
-place.
+That comes to about **97.7 %**, measured at 97.7 %. The other 2.3 % decode to a
+real place.
 
 ### The scramble makes the rest obvious
 
-Since most wrong words can't be refused, the scramble makes sure they can't look
-right. Without it, the ordinal keeps H3's order and neighbouring places share
-leading words. A wrong last word would then land next door: plausible, and the
-hardest mistake to spot. With the scramble, changing any word sends the address
-somewhere unrelated. In the tests the median miss is about **10,000 km**, and
-none of about 11,000 landed within 100 km. Most land in an ocean or on another
-continent.
+Without the scramble, the ordinal keeps H3's order and neighbouring places
+share leading words. A wrong last word would then land next door: plausible,
+and the hardest mistake to spot. With it, changing any word sends the address
+somewhere unrelated. In the tests the median miss is about **9,700 km**, and
+none landed within 100 km. Most land in an ocean or on another continent.
 
-The scramble is a six-round Feistel network. 1,296⁴ is exactly 1,679,616², so
-the value splits into two halves of 1,679,616 and each round adds a SHA-256 of
-one half to the other, modulo 1,679,616. That is a bijection on every four-word
-combination by construction, with nothing left over and no cycle-walking.
+The scramble is a six-round Feistel network. 1,296⁵ is 6²⁰, which is exactly
+60,466,176², so the value splits into two equal halves even with an odd number
+of words. Each round adds a SHA-256 of one half to the other, modulo 60,466,176.
+That is a bijection on every five-word combination by construction, with
+nothing left over and no cycle-walking.
 
 ### What it costs
 
 - **Neighbours share no words.** Nothing in an address says roughly where it is.
-- **No shorter form.** Three words do not name a bigger area, and there is no
+- **No shorter form.** Four words do not name a bigger area, and there is no
   dropping words against a nearby reference.
 - **No correction.** A wrong word is refused or lands far away, but it is never
   repaired.
 
 ## What came before
 
-Before four words this was three words to a 531 m hexagon. Before that it was
-six words: first on a square grid over a cylindrical equal-area projection, then
-on H3 resolution 14 (a 3 m hexagon), with a word-per-level layout, a strong
-checksum, and both directions of shortening. There was also an online mode that
-issued random three-word codes from a database, backed by a Cloudflare Worker.
-All of it was retired for words decoded offline. The git history has the rest.
+The scheme got here by way of four words to a 307 m² hexagon with no check, and
+three words to a 0.74 km² one. Before that it was six words: first on a square
+grid over a cylindrical equal-area projection, then on H3 resolution 14 with a
+word-per-level layout and both directions of shortening. There was also an
+online mode that issued random three-word codes from a database, backed by a
+Cloudflare Worker. The git history has all of it.
 
 ## The word list
 
@@ -116,21 +114,19 @@ words spelled two ways, and then everything confusable or sound-alike. **Zero
 homophones, zero pairs one articulatory feature apart, zero pairs within one
 phoneme error.**
 
-That matters more now than it did with a strong checksum. The list is the first
-line of defence against a misheard word, and the scramble is the second.
-
-1,311 is the ceiling on A1–B2 graded vocabulary. Resolution 13 at four words
-would need about 1,850 words, which the easy band does not have.
+The list is the first line of defence against a misheard word, the check the
+second, and the scramble the third.
 
 ## Verified
 
 `python3 tools/gridcode/test_bip39grid.py`:
 
-- **The layout.** 1,296⁴ fits resolution 12 with no whole factor to spare, and
-  does not fit resolution 13. Ordinals and cells round-trip.
+- **The layout.** 1,296⁵ fits resolution 14 forty-four times, and resolution 15
+  would leave a check of only 6. The whole space is exact in a double. Ordinals
+  and cells round-trip.
 - **The scramble.** Its inverse undoes it both ways, and the ends of the space
   stay inside it.
-- **The grid.** Every point encodes to four words and decodes to the cell it
+- **The grid.** Every point encodes to five words and decodes to the cell it
   came from, including the poles, the antimeridian and all twelve pentagons. A
   point is within its cell's radius of the decoded centre, and different cells
   never share an address.

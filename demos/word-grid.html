@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Four everyday words name any place on earth to one H3 hexagon about 19 m across. Nothing else is needed to decode them.">
-<title>Word grid — four easy words, one house-sized hexagon</title>
+<meta name="description" content="Five everyday words name any place on earth to one H3 hexagon about 2.7 m across, and refuse a misheard one 98% of the time.">
+<title>Word grid — five easy words, one 3-metre hexagon</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
   html, body { margin: 0; height: 100%; }
@@ -16,9 +16,12 @@
          pointer-events: none; max-width: calc(100vw - 32px); }
   #addr { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
           font-size: 24px; font-weight: 700; color: #16171a; letter-spacing: -0.01em;
-          line-height: 1.3; overflow-wrap: anywhere;
+          line-height: 1.3;
           text-shadow: 0 1px 3px #fff, 0 0 8px #fff, 0 0 16px #fff,
                        1px 0 3px #fff, -1px 0 3px #fff, 0 -1px 3px #fff; }
+  /* Each word is unbreakable, and a line may only break after a dot, so a long
+     address wraps between words rather than through one. */
+  #addr .w { white-space: nowrap; }
   #note { font-size: 12px; color: #4a4a44; margin-top: 5px; font-weight: 600;
           max-width: 44ch; line-height: 1.45;
           text-shadow: 0 1px 3px #fff, 0 0 8px #fff, 1px 0 3px #fff, -1px 0 3px #fff; }
@@ -46,7 +49,7 @@
   <div id="addr"></div>
   <div id="note">Click anywhere</div>
   <form id="find" autocomplete="off">
-    <input id="q" type="text" placeholder="four words" aria-label="Look up four words"
+    <input id="q" type="text" placeholder="five words" aria-label="Look up five words"
            spellcheck="false" autocapitalize="none">
     <button id="go" type="submit">Go</button>
   </form>
@@ -65,31 +68,30 @@ const INDEX = new Map(WORDS.map((w, i) => [w, i]));
 // --- the scheme ------------------------------------------------------------
 // Must match tools/gridcode/bip39grid.py exactly; CI cross-checks them.
 //
-// FOUR WORDS NAME ONE H3 RESOLUTION-12 HEXAGON (the h3 global, from h3-js):
-// 10.8 m on an edge, about 19 m across, 307 m^2 -- a house. 1296**4 is 2.82
-// trillion addresses and H3 has 1.69 trillion resolution-12 slots, so it fits
-// 1.67 times over: no whole factor to spare, so there is no check, and the 40 %
-// of values past the last cell are simply refused.
+// FIVE WORDS NAME ONE H3 RESOLUTION-14 HEXAGON (the h3 global, from h3-js):
+// 1.5 m on an edge, about 2.7 m across, 6.3 m^2. 1296**5 is 3.66 quadrillion
+// addresses and H3 has 82.7 trillion resolution-14 slots, so it fits 44 times
+// over -- and the 44 is a check, refusing a misheard word about 98 % of the time.
 //
-// The four words are one number, not one word per level:
-//   ordinal = base cell * 7**12 + its twelve digits in base 7
-//   value   = ordinal * CHECK + check      (CHECK is 1, so value = ordinal)
-//   number  = scramble(value)              (a permutation of 1296**4)
+// The five words are one number, not one word per level:
+//   ordinal = base cell * 7**14 + its fourteen digits in base 7
+//   value   = ordinal * 44 + check         (sha256 of the cell, mod 44)
+//   number  = scramble(value)              (a permutation of 1296**5)
 //   words   = number in base 1296
 //
-// THE SCRAMBLE IS THE SAFETY. With no check most misheard words decode, so it
-// makes them obvious: changing any word sends the address somewhere unrelated
-// on earth, rather than next door.
+// THE SCRAMBLE MAKES THE REST OBVIOUS: the misheard word that passes the check
+// lands somewhere unrelated on earth, rather than next door. Every value stays
+// below 2**53, so plain doubles are exact throughout.
 const LIST_SIZE = 1296;
-const N_WORDS = 4;
-const SPACE = LIST_SIZE ** N_WORDS;              // 2,821,109,907,456
+const N_WORDS = 5;
+const SPACE = LIST_SIZE ** N_WORDS;              // 3,656,158,440,062,976
 const BASE_CELLS = 122;
 const APERTURE = 7;
-const RES = 12;
-const CELLS = BASE_CELLS * APERTURE ** RES;      // 1,688,637,038,522
-const CHECK = Math.floor(SPACE / CELLS);         // 1
+const RES = 14;
+const CELLS = BASE_CELLS * APERTURE ** RES;      // 82,743,214,887,578
+const CHECK = Math.floor(SPACE / CELLS);         // 44
 const USED = CELLS * CHECK;
-const HALF = LIST_SIZE ** (N_WORDS / 2);         // SPACE === HALF ** 2
+const HALF = 60466176;                           // 6**10: SPACE === HALF ** 2
 const ROUNDS = 6;
 const SEP = '.';
 const R = 6371008.8;
@@ -174,8 +176,8 @@ function cellCheck(cell) {
 }
 
 // --- the scramble -------------------------------------------------------------
-// A six-round Feistel network over two halves of 1,679,616: a bijection on
-// every four-word combination, with nothing left over.
+// A six-round Feistel network over two halves of 60,466,176: 1296**5 is 6**20,
+// so it is a bijection on every five-word combination, with nothing left over.
 function roundFn(i, half) {
   const p = new Uint8Array(5);
   p[0] = i;
@@ -208,8 +210,8 @@ const encodeCell = (cell) => numberToWords(scramble(cellToOrdinal(cell) * CHECK 
 
 const encode = (lat, lng) => encodeCell(cellAt(lat, lng));
 
-// The cell four words name. Throws for a wrong word when it can tell, which is
-// about 40 % of the time.
+// The cell five words name. Throws for a wrong word when it can tell, which is
+// about 98 % of the time.
 function decodeCell(spoken) {
   const unknown = spoken.filter((w) => !INDEX.has(w));
   if (unknown.length) throw new Error(`not on the word list: ${unknown.join(', ')}`);
@@ -238,7 +240,7 @@ function parseAddress(text) {
 // The zoom control sits top right: the address lives top left, where it reads
 // best, and the two were overlapping.
 const map = L.map('map', { worldCopyJump: true, zoomControl: false })
-  .setView([53.3498, -6.2603], 18);
+  .setView([53.3498, -6.2603], 19);
 L.control.zoom({ position: 'topright' }).addTo(map);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -278,16 +280,28 @@ function draw(cell, lat, lng) {
 }
 
 function describe(cell) {
-  return `${Math.round(Math.sqrt(3) * edge(cell))} m hexagon &middot; `
+  return `${(Math.sqrt(3) * edge(cell)).toFixed(1)} m hexagon &middot; `
     + '<strong>says where you are</strong>'
     + '<span class="dim"> &mdash; decodes in this page with nothing else involved. '
-    + 'A misheard word is refused 40% of the time, and otherwise lands somewhere '
+    + 'A misheard word is refused 98% of the time, and otherwise lands somewhere '
     + 'unrelated on earth.</span>';
+}
+
+// The separator stays on the word it follows, so a line that continues ends in
+// a dot and the address is still correct if it is copied.
+function showWords(spoken) {
+  addrEl.textContent = '';
+  spoken.forEach((w, i) => {
+    const el = document.createElement('span');
+    el.className = 'w';
+    el.textContent = w + (i < spoken.length - 1 ? SEP : '');
+    addrEl.append(el, document.createElement('wbr'));
+  });
 }
 
 function show(lat, lng) {
   const cell = cellAt(lat, lng);
-  addrEl.textContent = formatAddress(encode(lat, lng));
+  showWords(encode(lat, lng));
   noteEl.innerHTML = describe(cell);
   draw(cell, lat, lng);
 }
@@ -301,10 +315,10 @@ document.getElementById('find').addEventListener('submit', (e) => {
     return;
   }
   const [lat, lng] = h3.cellToLatLng(cell);
-  addrEl.textContent = formatAddress(encodeCell(cell));
+  showWords(encodeCell(cell));
   noteEl.innerHTML = describe(cell);
   draw(cell, lat, lng);
-  map.setView([lat, lng], 18);
+  map.setView([lat, lng], 19);
 });
 
 map.on('click', (e) => show(e.latlng.lat, wrapLng(e.latlng.lng)));

@@ -1,55 +1,53 @@
 #!/usr/bin/env python3
-"""Four everyday words for any place on earth, on Uber's H3 hexagon grid.
+"""Five everyday words for any place on earth, on Uber's H3 hexagon grid.
 
-FOUR WORDS NAME ONE H3 RESOLUTION-12 HEXAGON: 10.8 m on an edge, about 19 m
-across and 307 m^2 on average -- a house. Nothing else is needed to decode
-them: no reference point, no network, no database.
+FIVE WORDS NAME ONE H3 RESOLUTION-14 HEXAGON: 1.5 m on an edge, about 2.7 m
+across and 6.3 m^2 on average -- smaller than a what3words square. Nothing else
+is needed to decode them: no reference point, no network, no database.
 
-WHY RESOLUTION 12. Four words from a 1,296-word list are 1,296**4 = 2.82
-trillion combinations. H3 has 122 * 7**12 = 1.69 trillion resolution-12 index
-slots, which fits 1.67 times over; resolution 13 would need 11.8 trillion,
-which does not. There is no whole factor to spare, so there is NO CHECK: the
-40 % of values past the last cell are simply refused.
+WHY RESOLUTION 14. Five words from a 1,296-word list are 1,296**5 = 3.66
+quadrillion combinations. H3 has 122 * 7**14 = 82.7 trillion resolution-14
+index slots, which fits 44 times over, and the 44 is a check: a misheard word
+is refused about 98 % of the time. Resolution 15 also fits, but only 6 times
+over -- a 0.9 m^2 hexagon with a 1-in-6 check, a worse trade.
 
-THE FOUR WORDS ARE ONE NUMBER, NOT ONE WORD PER LEVEL. 7**4 = 2,401 does not
+THE FIVE WORDS ARE ONE NUMBER, NOT ONE WORD PER LEVEL. 7**4 = 2,401 does not
 fit in a word, so no word can carry whole H3 levels deep enough to reach
-resolution 12 in four. The cell is numbered and written in base 1,296:
+resolution 14 in five. The cell is numbered, the check is folded in, and the
+result is written in base 1,296:
 
-    ordinal  = base cell * 7**12 + its twelve digits read in base 7
-    value    = ordinal * CHECK + check      (CHECK is 1 here, so value = ordinal)
-    number   = SCRAMBLE(value)              (a keyed permutation of 1296**4)
-    words    = number in base 1296, four digits
+    ordinal  = base cell * 7**14 + its fourteen digits read in base 7
+    value    = ordinal * 44 + check         (check: sha256 of the cell, mod 44)
+    number   = SCRAMBLE(value)              (a keyed permutation of 1296**5)
+    words    = number in base 1296, five digits
 
-THE SCRAMBLE IS THE SAFETY. With no check, a misheard word is refused only when
-it lands on an unused value -- about 40 % of the time. The rest decode, so the
-scramble makes them obvious: changing any one word sends the address to an
-unrelated place anywhere on earth, usually an ocean or another continent,
-rather than next door. The price is that neighbouring places share no words,
-and there is no shorter form.
+THE SCRAMBLE MAKES THE REST OBVIOUS. The one misheard word in 44 that passes
+the check would otherwise land next door, plausible and hard to spot. With the
+scramble, changing any one word sends the address to an unrelated place
+anywhere on earth -- usually an ocean or another continent. The price is that
+neighbouring places share no words, and there is no shorter form.
 
-The scramble is a six-round Feistel network over two halves of 1,679,616 each:
-1296**4 is exactly (1296**2)**2, so it is a bijection on every four-word
-combination with nothing left over.
+The scramble is a six-round Feistel network over two halves of 60,466,176
+each: 1296**5 is 6**20, exactly (6**10)**2, so it is a bijection on every
+five-word combination with nothing left over.
 """
-import hashlib, os
+import hashlib, math, os
 
 import h3.api.basic_int as h3
 
 LIST_SIZE = 1296            # the word list
-N_WORDS = 4
-SPACE = LIST_SIZE ** N_WORDS                     # 2,821,109,907,456 addresses
+N_WORDS = 5
+SPACE = LIST_SIZE ** N_WORDS                     # 3,656,158,440,062,976 addresses
 BASE_CELLS = 122            # H3's resolution-0 cells
 APERTURE = 7                # children per H3 cell
-RES = 12                    # 10.8 m edge, 307 m^2
-CELLS = BASE_CELLS * APERTURE ** RES             # 1,688,637,038,522 index slots
-# The whole factor to spare. 1 at resolution 12, so there is no check, but the
-# code keeps the slot: a longer list or a coarser resolution would fill it.
-CHECK = SPACE // CELLS                           # 1
+RES = 14                    # 1.5 m edge, 6.3 m^2
+CELLS = BASE_CELLS * APERTURE ** RES             # 82,743,214,887,578 index slots
+CHECK = SPACE // CELLS                           # 44, the whole factor to spare
 USED = CELLS * CHECK                             # values that name a cell
-HALF = LIST_SIZE ** (N_WORDS // 2)              # SPACE == HALF ** 2, the Feistel halves
+HALF = math.isqrt(SPACE)    # 60,466,176: SPACE == HALF ** 2, the Feistel halves
 ROUNDS = 6
 SEP = '.'
-assert HALF * HALF == SPACE and CHECK == 1
+assert HALF * HALF == SPACE and CHECK == 44
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -91,7 +89,7 @@ def _sha_int(data, nbytes):
 # at 45-51, then fifteen 3-bit digits, resolution 1 highest, unused ones 7.
 
 def cell_to_ordinal(cell):
-    """A resolution-12 cell as a number in [0, CELLS)."""
+    """A resolution-14 cell as a number in [0, CELLS)."""
     x = (cell >> 45) & 0x7F
     for r in range(1, RES + 1):
         x = x * APERTURE + ((cell >> ((15 - r) * 3)) & 7)
@@ -158,13 +156,13 @@ def encode_cell(cell, words):
 
 
 def encode(lat, lng, words):
-    """The four words for a point."""
+    """The five words for a point."""
     return encode_cell(cell_at(lat, lng), words)
 
 
 def decode_cell(spoken, words):
-    """The H3 cell four words name. Raises ValueError for a wrong word, when it
-    can tell: about 40 % of the time."""
+    """The H3 cell five words name. Raises ValueError for a wrong word, when it
+    can tell: about 98 % of the time."""
     index = _index(words)
     unknown = [w for w in spoken if w not in index]
     if unknown:
@@ -187,7 +185,7 @@ def decode_cell(spoken, words):
 
 
 def decode(spoken, words):
-    """The centre of the cell four words name."""
+    """The centre of the cell five words name."""
     return h3.cell_to_latlng(decode_cell(spoken, words))
 
 
@@ -196,7 +194,7 @@ def format_address(spoken):
 
 
 def parse_address(text):
-    """Split 'a.b.c.d', 'a b c d' or 'a, b, c, d' into words."""
+    """Split 'a.b.c.d.e', 'a b c d e' or 'a, b, c, d, e' into words."""
     text = text.strip().replace(',', SEP).replace(' ', SEP)
     parts = [p.lower() for p in text.split(SEP) if p]
     if not parts:

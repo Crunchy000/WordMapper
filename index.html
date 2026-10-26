@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>WordMapper — locations as memorable words</title>
-<meta name="description" content="Four everyday words name any place on earth to one house-sized H3 hexagon, decoded offline.">
+<meta name="description" content="Five everyday words name any place on earth to one 2.7 m H3 hexagon, decoded offline, with a misheard word refused 98% of the time.">
 <style>
   :root {
     --bg: #fbfbf9; --fg: #1c1c1a; --muted: #5c5c56; --rule: #e2e2dc;
@@ -69,12 +69,12 @@
 <header>
   <div class="wrap">
     <h1>WordMapper</h1>
-    <p class="tagline">Four everyday words name any place on earth to one hexagon about the size of a house. Nothing else is needed to decode them &mdash; no reference point, no network, no database.</p>
-    <div class="addr">pattern<span>.</span>revolve<span>.</span>inch<span>.</span>partner</div>
-    <p class="note">Big Ben: one resolution-12 hexagon of Uber&rsquo;s
-    <a href="https://h3geo.org/">H3</a> grid, 10.8&nbsp;m on an edge, about 19&nbsp;m across
-    and 307&nbsp;m&sup2; on average. Every word is graded CEFR&nbsp;A1&ndash;B2 &mdash;
-    everyday English, nothing you would have to spell out.</p>
+    <p class="tagline">Five everyday words name any place on earth to one hexagon about 2.7&nbsp;m across, and refuse a misheard one 98&nbsp;% of the time. Nothing else is needed to decode them &mdash; no reference point, no network, no database.</p>
+    <div class="addr">sufficient<span>.</span>twist<span>.</span>recommend<span>.</span>apron<span>.</span>paradox</div>
+    <p class="note">Big Ben: one resolution-14 hexagon of Uber&rsquo;s
+    <a href="https://h3geo.org/">H3</a> grid, 1.5&nbsp;m on an edge and 6.3&nbsp;m&sup2; on
+    average &mdash; smaller than a what3words square. Every word is graded
+    CEFR&nbsp;A1&ndash;B2 &mdash; everyday English, nothing you would have to spell out.</p>
   </div>
 </header>
 
@@ -82,40 +82,50 @@
 
   <h2>Try it</h2>
   <p><a href="demos/word-grid.html">Open the grid</a> &mdash; click anywhere on earth and
-  the address appears with its hexagon drawn round the point, or type four words to go to
+  the address appears with its hexagon drawn round the point, or type five words to go to
   them. It is all computed in the page.</p>
 
-  <h2>Why resolution 12</h2>
-  <p>Four words from a 1,296-word list are 1,296<sup>4</sup> &asymp; 2.82&nbsp;trillion
-  combinations. H3 has 122&nbsp;&times;&nbsp;7<sup>12</sup> &asymp; 1.69&nbsp;trillion
-  resolution-12 slots, which fits 1.67 times over; resolution 13 would need
-  11.8&nbsp;trillion. Three words were tried first, and reach only resolution 8: a
-  0.74&nbsp;km&sup2; hexagon, a whole village.</p>
+  <h2>Why five words and resolution 14</h2>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Words</th><th>H3</th><th>Hexagon</th><th>Misheard word refused</th></tr></thead>
+    <tbody>
+      <tr><td class="num">3</td><td class="num">res 8</td><td class="num">0.74 km&sup2;, a village</td><td class="num">68 %</td></tr>
+      <tr><td class="num">4</td><td class="num">res 12</td><td class="num">307 m&sup2;, a house</td><td class="num">40 %</td></tr>
+      <tr><td class="num"><strong>5</strong></td><td class="num"><strong>res 14</strong></td><td class="num"><strong>6.3 m&sup2;, 2.7 m across</strong></td><td class="num"><strong>97.7 %</strong></td></tr>
+      <tr><td class="num">5</td><td class="num">res 15</td><td class="num">0.9 m&sup2;</td><td class="num">84 %</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Five words from a 1,296-word list are 1,296<sup>5</sup> &asymp; 3.66&nbsp;quadrillion
+  combinations. H3 has 122&nbsp;&times;&nbsp;7<sup>14</sup> &asymp; 82.7&nbsp;trillion
+  resolution-14 slots, which fits 44 times over, and the 44 becomes a check. Resolution 15
+  would fit only six times, for a hexagon smaller than anyone can point to.</p>
   <p>H3 is there for shape. It lays hexagons on an icosahedron, so a cell is close to a
   regular hexagon everywhere on earth, and every neighbour is the same distance away. It is
-  not equal-area: resolution-12 cells vary by about 2:1 across the globe.</p>
+  not equal-area: cells vary by about 2:1 across the globe.</p>
 
-  <h2>Four words, one number</h2>
+  <h2>Five words, one number</h2>
   <p>A word cannot hold four of H3&rsquo;s base-7 digits (7<sup>4</sup> = 2,401), so one
-  word per level would stop at resolution 10. Instead the four words are one number:</p>
+  word per level would stop at resolution 13. Instead the five words are one number:</p>
 
-  <pre style="font-size:13px;overflow-x:auto">ordinal = base cell &times; 7&sup1;&sup2; + its twelve digits in base 7
-number  = scramble(ordinal)            a permutation of all 1,296&#8308;
+  <pre style="font-size:13px;overflow-x:auto">ordinal = base cell &times; 7&sup1;&#8308; + its fourteen digits in base 7
+value   = ordinal &times; 44 + check         check = sha256(cell) mod 44
+number  = scramble(value)              a permutation of all 1,296&#8309;
 words   = number in base 1,296</pre>
 
   <h2>A wrong word</h2>
-  <p>1.67&times; is not a whole factor, so there is no room for a check digit. A misheard
-  word is refused only when it lands past the last value that names a cell, or on a
-  pentagon&rsquo;s missing child: about <strong>40&nbsp;%</strong> of the time. The rest
-  decode to a real place.</p>
-  <p><strong>So the scramble makes those obvious.</strong> Without it, neighbouring places
+  <p>A misheard word is refused about <strong>98&nbsp;%</strong> of the time: it fails the
+  1-in-44 check, lands past the last value that names a cell, or lands on a pentagon&rsquo;s
+  missing child.</p>
+  <p><strong>The scramble makes the rest obvious.</strong> Without it, neighbouring places
   would share leading words, and a wrong last word would land next door. With it, changing
   any word sends the address somewhere unrelated. In the tests the median miss is about
-  <strong>10,000&nbsp;km</strong>, and none of about 11,000 landed within 100&nbsp;km. It is
-  a six-round Feistel network, and 1,296<sup>4</sup> is exactly 1,679,616&sup2;, so it is a
-  bijection on every four-word combination with nothing left over.</p>
+  <strong>9,700&nbsp;km</strong>, and none landed within 100&nbsp;km. It is a six-round
+  Feistel network, and 1,296<sup>5</sup> is 6<sup>20</sup>, exactly 60,466,176&sup2;, so it
+  is a bijection on every five-word combination with nothing left over.</p>
   <p>The price: neighbouring places share no words, and there is no shorter form &mdash;
-  three words do not name a bigger area.</p>
+  four words do not name a bigger area.</p>
 
   <h2>The word list</h2>
   <p><strong>1,296 words, every one graded CEFR&nbsp;A1&ndash;B2</strong> &mdash; the band
@@ -126,8 +136,8 @@ words   = number in base 1,296</pre>
   words spelled two ways &mdash; and then everything confusable or sound-alike.</p>
 
   <p><strong>No two words are within one phoneme error of each other.</strong> Zero
-  homophones, zero pairs one articulatory feature apart. With no check digit, the list
-  is the first defence against a misheard word, and the scramble the second.</p>
+  homophones, zero pairs one articulatory feature apart. The list is the first defence
+  against a misheard word, the check the second, and the scramble the third.</p>
 
   <p><strong>BIP-39 was here first and was the wrong list.</strong> It is designed to be
   <em>typed and checksummed</em>, not spoken: it contains
@@ -137,7 +147,7 @@ words   = number in base 1,296</pre>
 
   <h2>Reading</h2>
   <ul>
-    <li><a href="https://github.com/Crunchy000/WordMapper/blob/main/docs/grid-scheme.md">The scheme in full</a> — why resolution 12, the numbering, why there is no check, the scramble, and what is verified.</li>
+    <li><a href="https://github.com/Crunchy000/WordMapper/blob/main/docs/grid-scheme.md">The scheme in full</a> — five words at resolution 14, the numbering, the check, the scramble, and what is verified.</li>
     <li><a href="https://github.com/Crunchy000/WordMapper/blob/main/docs/coverage.md">Coverage and resolution</a> — why coverage is cheap and vocabulary is not.</li>
     <li><a href="https://github.com/Crunchy000/WordMapper">Source on GitHub</a>.</li>
   </ul>
