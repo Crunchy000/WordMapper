@@ -4,67 +4,74 @@ Experiments in encoding geographic coordinates as short, memorable word sequence
 
 **Live: <https://crunchy000.github.io/WordMapper/>**
 
-## Three words, one H3 hexagon
+## Four words, one house-sized H3 hexagon
 
-**Three everyday words name any place on earth to one hexagon of Uber's [H3]
-grid at resolution 8**: 531 m on an edge and 0.74 km² on average, roughly a
-neighbourhood. Nothing else is needed to decode them. There is no reference
-point, no network call and no database.
+**Four everyday words name any place on earth to one hexagon of Uber's [H3]
+grid at resolution 12**: 10.8 m on an edge, about 19 m across and 307 m² on
+average, roughly a house. Nothing else is needed to decode them. There is no
+reference point, no network call and no database.
 
 ```
-film.balloon.tourism      <- Westminster, around Big Ben
+pattern.revolve.inch.partner      <- Big Ben
 ```
 
 [`demos/word-grid.html`](demos/word-grid.html) is the scheme live and bare.
-Click anywhere and the address appears with its hexagon drawn, or type three
+Click anywhere and the address appears with its hexagon drawn, or type four
 words to go to them.
 
-### Why resolution 8
+### Why resolution 12
 
-Three words from a 1,296-word list are 1,296³ ≈ 2.18 billion combinations. H3
-has 122 × 7⁸ ≈ 703 million resolution-8 slots, which fits about three times
-over. Resolution 9 would need 4.9 billion, which does not fit. No grid of any
-shape could do much better: earth split 2.18 billion ways is 0.23 km² each.
+| Words | Combinations | Finest H3 that fits | Hexagon | Room for a check |
+|---|---|---|---|---|
+| 3 | 2.18 billion | res 8 | 531 m edge, 0.74 km² | 1 in 3 |
+| **4** | **2.82 trillion** | **res 12** | **10.8 m edge, 307 m²** | **none (1.67× spare)** |
 
-### How a cell becomes three words
+Four words from a 1,296-word list are 1,296⁴ ≈ 2.82 trillion combinations. H3
+has 122 × 7¹² ≈ 1.69 trillion resolution-12 slots, which fits 1.67 times over;
+resolution 13 would need 11.8 trillion. Resolution 11 (2,150 m², about 50 m
+across) would have left room for a 1-in-11 check. Three words was tried first,
+and a 0.74 km² hexagon is a whole village.
 
-The three words are one number, not one word per H3 level. A word can't hold
+### How a cell becomes four words
+
+The four words are one number, not one word per H3 level. A word can't hold
 four of H3's base-7 digits (7⁴ = 2,401 > 1,296), so a word-per-level layout
-would stop at resolution 7.
+would stop well short of resolution 12.
 
 ```
-ordinal = base cell × 7⁸ + its eight digits read in base 7
-value   = ordinal × 3 + check          check = sha256(cell) mod 3
-number  = scramble(value)              a keyed permutation of all 1,296³
+ordinal = base cell × 7¹² + its twelve digits read in base 7
+value   = ordinal × CHECK + check      CHECK is 1, so value = ordinal
+number  = scramble(value)              a keyed permutation of all 1,296⁴
 words   = number in base 1,296
 ```
 
-**The check is weak, so the scramble makes mistakes obvious.** The spare factor
-of three is all there is for checking. A misheard word is refused about
-**68 %** of the time: it lands past the last value that names a cell, on a
-pentagon's missing child, or fails the check. The rest decode to a real place,
-so the scramble sends them somewhere unrelated. In the tests the median miss is
-**9,900 km** away, and none of 6,000 landed within 100 km. Without the scramble,
-a wrong last word would land a plausible few kilometres away, the hardest
+**There is no check, so the scramble makes mistakes obvious.** 1.67× is not a
+whole factor, so nothing is left for a check digit. A misheard word is refused
+only when it lands on one of the 40 % of values past the last cell, or on a
+pentagon's missing child: about **40 %** of the time. The rest decode to a real
+place, so the scramble sends them somewhere unrelated. In the tests the median
+miss is about **10,000 km** away, and none of 11,000 landed within 100 km.
+Without the scramble, a wrong last word would land next door, the hardest
 mistake to spot.
 
-The scramble is a six-round Feistel network over two halves of 46,656, and
-1,296³ is exactly 46,656². So it is a bijection on every three-word combination
-with nothing left over.
+The scramble is a six-round Feistel network over two halves of 1,679,616, and
+1,296⁴ is exactly (1,296²)². So it is a bijection on every four-word
+combination with nothing left over.
 
 **What it costs:**
 - Neighbouring places share no words.
-- There is no shorter form: two words do not name a bigger area, and there is
+- There is no shorter form: three words do not name a bigger area, and there is
   no dropping words against a nearby reference.
-- H3 is not equal-area, so resolution-8 cells vary in size by about 2:1 across
+- H3 is not equal-area, so resolution-12 cells vary in size by about 2:1 across
   the globe.
 
 ### What came before
 
-This used to be six words to a 3 m hexagon, and before that a square grid on a
+Before four words this was three words to a 531 m hexagon, before that six
+words to a 3 m hexagon, and before that a square grid on a
 cylindrical equal-area projection, whose cells were square only at 55.65°. There
 was also an online mode that issued random three-word codes from a database,
-backed by a Cloudflare Worker. All of that is gone: three words, decoded
+backed by a Cloudflare Worker. All of that is gone: four words, decoded
 offline, is the scheme. The git history has the rest.
 
 Open the demo file directly in a browser: no build step. It loads Leaflet,
@@ -88,8 +95,8 @@ re-run the workflow and it will publish.
 ## Docs
 
 - [`docs/grid-scheme.md`](docs/grid-scheme.md) — the scheme in full: why
-  resolution 8, how the cell is numbered, the check, the scramble, and what is
-  verified.
+  resolution 12, how the cell is numbered, why there is no check, the scramble,
+  and what is verified.
 - [`docs/coverage.md`](docs/coverage.md) — the square-root law relating area to
   resolution, and the word-list vs address-length trade. Written for an earlier,
   UK-only version of the scheme; the arithmetic still holds.
@@ -113,9 +120,9 @@ twin, and its only guarantee is unique four-letter prefixes — which says nothi
 about a phone line.
 
 **The list size sets the resolution.** 1,311 is the ceiling on A1–B2 graded
-vocabulary, so 1,296 is close to everything the easy band has to give. Three
-words of 1,296 just fit H3 resolution 8; resolution 9 would need a list of
-about 1,700. BIP-39's 2,048 would reach it, but the largest phonetically clean
+vocabulary, so 1,296 is close to everything the easy band has to give. Four
+words of 1,296 just fit H3 resolution 12; resolution 13 would need a list of
+about 1,850. BIP-39's 2,048 would reach it, but the largest phonetically clean
 list inside the top 10,000 words of English is 976, and 2,048 needs roughly the
 top 30,000.
 
