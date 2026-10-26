@@ -29,75 +29,49 @@ if (JSON.parse(words).join('\n') !== listed.join('\n'))
   fail("the demo's word list is not tools/wordlist/spoken-1296-plain.txt");
 const src = `import * as h3 from 'h3-js';\nconst WORDS = ${words};\n`
   + html.slice(html.indexOf('const INDEX = new Map'), html.indexOf('// --- map ---'))
-  + '\nexport { encode, decode, decodeCell, resolveTailCell, cellAt, parseAddress,'
-  + ' formatAddress, checkDigits, undigitsCheck, makeCell, cellDigits,'
-  + ' MAX_WORDS, RES, CHECK, WORD_DIGITS, POSITIONS, CHECKS, RES_AT };';
+  + '\nexport { encode, decodeCell, cellAt, scramble, unscramble, cellToOrdinal,'
+  + ' ordinalToCell, parseAddress, formatAddress, RES, CHECK, HALF, ROUNDS };';
 const tmp = join(here, `.check-demo-${process.pid}.mjs`);
 writeFileSync(tmp, src);
 let mod;
 try { mod = await import(pathToFileURL(tmp).href); } finally { rmSync(tmp, { force: true }); }
 
-// The layout decides what every word means, so the ports must agree on it word
-// by word, not merely on the totals.
-for (const [js, py] of [['WORD_DIGITS', 'word_digits'], ['POSITIONS', 'positions'],
-                        ['CHECKS', 'checks'], ['RES_AT', 'res_at']])
-  if (mod[js].join(',') !== fixture[py].join(','))
-    fail(`${js}: js ${mod[js]} vs py ${fixture[py]}`);
-if (mod.MAX_WORDS !== fixture.max_words || mod.RES !== fixture.res || mod.CHECK !== fixture.check)
-  fail(`length/res/check: js ${[mod.MAX_WORDS, mod.RES, mod.CHECK]} vs py `
-    + `${[fixture.max_words, fixture.res, fixture.check]}`);
+for (const k of ['res', 'check', 'half', 'rounds'])
+  if (mod[k.toUpperCase()] !== fixture[k])
+    fail(`${k}: js ${mod[k.toUpperCase()]} vs py ${fixture[k]}`);
 
-// Encodings, the prefix property, and the checksum, over a spread that includes
-// the seams and a pentagon.
+// The scramble on its own, both ways, so a mismatch says which half disagrees.
+for (const [v, n] of fixture.scramble) {
+  if (mod.scramble(v) !== n) fail(`SCRAMBLE ${v}: js ${mod.scramble(v)} vs py ${n}`);
+  if (mod.unscramble(n) !== v) fail(`UNSCRAMBLE ${n}: js ${mod.unscramble(n)} vs py ${v}`);
+}
+
+// Encodings over a spread that includes the seams and a pentagon.
 for (const c of fixture.points) {
-  if (mod.cellAt(c.lat, c.lng) !== c.cell)
-    fail(`CELL ${c.lat},${c.lng}: js ${mod.cellAt(c.lat, c.lng)} vs py ${c.cell}`);
-  if (mod.makeCell(...mod.cellDigits(c.cell)) !== c.cell)
-    fail(`DIGITS do not round-trip for ${c.cell}`);
-  for (const [n, expected] of Object.entries(c.words)) {
-    const got = mod.encode(c.lat, c.lng, Number(n));
-    if (got.join('.') !== expected.join('.'))
-      fail(`MISMATCH ${c.lat},${c.lng} @${n}: js ${got.join('.')} vs py ${expected.join('.')}`);
-  }
-  const longest = c.words[String(fixture.max_words)];
-  for (const [n, expected] of Object.entries(c.words))
-    if (longest.slice(0, Number(n)).join('.') !== expected.join('.'))
-      fail(`NOT A PREFIX at ${n}: ${expected.join('.')}`);
+  const cell = mod.cellAt(c.lat, c.lng);
+  if (cell !== c.cell) fail(`CELL ${c.lat},${c.lng}: js ${cell} vs py ${c.cell}`);
+  if (mod.ordinalToCell(mod.cellToOrdinal(c.cell)) !== c.cell)
+    fail(`ORDINAL does not round-trip for ${c.cell}`);
+  const got = mod.encode(c.lat, c.lng);
+  if (got.join('.') !== c.words.join('.'))
+    fail(`MISMATCH ${c.lat},${c.lng}: js ${got.join('.')} vs py ${c.words.join('.')}`);
   try {
-    if (mod.decodeCell(longest) !== c.cell) fail(`DECODE ${longest.join('.')} is not ${c.cell}`);
-  } catch (e) { fail(`CHECKSUM ${c.lat},${c.lng}: ${e.message}`); }
+    if (mod.decodeCell(c.words) !== c.cell) fail(`DECODE ${c.words.join('.')} is not ${c.cell}`);
+  } catch (e) { fail(`DECODE ${c.words.join('.')}: ${e.message}`); }
 }
 
-// Dropping leading words and filling them back in from a reference POINT,
-// including across the antimeridian.
-for (const t of fixture.tails) {
-  try {
-    const got = mod.resolveTailCell(t.words, t.ref[0], t.ref[1]);
-    if (got !== t.cell) fail(`TAIL .${t.words.join('.')} from ${t.ref}: js ${got} vs py ${t.cell}`);
-  } catch (e) { fail(`TAIL .${t.words.join('.')} from ${t.ref}: ${e.message}`); }
-}
-for (const h of fixture.hopeless) {
-  let refused = false;
-  try { mod.resolveTailCell(h.words, h.ref[0], h.ref[1]); } catch { refused = true; }
-  if (!refused) fail(`RESOLVED a hopeless tail .${h.words.join('.')} from ${h.ref}`);
+// Misheard addresses: the ports must agree on whether each is refused, and on
+// where it lands when it is not.
+for (const w of fixture.wrong) {
+  let got = null;
+  try { got = mod.decodeCell(w.words); } catch { /* refused */ }
+  if (got !== w.cell) fail(`WRONG ${w.words.join('.')}: js ${got} vs py ${w.cell}`);
 }
 
-for (const [text, n, tail] of [['studio.scribble.critical', 3, false],
-                               ['.studio.scribble.critical', 3, true],
-                               ['  STUDIO scribble Critical ', 3, false]]) {
-  const [parts, isTail] = mod.parseAddress(text);
-  if (parts.length !== n || isTail !== tail)
-    fail(`PARSE ${JSON.stringify(text)} -> ${parts.length} words, tail=${isTail}`);
-}
-
-for (let i = 0; i < 500; i++) {
-  const v = Math.floor(Math.random() * mod.CHECK);
-  if (mod.undigitsCheck(mod.checkDigits(v, mod.CHECKS), mod.CHECKS) !== v)
-    fail(`check digits do not round-trip at ${v}`);
-}
+for (const [text, n] of [['studio.scribble.critical', 3], ['  STUDIO, scribble Critical ', 3]])
+  if (mod.parseAddress(text).length !== n) fail(`PARSE ${JSON.stringify(text)}`);
 
 console.log(`demo codec vs python reference: ${fixture.points.length} points, `
-  + `${fixture.tails.length} tails, ${fixture.hopeless.length} hopeless`);
+  + `${fixture.scramble.length} scrambles, ${fixture.wrong.length} wrong words`);
 if (bad) { console.error(`FAIL: ${bad} problem(s)`); process.exit(1); }
-console.log('OK: cells match, encodings match, truncation holds, checksums verify, '
-  + 'and tails resolve from a reference');
+console.log('OK: the scramble, cells, encodings and wrong-word handling all match');

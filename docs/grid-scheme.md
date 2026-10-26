@@ -1,169 +1,101 @@
-# A global word grid, on H3
+# Three words on H3
 
 Reference: [`tools/gridcode/bip39grid.py`](../tools/gridcode/bip39grid.py),
 tests in [`test_bip39grid.py`](../tools/gridcode/test_bip39grid.py).
 Setup: `pip install -r tools/gridcode/requirements.txt` and
 `npm ci --prefix tools/gridcode`.
 
-## One grid, and it is H3
+## The scheme
 
-**Six everyday words name any point on earth to one hexagon of Uber's [H3]
-grid at resolution 14** — about 2.7 m across its flats and 3.1 m corner to
-corner, 6.3 m² on average — and a misheard word is caught at least
-**99.9945 %** of the time (1 in 18,252).
+**Three everyday words name one hexagon of Uber's [H3] grid at resolution 8**:
+531 m on an edge and 0.74 km² on average. They decode with nothing else
+involved: no reference point, no network and no database.
 
 ```
-attempt.clean.      Big Ben
-kangaroo.professor.
-retina.menu
+film.balloon.tourism      Westminster, around Big Ben
 ```
 
-One grid, one address for a place, one length, no scope to choose and nothing to
-switch. Six words is what you always say.
+## Why resolution 8
 
-### Why hexagons, and why H3
+| | Count |
+|---|---|
+| Three words, 1,296³ | 2,176,782,336 |
+| H3 resolution-8 slots, 122 × 7⁸ | 703,305,722 |
+| H3 resolution-9 slots, 122 × 7⁹ | 4,923,140,054 |
 
-The grid used to be squares on a Lambert cylindrical equal-area projection. The
-squares were square *in the projection*, and on the ground only at the standard
-parallel, 55.65°:
+Resolution 8 fits about three times over, and resolution 9 does not fit. Any
+grid at all is bounded by earth's area over 2.18 billion, which is 0.23 km², so
+H3 gives up about a factor of three to keep its hexagons.
 
-| latitude | old 2.99 m cell on the ground | farthest point from its centre |
-|---|---|---|
-| 0° | 1.7 × 5.3 m | 2.78 m |
-| 55.65° | 3.0 × 3.0 m | 2.11 m |
-| 80° | 9.7 × 0.9 m | 4.88 m |
+H3 is used for shape. It lays hexagons on an icosahedron, so a cell is close to
+a regular hexagon everywhere, every neighbour is equidistant, and a point is
+never more than one edge from its cell's centre. It is not equal-area:
+resolution-8 cells vary by about 2:1 across the globe.
 
-Shape distortion swamped anything a better cell shape could buy, so moving to
-hexagons on the same map would have achieved little. H3 fixes the map as well:
-it lays hexagons on an icosahedron, so a cell is close to a regular hexagon
-everywhere. Every neighbour is the same distance away, there are no diagonals,
-and a point is never more than one edge length — 1.55 m on average — from the
-centre of its cell.
+## The three words are one number
 
-The price is area. H3 is not equal-area: resolution-14 cells run from about
-3.8 m² to 7.6 m² across the globe. Shape was the point, and shape is what H3
-keeps.
+Each word cannot carry its own H3 levels. 7⁴ = 2,401 does not fit in a word, so
+three words of whole digits would reach only resolution 7: a base cell and one
+digit, then three digits, then three digits. Reading all three words as one
+number in base 1,296 gets the last level:
 
-## The address is H3's own hierarchy
+```
+ordinal = base cell × 7⁸ + its eight digits read in base 7      [0, 703,305,722)
+value   = ordinal × 3 + check          check = sha256(cell) mod 3
+number  = scramble(value)              a permutation of [0, 1,296³)
+words   = number in base 1,296, three digits
+```
 
-A resolution-14 H3 cell is a **base cell** (one of 122) and **fourteen base-7
-digits**, each choosing one of a cell's seven children. Each word carries a
-whole number of those digits plus a digit of checksum —
-`value = position × check + check digit`:
+The ordinal counts slots, not cells. A pentagon has no children on one axis, so
+some ordinals name no cell, and the decoder refuses them.
 
-| Word | 1 | 2 | 3 | 4 | 5 | 6 |
-|---|---|---|---|---|---|---|
-| H3 digits | base cell + 1 | 3 | 3 | 3 | 2 | 2 |
-| Positions | 854 | 343 | 343 | 343 | 49 | 49 |
-| Check | 1 | 3 | 3 | 3 | 26 | 26 |
-| Reaches resolution | 1 | 4 | 7 | 10 | 12 | 14 |
+## A wrong word
 
-The checks multiply: `3 × 3 × 3 × 26 × 26 = 18,252`.
+The spare factor of three is all the checking there is room for. A misheard word
+gives a random value, and it is caught when it:
 
-**Base 7 does not pack evenly into 1,296.** 7⁴ = 2,401 does not fit, so three
-digits is the most a word can hold, and 343 × 3 uses 1,029 of its 1,296 values.
-The values no position uses are not wasted. A misheard word that lands on one is
-refused before the checksum runs, as is one that lands on a pentagon's missing
-child. Measured detection is therefore a little *better* than 1 − 1/18,252.
+- lands past the last value that names a cell (3.1 % of values),
+- lands on a pentagon's missing child, or
+- fails the 1-in-3 check.
 
-**The checksum sits in the trailing words** because a tail, an address with its
-leading words dropped, keeps only the check its own words carry (see below).
-Words five and six each give up a digit they could hold, 49 positions instead of
-343, for a check of 26. Spreading the checksum evenly would have given a
-slightly bigger total (21,060), but a three-word tail would have kept only 1 in
-234 of it.
+That comes to about **67.7 %**, measured at 68 %. The other third decode to a
+real place.
 
-### What the resolution cost
+### The scramble makes the rest obvious
 
-Six words always had a choice between metres and certainty, and on H3 it is
-starker than it was on the square grid:
+Since a wrong word usually can't be refused, the scramble makes sure it can't
+look right. Without it, the ordinal keeps H3's order and neighbouring places
+share leading words. A wrong last word would then land a few kilometres away:
+plausible, and the hardest mistake to spot. With the scramble, changing any word
+sends the address somewhere unrelated. In the tests the median miss is about
+**9,900 km**, and none of about 6,000 landed within 100 km. Most land in an ocean
+or on another continent.
 
-| Six words reach | Cell | CHECK | Wrong word caught |
-|---|---|---|---|
-| res 13 (sixth word pure check) | 44 m², 4.1 m edge | 104,976 | 99.99905 % |
-| **res 14** | **6.3 m², 1.55 m edge** | **18,252** | **99.9945 %** |
-| *old square grid* | *8.9 m², 2.99 m square* | *82,944* | *99.9988 %* |
+The scramble is a six-round Feistel network. 1,296³ is exactly 46,656², so the
+value splits into two halves of 46,656 and each round adds a SHA-256 of one half
+to the other, modulo 46,656. That is a bijection on every three-word combination
+by construction, with nothing left over and no cycle-walking.
 
-Shipped at **resolution 14**. It is finer than the square grid everywhere, and
-round. Against that, a misheard word slips through 1 time in 18,252 rather than
-1 in 82,944. Resolution 13 would have kept a strong check, but a 44 m² cell is a
-house rather than a doorstep.
+### What it costs
 
-## Drop trailing words: coarser, needs no context
+- **Neighbours share no words.** Nothing in an address says roughly where it is.
+- **No shorter form.** Two words do not name a bigger area, and there is no
+  dropping words against a nearby reference.
+- **No correction.** A wrong word is refused or lands far away, but it is never
+  repaired.
 
-An H3 cell's parent is the same index with its last digits removed, so **every
-address is a prefix of a longer one by construction**:
+## What came before
 
-| Words | Big Ben | Cell (average edge) | Checked |
-|---|---|---|---|
-| 1 | `attempt` | res 1 — 483 km | — |
-| 2 | `attempt.clean` | res 4 — 26 km | — |
-| 3 | `attempt.clean.kangaroo` | res 7 — 1.4 km | — |
-| 4 | `attempt.clean.kangaroo.professor` | res 10 — 76 m | — |
-| 5 | `attempt.clean.kangaroo.professor.retina` | res 12 — 10.8 m | — |
-| 6 | `attempt.clean.kangaroo.professor.retina.menu` | **res 14 — 1.55 m** | **1 in 18,252** |
-
-Only the full address is checked. The checksum is over the whole res-14 cell,
-so no part of it is determined until all fourteen digits are.
-
-**H3 nests approximately.** A coarse hexagon, as drawn, does not exactly contain
-its seven children: the union of a cell's descendants is a slightly ragged
-hexagon, close to the drawn one but not the same. So the point a five-word
-address came from is always one of that cell's descendants, but not always
-inside its drawn outline. It is always near the centre. The tests measure it at
-every length: a point is never more than 1.1 times the cell's own circumradius
-from the centre a shorter address decodes to.
-
-## Drop leading words: same precision, fewer words, needs context
-
-The leading words are the coarse ones, so whoever is listening can supply them
-if they already know roughly where you are.
-
-`resolve_tail()` takes the reference point's own cell at the resolution the
-dropped words reached, and every cell within two rings of it. It appends the
-digits that were said to each one, keeps the candidate whose centre is nearest
-the reference, and tests **that one** against the checksum. It never searches,
-so it costs no detection beyond what the said words carry.
-
-| Words said | Written | Ambiguity (average edge) | Resolves from a reference within | Checked |
-|---|---|---|---|---|
-| 6 | `attempt.clean.kangaroo.professor.retina.menu` | none | anywhere | 1 in 18,252 |
-| 5 | `.clean.kangaroo.professor.retina.menu` | res 1 — 483 km | ~120 km | 1 in 18,252 |
-| 4 | `.kangaroo.professor.retina.menu` | res 4 — 26 km | 6.5 km | 1 in 6,084 |
-| 3 | `.professor.retina.menu` | res 7 — 1.4 km | 560 m | 1 in 2,028 |
-| 2 | `.retina.menu` | res 10 — 76 m | 30 m | 1 in 676 |
-| 1 | `.menu` | res 12 — 10.8 m | 4 m | 1 in 26 |
-
-The "within" column is what the tests guarantee. It is 0.4 of the average edge
-for one to three words said, and a quarter of an edge for four and five. The
-coarse lengths are weaker because of H3's base cells. Where two base cells meet,
-their digits point in different directions, so a candidate across the seam can
-land nearer the reference than the true one. That only matters when the dropped
-cells are big. With five words said, only a base cell and one digit are dropped,
-and a reference within a quarter of an edge resolves about 99.5 % of the time
-rather than always. The tests hold it to 98 %.
-
-The leading separator is the whole notation. It says the coarse words are
-missing and context must supply them.
-
-**A tail keeps only its own words' check.** The dropped words take their check
-digits with them, which is why the checksum is weighted to the end. A reference
-too far away to pick the right cell is caught 1 − 1/modulus of the time: 99.95 %
-for three words said, and 99.995 % for five. A one-word tail is barely checked
-at all, so treat it as a convenience between people who can already see each
-other.
-
-### There is nothing to shorten against
-
-There used to be a second way to fill in leading words: a *region*, usually a
-country, whose bounding box a reverse geocoder would supply. It is gone. Every
-candidate the box left was a fresh lottery against the same checksum, it made the
-word count unpredictable, and it needed a network call. A reference *point*
-tests one candidate and costs nothing.
+The scheme was six words: first on a square grid over a cylindrical equal-area
+projection, then on H3 resolution 14 (a 3 m hexagon), with a word-per-level
+layout, a strong checksum, and both directions of shortening. There was also an
+online mode that issued random three-word codes from a database, backed by a
+Cloudflare Worker. All of it was retired for three words decoded offline. The
+git history has the rest.
 
 ## The word list
 
-1,296 words, every one graded **CEFR A1–B2** — the band a person can retrieve
+1,296 words, every one graded **CEFR A1–B2**: the band a person can retrieve
 under pressure, not merely recognise. Generated by `tools/wordlist` from the
 9,025 graded headwords of the Oxford 5000 and the English Vocabulary Profile,
 minus names, places, offensive and vulgar words, inflections of other words,
@@ -171,43 +103,35 @@ words spelled two ways, and then everything confusable or sound-alike. **Zero
 homophones, zero pairs one articulatory feature apart, zero pairs within one
 phoneme error.**
 
-1,296 was chosen as 36 × 36 for the square grid, where each word was one base-36
-digit of x and one of y. H3 does not need that, but 1,311 is the ceiling on
-A1–B2 graded vocabulary, so 1,296 is still close to everything the easy band has
-to give.
+That matters more now than it did with a strong checksum. The list is the first
+line of defence against a misheard word, and the scramble is the second.
 
-[BIP-39][bip39] was here first and was the wrong list. It is designed to be
-*typed and checksummed*: it holds `pair`/`pear`, `peace`/`piece`,
-`right`/`write` and `wear`/`where`, and 53 % of its words have a
-same-or-one-phoneme twin.
+1,311 is the ceiling on A1–B2 graded vocabulary. Resolution 9 would need about
+1,700 words, which the easy band does not have.
 
 ## Verified
 
 `python3 tools/gridcode/test_bip39grid.py`:
 
-- **The layout.** No word holds more than the list, and words one to four could
-  not hold another digit. The checks multiply to `CHECK`, each length's check
-  divides the next one's, and check digits and H3 indexes round-trip.
-- **The grid.** Every point on earth encodes, including the poles, both sides of
-  the antimeridian and all twelve pentagons. Every address decodes to the cell
-  it came from.
-- **Truncation.** Every address is a prefix of the next longer one, and is the
-  H3 parent of it. A point is within 1.1 cell radii of the centre at every
-  length.
-- **Tails.** They resolve from a reference within the distances above,
-  including across the antimeridian. A full address needs no reference.
-  Hopeless references are caught within a point of theory.
-- **The checksum.** A wrong word is rejected at least 1 − 1/18,252 of the time,
-  and a value no position uses is refused outright.
+- **The layout.** 1,296³ fits resolution 8 three times and does not fit
+  resolution 9. Ordinals and cells round-trip.
+- **The scramble.** Its inverse undoes it both ways, and the ends of the space
+  stay inside it.
+- **The grid.** Every point encodes to three words and decodes to the cell it
+  came from, including the poles, the antimeridian and all twelve pentagons. A
+  point is within its cell's radius of the decoded centre, and different cells
+  never share an address.
+- **Neighbours.** Adjacent cells share words no more than chance.
+- **Wrong words.** They are caught within two points of theory. Those that
+  decode land a median of more than 5,000 km away, under 0.5 % land within
+  100 km, and values past the last cell are refused.
 
 `node tools/gridcode/check-demo.mjs` runs the demo's own JavaScript port against
-a fixture generated from the Python reference, so the two cannot drift. It
-compares the layout word by word, H3 cells, encodings at every length,
-truncation, checksums, tails across the antimeridian, hopeless references and
-address parsing. It also checks that the demo loads the same h3-js version that
-is installed.
+a fixture generated from the Python reference. It compares the scramble both
+ways, H3 cells, encodings, and how dozens of misheard addresses are handled,
+whether refused or landing in a cell. It also checks that the demo loads the
+same h3-js version that is installed.
 
 Both run in CI on every push.
 
 [H3]: https://h3geo.org/
-[bip39]: https://github.com/bitcoin/bips/blob/master/bip-0039/bip-0039-wordlists.md

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>WordMapper — locations as memorable words</title>
-<meta name="description" content="Encoding geographic coordinates as six everyday words on the H3 hexagon grid, one three-metre hexagon, with a misheard word caught at least 99.9945% of the time.">
+<meta name="description" content="Three everyday words name any place on earth to one H3 hexagon, 531 m on an edge, decoded offline.">
 <style>
   :root {
     --bg: #fbfbf9; --fg: #1c1c1a; --muted: #5c5c56; --rule: #e2e2dc;
@@ -69,13 +69,12 @@
 <header>
   <div class="wrap">
     <h1>WordMapper</h1>
-    <p class="tagline">Six everyday words name any point on earth to one hexagon about three metres across, and catch a misheard one at least 99.9945&nbsp;% of the time. Say fewer for a coarser place, or drop the leading ones if whoever is listening already knows roughly where you are &mdash; but six is the address.</p>
-    <div class="addr">attempt<span>.</span>clean<span>.</span>kangaroo<span>.</span>professor<span>.</span>retina<span>.</span>menu</div>
-    <p class="note">Big Ben, to one resolution-14 hexagon of Uber&rsquo;s
-    <a href="https://h3geo.org/">H3</a> grid: 2.7&nbsp;m across, 6.3&nbsp;m&sup2;, with a
-    misheard word caught at least 18,251 times in 18,252. Every word is graded
-    CEFR&nbsp;A1&ndash;B2 &mdash; everyday English, nothing you would have to spell out.
-    One grid over the whole earth, so this is <em>the</em> address for that spot.</p>
+    <p class="tagline">Three everyday words name any place on earth to one hexagon, 531&nbsp;m on an edge. Nothing else is needed to decode them &mdash; no reference point, no network, no database.</p>
+    <div class="addr">film<span>.</span>balloon<span>.</span>tourism</div>
+    <p class="note">Westminster, around Big Ben: one resolution-8 hexagon of Uber&rsquo;s
+    <a href="https://h3geo.org/">H3</a> grid, 0.74&nbsp;km&sup2; on average. Every word is
+    graded CEFR&nbsp;A1&ndash;B2 &mdash; everyday English, nothing you would have to spell
+    out.</p>
   </div>
 </header>
 
@@ -83,101 +82,41 @@
 
   <h2>Try it</h2>
   <p><a href="demos/word-grid.html">Open the grid</a> &mdash; click anywhere on earth and
-  the address sits on the map with its hexagon drawn round the point. It is computed in
-  the page: there is no country to consult and no word to drop, so all six are always
-  there.</p>
+  the address appears with its hexagon drawn round the point, or type three words to go to
+  them. It is all computed in the page.</p>
 
-  <h2>Hexagons, on H3</h2>
-  <p>The grid used to be squares on a cylindrical equal-area projection. They were square
-  in the projection, but on the ground only at 55.65&deg;: a 2.99&nbsp;m cell was
-  1.7&nbsp;&times;&nbsp;5.3&nbsp;m at the equator and 9.7&nbsp;&times;&nbsp;0.9&nbsp;m at
-  80&deg;. Hexagons on the same map would have been stretched just as badly.</p>
-  <p><strong>H3 fixes the map as well as the shape.</strong> It lays hexagons on an
-  icosahedron, so a cell is close to a regular hexagon everywhere on earth. Every neighbour
-  is the same distance away, there are no diagonals, and a point is never more than one
-  edge (1.55&nbsp;m on average) from its cell&rsquo;s centre. The trade is area: H3 is not
-  equal-area, and resolution-14 cells run from about 3.8 to 7.6&nbsp;m&sup2;.</p>
+  <h2>Why resolution 8</h2>
+  <p>Three words from a 1,296-word list are 1,296&sup3; &asymp; 2.18&nbsp;billion
+  combinations. H3 has 122&nbsp;&times;&nbsp;7<sup>8</sup> &asymp; 703&nbsp;million
+  resolution-8 slots, which fits about three times over; resolution 9 would need
+  4.9&nbsp;billion. No grid of any shape could do much better: earth split 2.18&nbsp;billion
+  ways is 0.23&nbsp;km&sup2; each.</p>
+  <p>H3 is there for shape. It lays hexagons on an icosahedron, so a cell is close to a
+  regular hexagon everywhere on earth, and every neighbour is the same distance away. It is
+  not equal-area: resolution-8 cells vary by about 2:1 across the globe.</p>
 
-  <h2>The address is H3&rsquo;s own hierarchy</h2>
-  <p>A resolution-14 cell is a base cell (one of 122) and fourteen base-7 digits, each
-  choosing one of a cell&rsquo;s seven children. Each word carries a whole number of those
-  digits plus a digit of checksum:</p>
+  <h2>Three words, one number</h2>
+  <p>A word cannot hold four of H3&rsquo;s base-7 digits (7<sup>4</sup> = 2,401), so one
+  word per level would stop at resolution 7. Instead the three words are one number:</p>
 
-  <div class="scroll">
-  <table>
-    <thead><tr><th>Word</th><th>H3 digits</th><th>Positions</th><th>Check</th><th>Reaches</th></tr></thead>
-    <tbody>
-      <tr><td class="num">1</td><td class="num">base + 1</td><td class="num">854</td><td class="num">1</td><td class="num">res 1</td></tr>
-      <tr><td class="num">2</td><td class="num">3</td><td class="num">343</td><td class="num">3</td><td class="num">res 4</td></tr>
-      <tr><td class="num">3</td><td class="num">3</td><td class="num">343</td><td class="num">3</td><td class="num">res 7</td></tr>
-      <tr><td class="num">4</td><td class="num">3</td><td class="num">343</td><td class="num">3</td><td class="num">res 10</td></tr>
-      <tr><td class="num">5</td><td class="num">2</td><td class="num">49</td><td class="num">26</td><td class="num">res 12</td></tr>
-      <tr><td class="num">6</td><td class="num">2</td><td class="num">49</td><td class="num">26</td><td class="num"><strong>res 14</strong></td></tr>
-    </tbody>
-  </table>
-  </div>
+  <pre style="font-size:13px;overflow-x:auto">ordinal = base cell &times; 7&#8312; + its eight digits in base 7
+value   = ordinal &times; 3 + check          check = sha256(cell) mod 3
+number  = scramble(value)              a permutation of all 1,296&sup3;
+words   = number in base 1,296</pre>
 
-  <p><strong>Base 7 does not pack evenly into 1,296.</strong> 7<sup>4</sup> = 2,401 does
-  not fit, so three digits is the most a word can hold, and the checks multiply out to
-  only 18,252. The square grid managed 82,944. Resolution 13 would have kept a strong check
-  (1 in 104,976), but a 44&nbsp;m&sup2; cell is a house rather than a doorstep. The values
-  no position uses are not wasted: a misheard word that lands on one, or on a
-  pentagon&rsquo;s missing child, is refused before the checksum runs.</p>
-
-  <h2>Drop trailing words: coarser, needs no context</h2>
-  <p>An H3 cell&rsquo;s parent is the same index with its last digits removed, so every
-  address is a prefix of a longer one by construction.</p>
-
-  <div class="scroll">
-  <table>
-    <thead><tr><th>Words</th><th>Big Ben</th><th>Cell edge</th></tr></thead>
-    <tbody>
-      <tr><td class="num">1</td><td class="num">attempt</td><td class="num">483 km</td></tr>
-      <tr><td class="num">2</td><td class="num">attempt.clean</td><td class="num">26 km</td></tr>
-      <tr><td class="num">3</td><td class="num">attempt.clean.kangaroo</td><td class="num">1.4 km</td></tr>
-      <tr><td class="num">4</td><td class="num">attempt.clean.kangaroo.professor</td><td class="num">76 m</td></tr>
-      <tr><td class="num">5</td><td class="num">attempt.clean.kangaroo.professor.retina</td><td class="num">10.8 m</td></tr>
-      <tr><td class="num">6</td><td class="num">attempt.clean.kangaroo.professor.retina.menu</td><td class="num">1.55 m &mdash; <strong>checked 1 in 18,252</strong></td></tr>
-    </tbody>
-  </table>
-  </div>
-
-  <p>H3 nests approximately: a coarse hexagon, as drawn, does not quite contain all its
-  descendants. So the point is not always inside a shorter address&rsquo;s outline, but it
-  is always close to its centre, within 1.1 cell radii at every length.</p>
-
-  <h2>Drop leading words: same precision, fewer words</h2>
-  <p>The leading words are the coarse ones, so whoever is listening can supply them if
-  they already know roughly where you are &mdash; the way nobody dials +44 or an area
-  code to a neighbour. The reference point&rsquo;s nearby H3 cells supply the missing
-  words, and the one candidate nearest it is tested against the checksum. A leading dot
-  marks the missing words.</p>
-
-  <div class="scroll">
-  <table>
-    <thead><tr><th>Said</th><th>Written</th><th>Needs the listener within</th><th>Checked</th></tr></thead>
-    <tbody>
-      <tr><td class="num">5</td><td class="num">.clean.kangaroo.professor.retina.menu</td><td class="num">~120 km</td><td class="num">1 in 18,252</td></tr>
-      <tr><td class="num">4</td><td class="num">.kangaroo.professor.retina.menu</td><td class="num">6.5 km &mdash; which town</td><td class="num">1 in 6,084</td></tr>
-      <tr><td class="num">3</td><td class="num">.professor.retina.menu</td><td class="num">560 m &mdash; which street</td><td class="num">1 in 2,028</td></tr>
-      <tr><td class="num">2</td><td class="num">.retina.menu</td><td class="num">30 m &mdash; which building</td><td class="num">1 in 676</td></tr>
-      <tr><td class="num">1</td><td class="num">.menu</td><td class="num">4 m &mdash; you can see them</td><td class="num">1 in 26</td></tr>
-    </tbody>
-  </table>
-  </div>
-
-  <p><strong>A tail keeps only its own words&rsquo; check.</strong> The dropped words take
-  their check digits with them, which is why the checksum is weighted to the last two
-  words: each gives up a digit of position for a check of 26. A reference too far away
-  says so, rather than answering confidently with the wrong place.</p>
-
-  <h2>There is nothing to shorten against</h2>
-  <p>Filling a dropped <em>leading</em> word back in needs a nearby <em>point</em>, and
-  tests exactly <strong>one</strong> candidate. There used to be a second way: a
-  <em>region</em>, usually a country, whose bounding box a reverse geocoder would supply.
-  It is gone. Every candidate the box left was a fresh lottery against the same checksum,
-  it made the word count unpredictable, and it needed a network call. What it bought was
-  a single word. Six words, always, is the trade.</p>
+  <h2>A wrong word</h2>
+  <p>The spare factor of three is all the checking there is room for. A misheard word is
+  refused about <strong>68&nbsp;%</strong> of the time: it lands past the last value that
+  names a cell, on a pentagon&rsquo;s missing child, or fails the check. The rest decode to a
+  real place.</p>
+  <p><strong>So the scramble makes those obvious.</strong> Without it, neighbouring places
+  would share leading words, and a wrong last word would land a plausible few kilometres
+  away. With it, changing any word sends the address somewhere unrelated. In the tests the
+  median miss is about <strong>9,900&nbsp;km</strong>, and none of about 6,000 landed within
+  100&nbsp;km. It is a six-round Feistel network, and 1,296&sup3; is exactly 46,656&sup2;,
+  so it is a bijection on every three-word combination with nothing left over.</p>
+  <p>The price: neighbouring places share no words, and there is no shorter form &mdash; two
+  words do not name a bigger area.</p>
 
   <h2>The word list</h2>
   <p><strong>1,296 words, every one graded CEFR&nbsp;A1&ndash;B2</strong> &mdash; the band
@@ -188,10 +127,8 @@
   words spelled two ways &mdash; and then everything confusable or sound-alike.</p>
 
   <p><strong>No two words are within one phoneme error of each other.</strong> Zero
-  homophones, zero pairs one articulatory feature apart. Substituting, inserting or
-  deleting a phoneme costs 1.0; a <em>confusable</em> substitution
-  (<code>free</code>/<code>three</code>, <code>lamp</code>/<code>ramp</code>) costs 0.5,
-  and every pair on the list is at least 2.0 apart.</p>
+  homophones, zero pairs one articulatory feature apart. With only a light check, the list
+  is the first defence against a misheard word, and the scramble the second.</p>
 
   <p><strong>BIP-39 was here first and was the wrong list.</strong> It is designed to be
   <em>typed and checksummed</em>, not spoken: it contains
@@ -199,13 +136,9 @@
   <code>right</code>/<code>write</code> and <code>wear</code>/<code>where</code>, and
   53&nbsp;% of its words have a same-or-one-phoneme twin.</p>
 
-  <p>1,296 was 36&nbsp;&times;&nbsp;36 for the square grid. H3 does not need that, but
-  1,311 is the ceiling on A1&ndash;B2 graded vocabulary, so 1,296 is close to everything
-  the easy band has to give.</p>
-
   <h2>Reading</h2>
   <ul>
-    <li><a href="https://github.com/Crunchy000/WordMapper/blob/main/docs/grid-scheme.md">The scheme in full</a> — why H3, how its digits pack into words, what it cost, and what is verified.</li>
+    <li><a href="https://github.com/Crunchy000/WordMapper/blob/main/docs/grid-scheme.md">The scheme in full</a> — why resolution 8, the numbering, the check, the scramble, and what is verified.</li>
     <li><a href="https://github.com/Crunchy000/WordMapper/blob/main/docs/coverage.md">Coverage and resolution</a> — why coverage is cheap and vocabulary is not.</li>
     <li><a href="https://github.com/Crunchy000/WordMapper">Source on GitHub</a>.</li>
   </ul>

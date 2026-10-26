@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Six everyday words name any point on earth to one H3 hexagon about three metres across, and catch a misheard one 99.995% of the time.">
-<title>Word grid — six easy words, one three-metre hexagon</title>
+<meta name="description" content="Three everyday words name any place on earth to one H3 hexagon, 531 m on an edge. Nothing else is needed to decode them.">
+<title>Word grid — three easy words, one H3 hexagon</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
   html, body { margin: 0; height: 100%; }
@@ -14,51 +14,28 @@
      panel so it reads over pale streets and dark satellite tiles alike. */
   #hud { position: absolute; z-index: 1000; top: 16px; left: 16px;
          pointer-events: none; max-width: calc(100vw - 32px); }
-  /* TWO WORDS TO A LINE. Six words on one line is a long line to read back to
-     someone over the phone and an easy one to lose your place in; in pairs it
-     is three short chunks, which is how people say numbers out loud anyway.
-     One row element per pair rather than a two-column grid: a grid sizes both
-     columns to their widest word and leaves a gap after the short ones, so the
-     pairs stop reading as pairs. Rows also fix the break after the second word,
-     where wrapping would move it with the window. */
   #addr { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-          font-size: 22px; letter-spacing: -0.01em; line-height: 1.3;
+          font-size: 24px; font-weight: 700; color: #16171a; letter-spacing: -0.01em;
+          line-height: 1.3; overflow-wrap: anywhere;
           text-shadow: 0 1px 3px #fff, 0 0 8px #fff, 0 0 16px #fff,
                        1px 0 3px #fff, -1px 0 3px #fff, 0 -1px 3px #fff; }
-  #addr .row { white-space: pre; }
-  #addr .w { color: #16171a; font-weight: 700; white-space: pre; }
   #note { font-size: 12px; color: #4a4a44; margin-top: 5px; font-weight: 600;
           max-width: 44ch; line-height: 1.45;
           text-shadow: 0 1px 3px #fff, 0 0 8px #fff, 1px 0 3px #fff, -1px 0 3px #fff; }
   #note .dim { color: #8a8a82; font-weight: 400; }
-  /* #hud is pointer-events:none so clicks fall through to the map; the controls
-     have to opt back in, and stop their own clicks reaching it. */
-  #controls { margin-top: 10px; pointer-events: auto; display: flex; gap: 8px;
-              align-items: center; }
-  #controls .lbl { font-size: 11px; font-weight: 600; color: #b9b9b2;
-                   transition: color .18s; user-select: none; }
-  #controls .lbl.on { color: #16171a; }
-  /* A real switch rather than two buttons: the two modes are one choice with a
-     side, not two things you might both want. */
-  #sw { width: 38px; height: 21px; flex: none; padding: 0; position: relative;
-        border: 1px solid #c9c9c0; border-radius: 999px; background: #ffffffdd;
-        cursor: pointer; transition: background .18s, border-color .18s;
-        backdrop-filter: blur(2px); }
-  #sw .knob { position: absolute; top: 2px; left: 2px; width: 15px; height: 15px;
-              border-radius: 50%; background: #8a8a82;
-              transition: transform .18s, background .18s; }
-  #sw[aria-checked="true"] { background: #1a5c4a; border-color: #1a5c4a; }
-  #sw[aria-checked="true"] .knob { transform: translateX(19px); background: #fff; }
-  #sw:focus-visible, #refresh:focus-visible { outline: 2px solid #4f9481;
-                                              outline-offset: 2px; }
-  #refresh { font: inherit; font-size: 12px; line-height: 1; padding: 4px 8px;
-             border: 1px solid #c9c9c0; background: #ffffffdd; color: #4a4a44;
-             border-radius: 999px; cursor: pointer; backdrop-filter: blur(2px); }
-  #refresh:hover { border-color: #8a8a82; color: #16171a; }
-  #refresh[disabled] { opacity: .3; cursor: default; }
+  #note .err { color: #a8322a; }
+  /* #hud is pointer-events:none so clicks fall through to the map; the form
+     has to opt back in. */
+  #find { margin-top: 10px; pointer-events: auto; display: flex; gap: 6px; }
+  #q { font: inherit; font-size: 14px; padding: 5px 9px; width: 220px; max-width: 60vw;
+       border: 1px solid #c9c9c0; border-radius: 999px; background: #ffffffdd;
+       color: #16171a; backdrop-filter: blur(2px); }
+  #q:focus-visible, #go:focus-visible { outline: 2px solid #4f9481; outline-offset: 2px; }
+  #go { font: inherit; font-size: 13px; padding: 5px 11px; border: 1px solid #1a5c4a;
+        border-radius: 999px; background: #1a5c4a; color: #fff; cursor: pointer; }
   @media (max-width: 480px) {
     #hud { top: 12px; left: 12px; }
-    #addr { font-size: 17px; }
+    #addr { font-size: 19px; }
   }
 </style>
 </head>
@@ -68,13 +45,11 @@
 <div id="hud">
   <div id="addr"></div>
   <div id="note">Click anywhere</div>
-  <div id="controls">
-    <span class="lbl on" id="lbl-off">offline &middot; 6 words</span>
-    <button id="sw" role="switch" aria-checked="false"
-            aria-label="Switch between the offline six-word address and an online three-word code"><span class="knob"></span></button>
-    <span class="lbl" id="lbl-on">online &middot; 3 words</span>
-    <button id="refresh" disabled title="Issue another code for this place">&#8635;</button>
-  </div>
+  <form id="find" autocomplete="off">
+    <input id="q" type="text" placeholder="three words" aria-label="Look up three words"
+           spellcheck="false" autocapitalize="none">
+    <button id="go" type="submit">Go</button>
+  </form>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -90,61 +65,33 @@ const INDEX = new Map(WORDS.map((w, i) => [w, i]));
 // --- the scheme ------------------------------------------------------------
 // Must match tools/gridcode/bip39grid.py exactly; CI cross-checks them.
 //
-// THE GRID IS H3 (the h3 global, from h3-js). Hexagons on an icosahedron, so a
-// cell is close to a regular hexagon everywhere on earth. The square grid this
-// replaced was square only at 55.65 degrees and 3:1 at the equator.
+// THREE WORDS NAME ONE H3 RESOLUTION-8 HEXAGON (the h3 global, from h3-js):
+// 531 m on an edge, 0.74 km^2. 1296**3 is 2.18 billion addresses and H3 has
+// 703 million resolution-8 slots, so it fits three times over -- and the three
+// is a check, catching a misheard word about two times in three.
 //
-// THE ADDRESS IS H3's OWN HIERARCHY: a res-14 cell is a base cell (one of 122)
-// and fourteen base-7 digits. Each word carries a whole number of those digits
-// and a digit of checksum: value = position * check + check digit.
+// The three words are one number, not one word per level:
+//   ordinal = base cell * 7**8 + its eight digits in base 7
+//   value   = ordinal * 3 + check          (sha256 of the cell, mod 3)
+//   number  = scramble(value)              (a permutation of 1296**3)
+//   words   = number in base 1296
 //
-//   word         1      2    3    4    5    6
-//   H3 digits    base+1 3    3    3    2    2
-//   positions    854    343  343  343  49   49
-//   check        1      3    3    3    26   26    -> CHECK = 18,252
-//   resolution   1      4    7    10   12   14
-//
-// The check sits in the trailing words because a tail -- an address with its
-// leading words dropped -- keeps only the check its own words carry.
+// THE SCRAMBLE IS THE SAFETY. A check of 3 cannot stop a misheard word, so it
+// makes one obvious instead: changing any word sends the address somewhere
+// unrelated on earth, rather than a plausible few kilometres away.
 const LIST_SIZE = 1296;
+const N_WORDS = 3;
+const SPACE = LIST_SIZE ** N_WORDS;              // 2,176,782,336
 const BASE_CELLS = 122;
 const APERTURE = 7;
-const RES = 14;
-const WORD_DIGITS = [1, 3, 3, 3, 2, 2];
-const MAX_WORDS = WORD_DIGITS.length;
-const POSITIONS = WORD_DIGITS.map((d, k) => APERTURE ** d * (k === 0 ? BASE_CELLS : 1));
-const CHECKS = POSITIONS.map((p) => Math.floor(LIST_SIZE / p));   // [1,3,3,3,26,26]
-const CHECK = CHECKS.reduce((a, b) => a * b, 1);                  // 18,252
-const RES_AT = WORD_DIGITS.map((_, n) =>
-  WORD_DIGITS.slice(0, n + 1).reduce((a, b) => a + b, 0));       // [1,4,7,10,12,14]
+const RES = 8;
+const CELLS = BASE_CELLS * APERTURE ** RES;      // 703,305,722
+const CHECK = Math.floor(SPACE / CELLS);         // 3
+const USED = CELLS * CHECK;
+const HALF = 46656;                              // SPACE === HALF ** 2
+const ROUNDS = 6;
 const SEP = '.';
-// How far around the reference's own cell resolveTail looks for the dropped
-// words. H3 nests approximately, so a point's true ancestor can be a neighbour
-// of the cell its reference falls in.
-const TAIL_RINGS = 2;
 const R = 6371008.8;
-
-const prod = (a) => a.reduce((p, v) => p * v, 1);
-
-// --- H3 indexes as base cell + digits ----------------------------------------
-// h3-js passes cells as hex strings. Mode 1 at bits 59-62, resolution at 52-55,
-// base cell at 45-51, then fifteen 3-bit digits, resolution 1 highest, unused 7.
-function cellDigits(cell) {
-  const h = BigInt('0x' + cell);
-  const res = Number((h >> 52n) & 0xFn);
-  const digits = [];
-  for (let r = 1; r <= res; r++) digits.push(Number((h >> BigInt((15 - r) * 3)) & 7n));
-  return [Number((h >> 45n) & 0x7Fn), digits];
-}
-
-function makeCell(base, digits) {
-  let h = (1n << 59n) | (BigInt(digits.length) << 52n) | (BigInt(base) << 45n);
-  for (let r = 1; r <= 15; r++)
-    h |= BigInt(r <= digits.length ? digits[r - 1] : 7) << BigInt((15 - r) * 3);
-  return h.toString(16);
-}
-
-const cellAt = (lat, lng, res = RES) => h3.latLngToCell(lat, lng, res);
 
 // SHA-256 in plain JS. crypto.subtle would be neater but only exists in a
 // secure context, so it is undefined when this file is opened from disk --
@@ -192,158 +139,103 @@ function sha256(bytes) {
   return H;
 }
 
-
-// One of CHECK values over the whole res-14 cell: 8 bytes big-endian, as Python.
-function checksum(cell) {
-  const p = new Uint8Array(8);
-  new DataView(p.buffer).setBigUint64(0, BigInt('0x' + cell));
-  const h = sha256(p);
-  return Number(((BigInt(h[0] >>> 0) << 32n) | BigInt(h[1] >>> 0)) % BigInt(CHECK));
-}
-
-// One checksum spread across the words, least significant first, so each
-// length's check modulus divides the next one's.
-function checkDigits(v, checks) {
-  const out = [];
-  for (const c of checks) { out.push(v % c); v = Math.floor(v / c); }
-  return out;
-}
-
-const undigitsCheck = (ds, checks) => {
-  let v = 0;
-  for (let k = ds.length - 1; k >= 0; k--) v = v * checks[k] + ds[k];
-  return v;
+const shaInt = (bytes, n) => {        // the first n (<= 8) bytes of sha256, as a number
+  const h = sha256(bytes);
+  const v = (BigInt(h[0] >>> 0) << 32n) | BigInt(h[1] >>> 0);
+  return v >> BigInt(64 - 8 * n);
 };
 
-// Each word's position value: word one is the base cell and its first digit,
-// the rest are their digits read as a base-7 number.
-function wordPositions(base, digits) {
-  const out = []; let at = 0;
-  WORD_DIGITS.forEach((n, k) => {
-    let v = k === 0 ? base : 0;
-    for (const d of digits.slice(at, at + n)) v = v * APERTURE + d;
-    out.push(v); at += n;
-  });
-  return out;
+// --- H3 cells as ordinals -----------------------------------------------------
+// h3-js passes cells as hex strings. Mode 1 at bits 59-62, resolution at 52-55,
+// base cell at 45-51, then fifteen 3-bit digits, resolution 1 highest, unused 7.
+function cellToOrdinal(cell) {
+  const h = BigInt('0x' + cell);
+  let x = Number((h >> 45n) & 0x7Fn);
+  for (let r = 1; r <= RES; r++) x = x * APERTURE + Number((h >> BigInt((15 - r) * 3)) & 7n);
+  return x;
 }
 
-function positionDigits(k, pos) {
-  const ds = [];
-  for (let i = 0; i < WORD_DIGITS[k]; i++) { ds.push(pos % APERTURE); pos = Math.floor(pos / APERTURE); }
-  return [k === 0 ? pos : null, ds.reverse()];
+function ordinalToCell(x) {
+  const digits = [];
+  for (let i = 0; i < RES; i++) { digits.push(x % APERTURE); x = Math.floor(x / APERTURE); }
+  let h = (1n << 59n) | (BigInt(RES) << 52n) | (BigInt(x) << 45n);
+  for (let r = 1; r <= 15; r++)
+    h |= BigInt(r <= RES ? digits[RES - r] : 7) << BigInt((15 - r) * 3);
+  return h.toString(16);
 }
 
-function wordValues(cell) {
-  const [base, digits] = cellDigits(cell);
-  const cd = checkDigits(checksum(cell), CHECKS);
-  return wordPositions(base, digits).map((p, k) => p * CHECKS[k] + cd[k]);
+const cellAt = (lat, lng) => h3.latLngToCell(lat, lng, RES);
+
+function cellCheck(cell) {
+  const p = new Uint8Array(8);
+  new DataView(p.buffer).setBigUint64(0, BigInt('0x' + cell));
+  return Number(shaInt(p, 8) % BigInt(CHECK));
 }
 
-// The first n words. Coarser as n falls; needs no context at any length. H3's
-// parent of a cell is the same index with its last digits removed, so a shorter
-// address is a prefix of a longer one by construction.
-function encode(lat, lng, n = MAX_WORDS) {
-  if (n < 1 || n > MAX_WORDS) throw new Error(`1 to ${MAX_WORDS} words`);
-  return wordValues(cellAt(lat, lng)).slice(0, n).map((v) => WORDS[v]);
+// --- the scramble -------------------------------------------------------------
+// A six-round Feistel network over two halves of 46,656: a bijection on every
+// three-word combination, with nothing left over.
+function roundFn(i, half) {
+  const p = new Uint8Array(5);
+  p[0] = i;
+  new DataView(p.buffer).setUint32(1, half);
+  return Number(shaInt(p, 4) % BigInt(HALF));
 }
 
-// Words to [base, digits, check digits], the first word said being word number
-// `first`. Rejects words off the list and values no position uses.
-function split(spoken, first) {
+function scramble(v) {
+  let left = Math.floor(v / HALF), right = v % HALF;
+  for (let i = 0; i < ROUNDS; i++) [left, right] = [right, (left + roundFn(i, right)) % HALF];
+  return left * HALF + right;
+}
+
+function unscramble(n) {
+  let left = Math.floor(n / HALF), right = n % HALF;
+  for (let i = ROUNDS - 1; i >= 0; i--)
+    [left, right] = [(((right - roundFn(i, left)) % HALF) + HALF) % HALF, left];
+  return left * HALF + right;
+}
+
+// --- addresses ----------------------------------------------------------------
+function encodeCell(cell) {
+  const n = scramble(cellToOrdinal(cell) * CHECK + cellCheck(cell));
+  return [WORDS[Math.floor(n / LIST_SIZE ** 2)], WORDS[Math.floor(n / LIST_SIZE) % LIST_SIZE],
+          WORDS[n % LIST_SIZE]];
+}
+
+const encode = (lat, lng) => encodeCell(cellAt(lat, lng));
+
+// The cell three words name. Throws for a wrong word, when it can tell: about
+// two times in three.
+function decodeCell(spoken) {
   const unknown = spoken.filter((w) => !INDEX.has(w));
   if (unknown.length) throw new Error(`not on the word list: ${unknown.join(', ')}`);
-  let base = null; const digits = [], cd = [];
-  spoken.forEach((w, i) => {
-    const k = first + i, v = INDEX.get(w);
-    const pos = Math.floor(v / CHECKS[k]);
-    if (pos >= POSITIONS[k]) throw new Error(`"${w}" cannot be word ${k + 1} - a word is wrong`);
-    const [b, ds] = positionDigits(k, pos);
-    if (b !== null) base = b;
-    digits.push(...ds); cd.push(v % CHECKS[k]);
-  });
-  return [base, digits, cd];
-}
-
-// The H3 cell an absolute address names. A full address is checked.
-function decodeCell(spoken) {
-  const n = spoken.length;
-  if (n < 1 || n > MAX_WORDS) throw new Error(`1 to ${MAX_WORDS} words`);
-  const [base, digits, cd] = split(spoken, 0);
-  const cell = makeCell(base, digits);
+  if (spoken.length !== N_WORDS) throw new Error(`an address is ${N_WORDS} words`);
+  const [a, b, c] = spoken.map((w) => INDEX.get(w));
+  const v = unscramble((a * LIST_SIZE + b) * LIST_SIZE + c);
+  if (v >= USED) throw new Error('no such address - a word is wrong');
+  const ordinal = Math.floor(v / CHECK), chk = v % CHECK;
+  const cell = ordinalToCell(ordinal);
   if (!h3.isValidCell(cell)) throw new Error('no such cell - a word is wrong');
-  if (n === MAX_WORDS && checksum(cell) !== undigitsCheck(cd, CHECKS))
-    throw new Error('checksum failed - a word is wrong');
+  if (cellCheck(cell) !== chk) throw new Error('check failed - a word is wrong');
   return cell;
 }
 
 const decode = (spoken) => h3.cellToLatLng(decodeCell(spoken));
 
-function hav(lat1, lng1, lat2, lng2) {
-  const rad = Math.PI / 180, p1 = lat1 * rad, p2 = lat2 * rad;
-  const a = Math.sin((p2 - p1) / 2) ** 2
-    + Math.cos(p1) * Math.cos(p2) * Math.sin((lng2 - lng1) * rad / 2) ** 2;
-  return 2 * R * Math.asin(Math.min(1, Math.sqrt(a)));
-}
-
-// An address given as its last words, plus a reference point. The dropped words
-// are the coarse ones, so the reference supplies them: every cell at the dropped
-// resolution within TAIL_RINGS of the reference's own is a candidate parent, the
-// said digits go on the end of each, and the one nearest the reference is the
-// one tested against the checksum -- only that one, so it costs no detection.
-function resolveTailCell(spoken, nearLat, nearLng) {
-  const n = spoken.length;
-  if (n < 1 || n > MAX_WORDS) throw new Error(`1 to ${MAX_WORDS} words`);
-  const dropped = MAX_WORDS - n;
-  if (!dropped) return decodeCell(spoken);
-  const [, said, cd] = split(spoken, dropped);
-  const check = undigitsCheck(cd, CHECKS.slice(dropped));
-  const modulus = prod(CHECKS.slice(dropped)), divisor = prod(CHECKS.slice(0, dropped));
-  let best = null, bestD = Infinity;
-  for (const parent of h3.gridDisk(cellAt(nearLat, nearLng, RES_AT[dropped - 1]), TAIL_RINGS)) {
-    const [base, digits] = cellDigits(parent);
-    const cell = makeCell(base, digits.concat(said));
-    if (!h3.isValidCell(cell)) continue;      // a pentagon has no children on one axis
-    const d = hav(nearLat, nearLng, ...h3.cellToLatLng(cell));
-    if (d < bestD) { best = cell; bestD = d; }
-  }
-  if (best === null || Math.floor(checksum(best) / divisor) % modulus !== check)
-    throw new Error('checksum failed - a word is wrong, or the reference point '
-      + 'is too far away to fill in the missing words');
-  return best;
-}
-
-const resolveTail = (spoken, nearLat, nearLng) =>
-  h3.cellToLatLng(resolveTailCell(spoken, nearLat, nearLng));
-
-// The fewest trailing words that resolve back to this point from that reference.
-function wordsNeeded(lat, lng, nearLat, nearLng) {
-  const full = encode(lat, lng), want = cellAt(lat, lng);
-  for (let n = 1; n <= MAX_WORDS; n++) {
-    try { if (resolveTailCell(full.slice(-n), nearLat, nearLng) === want) return n; }
-    catch { /* checksum rejected this length; try a longer tail */ }
-  }
-  return MAX_WORDS;
-}
-
-// '.maintain.studio.scribble' -- the leading separator says the coarse words
-// are missing and context must supply them.
-const formatAddress = (spoken, tail) => (tail ? SEP : '') + spoken.join(SEP);
+const formatAddress = (spoken) => spoken.join(SEP);
 
 function parseAddress(text) {
-  text = text.trim().replace(/[,\s]+/g, SEP);
-  const tail = text.startsWith(SEP);
-  const parts = text.split(SEP).filter(Boolean).map((p) => p.toLowerCase());
+  const parts = text.trim().replace(/[,\s]+/g, SEP).split(SEP).filter(Boolean)
+    .map((p) => p.toLowerCase());
   if (!parts.length) throw new Error('empty address');
-  return [parts, tail];
+  return parts;
 }
-
-
 
 // --- map --------------------------------------------------------------------
 // The zoom control sits top right: the address lives top left, where it reads
 // best, and the two were overlapping.
 const map = L.map('map', { worldCopyJump: true, zoomControl: false })
-  .setView([53.3498, -6.2603], 16);
+  .setView([53.3498, -6.2603], 14);
 L.control.zoom({ position: 'topright' }).addTo(map);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -352,117 +244,64 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 const addrEl = document.getElementById('addr');
 const noteEl = document.getElementById('note');
-const swEl = document.getElementById('sw');
-const offLblEl = document.getElementById('lbl-off');
-const onLblEl = document.getElementById('lbl-on');
-const refreshEl = document.getElementById('refresh');
-let marker = null, cellBox = null;
-let here = [53.3498, -6.2603];         // the point the address is currently for
-
-const fmt = (m) => m >= 1000 ? `${(m / 1000).toFixed(1)} km`
-  : m >= 1 ? `${m.toFixed(2)} m` : `${(m * 100).toFixed(0)} cm`;
+const qEl = document.getElementById('q');
+let marker = null, hexagon = null;
 
 const wrapLng = (lng) => ((lng + 180) % 360 + 360) % 360 - 180;
 
-// The hexagon's width across its flats, measured on the cell itself: H3 cells
-// vary in size across the globe, so an average would be wrong somewhere.
-function gridHint(cell) {
-  const c = h3.cellToLatLng(cell);
-  const r = Math.max(...h3.cellToBoundary(cell).map((v) => hav(...c, ...v)));
-  return `${fmt(Math.sqrt(3) * r)} hexagon`;
+function hav(lat1, lng1, lat2, lng2) {
+  const rad = Math.PI / 180, p1 = lat1 * rad, p2 = lat2 * rad;
+  const a = Math.sin((p2 - p1) / 2) ** 2
+    + Math.cos(p1) * Math.cos(p2) * Math.sin((lng2 - lng1) * rad / 2) ** 2;
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(a)));
 }
 
-// --- the short code --------------------------------------------------------
-// THE LOOKUP IS THE CHECK. All three words are key -- 1296**3 =
-// 2,176,782,336 codes -- and none of them is a checksum, because the database
-// already is one: a code either was issued or it was not.
-//
-// That is strictly better than spending a word on a check, which is what this
-// first did. A wrong word names a code nobody was ever given, so it is caught
-// unless it collides with a live one -- and the emptier the space, the better
-// that gets, where a checksum is flat at 1 in 1296 forever. Better still, the
-// three words are one word away from only 3 x 1295 = 3,885 other codes, so the
-// service can look at all of them and REPAIR a single wrong word from the one
-// that exists, rather than merely refusing it.
-//
-// Nothing is stored here: the key is random, which is what a real shortener
-// would do, since the code is a row in a database and not an encoding of
-// anywhere. That is the whole difference the switch exists to show.
-const SHORT_WORDS = 3;
+// The hexagon's edge, measured on the cell itself: H3 cells vary in size across
+// the globe, so an average would be wrong somewhere.
+function edge(cell) {
+  const c = h3.cellToLatLng(cell);
+  return Math.max(...h3.cellToBoundary(cell).map((v) => hav(...c, ...v)));
+}
 
-const shortCode = () => Array.from({ length: SHORT_WORDS },
-  () => WORDS[Math.floor(Math.random() * LIST_SIZE)]);
+// Vertices are unwrapped against the given longitude, so a hexagon on the
+// antimeridian is drawn as itself rather than as a band round the world.
+function draw(cell, lat, lng) {
+  if (marker) map.removeLayer(marker);
+  if (hexagon) map.removeLayer(hexagon);
+  marker = L.circleMarker([lat, lng],
+    { radius: 5, color: '#a8322a', weight: 2, fillOpacity: .9 }).addTo(map);
+  const ring = h3.cellToBoundary(cell).map(([a, b]) => [a, lng + wrapLng(b - lng)]);
+  hexagon = L.polygon(ring, { color: '#1a5c4a', weight: 2, fillOpacity: .08 }).addTo(map);
+}
 
-// --- drawing ----------------------------------------------------------------
-// Two words to a line either way, so the two modes are directly comparable.
-function drawWords(words) {
-  addrEl.textContent = '';
-  let row;
-  words.forEach((w, i) => {
-    if (i % 2 === 0) { row = document.createElement('div'); row.className = 'row';
-                       addrEl.appendChild(row); }
-    const el = document.createElement('span');
-    el.className = 'w';
-    // The separator stays on the word it follows, so a line that continues ends
-    // in a dot and the address is still correct if it is copied.
-    el.textContent = w + (i < words.length - 1 ? SEP : '');
-    row.appendChild(el);
-  });
+function describe(cell) {
+  return `${Math.round(edge(cell))} m hexagon &middot; <strong>says where you are</strong>`
+    + '<span class="dim"> &mdash; decodes in this page with nothing else involved. '
+    + 'A misheard word is caught about two times in three, and otherwise lands '
+    + 'somewhere unrelated on earth.</span>';
 }
 
 function show(lat, lng) {
-  here = [lat, lng];
-  code = shortCode();          // a new place would be a new row, so a new code
-  if (marker) map.removeLayer(marker);
-  marker = L.circleMarker([lat, lng],
-    { radius: 5, color: '#a8322a', weight: 2, fillOpacity: .9 }).addTo(map);
-  if (cellBox) map.removeLayer(cellBox);
-  // Vertices are unwrapped against the clicked longitude, so a hexagon on the
-  // antimeridian is drawn as itself rather than as a band round the world.
-  const ring = h3.cellToBoundary(cellAt(lat, lng))
-    .map(([a, b]) => [a, lng + wrapLng(b - lng)]);
-  cellBox = L.polygon(ring, { color: '#1a5c4a', weight: 2, fill: false }).addTo(map);
-  render();
+  const cell = cellAt(lat, lng);
+  addrEl.textContent = formatAddress(encode(lat, lng));
+  noteEl.innerHTML = describe(cell);
+  draw(cell, lat, lng);
 }
 
-// The two modes, and the reason both exist. Offline is the address itself: it
-// decodes in this page with nothing else involved, and it says where you are.
-// Online is a short CODE: fewer words to read out, but it is a row in a
-// database somewhere, it means nothing on its own, and it stops working the day
-// that database does.
-let mode = 'offline';
-let code = null;                       // the current short code
-
-function render() {
-  if (mode === 'offline') {
-    drawWords(encode(here[0], here[1]));
-    noteEl.innerHTML = `${gridHint(cellAt(...here))} &middot; <strong>says where you are</strong>`
-      + `<span class="dim"> &mdash; decodes in this page with nothing else `
-      + `involved, and a wrong word is caught `
-      + `${(100 * (1 - 1 / CHECK)).toFixed(4)}% of the time &mdash; one hexagon on Uber's H3 grid.</span>`;
-  } else {
-    drawWords(code);
-    noteEl.innerHTML = `${gridHint(cellAt(...here))} &middot; <strong>the same exact place</strong>`
-      + `<span class="dim"> &mdash; one of `
-      + `${(LIST_SIZE ** SHORT_WORDS).toLocaleString()} codes, and the lookup is `
-      + `the check: a wrong word names a code nobody was issued, so it is caught `
-      + `&mdash; or repaired from the one live code a single word away.</span>`;
+document.getElementById('find').addEventListener('submit', (e) => {
+  e.preventDefault();
+  let cell;
+  try { cell = decodeCell(parseAddress(qEl.value)); }
+  catch (err) {
+    noteEl.innerHTML = `<span class="err">${err.message.replace(/</g, '&lt;')}</span>`;
+    return;
   }
-  swEl.setAttribute('aria-checked', String(mode === 'online'));
-  offLblEl.classList.toggle('on', mode === 'offline');
-  onLblEl.classList.toggle('on', mode === 'online');
-  refreshEl.disabled = mode !== 'online';
-}
-
-swEl.addEventListener('click', (e) => {
-  e.stopPropagation();
-  mode = mode === 'offline' ? 'online' : 'offline';
-  render();
+  const [lat, lng] = h3.cellToLatLng(cell);
+  addrEl.textContent = formatAddress(encodeCell(cell));
+  noteEl.innerHTML = describe(cell);
+  draw(cell, lat, lng);
+  map.setView([lat, lng], 14);
 });
-refreshEl.addEventListener('click', (e) => {
-  e.stopPropagation(); code = shortCode(); render();
-});
-
 
 map.on('click', (e) => show(e.latlng.lat, wrapLng(e.latlng.lng)));
 show(53.3498, -6.2603);

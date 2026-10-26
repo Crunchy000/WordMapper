@@ -262,7 +262,8 @@ The ceiling from this base is **1,311** at A1–B2. Similarity is what binds:
 over half the pool goes to it — 1,000 words on sound, 675 on a shared piece,
 160 on a shared root and 100 on containment.
 
-*This section was written for the square grid. The grid is now H3 — see
+*This section was written for the square grid. The scheme is now three words on
+H3 — see
 [`docs/grid-scheme.md`](../../docs/grid-scheme.md) — where the list no longer
 needs to be a square, and 1,296 stays because it is close to the A1–B2 ceiling.*
 
