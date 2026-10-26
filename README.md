@@ -4,119 +4,73 @@ Experiments in encoding geographic coordinates as short, memorable word sequence
 
 **Live: <https://crunchy000.github.io/WordMapper/>**
 
-## Demos
+## Three words, one H3 hexagon
 
-### `demos/word-grid.html`
-
-The scheme, live and deliberately bare: click anywhere on earth and the address
-sits on the map, nothing else. **Six everyday words name any point to 2.99 m,
-and catch a misheard one 99.9988 % of the time** — two words to a line, with the
-last set apart because it does a different job: it moves the position not at all
-and is nothing but checksum.
-
-**One grid, one address for a place, one length.** There are no regional boxes
-and no scope to switch — there used to be, around Britain and Ireland and around
-Australia, and they are gone: a box has to be a rectangle, most of the world
-cannot be boxed without swallowing a neighbour, and each one gave a place a
-*second* address.
-
-**And six words, always.** There is nothing to shorten against: no country to
-consult, no region to search, and so no network call at all — the address is
-drawn the instant you click.
+**Three everyday words name any place on earth to one hexagon of Uber's [H3]
+grid at resolution 8**: 531 m on an edge and 0.74 km² on average, roughly a
+neighbourhood. Nothing else is needed to decode them. There is no reference
+point, no network call and no database.
 
 ```
-kilo.waitress.
-maintain.table.
-glint.export     <- set apart: pure checksum
+film.balloon.tourism      <- Westminster, around Big Ben
 ```
 
-There used to be a country search, where a reverse geocoder's bounding box
-bought the leading word. It is gone, for three reasons that stack up.
+[`demos/word-grid.html`](demos/word-grid.html) is the scheme live and bare.
+Click anywhere and the address appears with its hexagon drawn, or type three
+words to go to them.
 
-**It cost detection, which is the one thing worth protecting.** A misheard word
-removes the true tile, so every candidate the box left was a fresh lottery
-against the same checksum, and a wrong word was caught `(1 − 1/CHECK)^k` of the
-time rather than `1 − 1/CHECK`. Saying the sixth word costs less than that.
+### Why resolution 8
 
-**It made the word count inconsistent** — the same country giving four words in
-one place and five in another, and the largest countries sitting right on the
-cap, shortening most of the time but not always. An address whose length you
-cannot predict is worse than one that is always six words.
+Three words from a 1,296-word list are 1,296³ ≈ 2.18 billion combinations. H3
+has 122 × 7⁸ ≈ 703 million resolution-8 slots, which fits about three times
+over. Resolution 9 would need 4.9 billion, which does not fit. No grid of any
+shape could do much better: earth split 2.18 billion ways is 0.23 km² each.
 
-**And it needed a network call**, to a rate-limited service with a usage policy,
-for a scheme that otherwise works entirely offline.
+### How a cell becomes three words
 
-**There is an online/offline switch**, and flipping it turns the address into a
-three-word *short code*. Refresh issues another. Nothing is stored — the code is
-random, which is what a real shortener would do, since a short code is a row in a
-database and not an encoding of anywhere.
-
-**All three words are key, and none of them is a checksum, because the database
-already is one.** A code either was issued or it was not, so a wrong word names a
-code nobody was ever given and is caught — and the three words are one word away
-from only 3 × 1295 = 3,885 other codes, so the service can look at all of them
-and *repair* the wrong word from the one that exists rather than merely refusing
-it. Spending a word on a check instead is strictly worse: it costs 1,296× the
-code space, gives a flat 1-in-1,296, and cannot repair anything.
-
-| codes issued | wrong word caught | repair unambiguous |
-|---|---|---|
-| 1,000 | 99.99995 % | 99.8 % |
-| 10,000 | 99.9995 % | 98.2 % |
-| 100,000 | 99.995 % | 83.7 % |
-| 1,000,000 | 99.954 % | 16.8 % |
-
-It gets *better* the emptier the space is, which is the opposite of how a
-checksum behaves.
-
-The point of the switch is the difference, not the word count. Six words *say
-where you are* and decode with the network down. Three words resolve to the same
-exact place, but they are a database row: fewer to read out, meaningless on their
-own, and dead the day that database is. Roughly four syllables separate them —
-worth knowing before paying for a service, since a short domain saves nearly
-thirty.
-
-Dropping *trailing* words still works and needs no context at all — each word
-narrows the area and the words already said never change. So does filling in
-dropped *leading* words from a nearby reference point, which tests exactly one
-candidate and so costs no detection at all. Only the region search is gone.
-
-Cells are square at every length: both axes get the same split at every word, so
-a cell's aspect is just the frame's, and the projection's standard parallel is
-chosen to make the projected world exactly square (`K = 1/√π`, 55.654°).
-Equal-area throughout, so this is shape, not resolution.
-
-Open the file directly in a browser: no build step, and no secure-context
-requirement, since SHA-256 is plain JavaScript rather than `crypto.subtle`. It
-loads Leaflet and map tiles from a CDN, but the address itself is computed
-entirely offline — nothing about it depends on the network.
-
-[bip39]: https://github.com/bitcoin/bips/blob/master/bip-0039/bip-0039-wordlists.md
-
-## Code backend
-
-[`workers/codes`](workers/codes) is a Cloudflare Worker that issues and resolves
-the three-word codes — the real version of what the demo's switch mocks. It is
-KV-backed, dependency-free, and its tests run on plain node with a `Map` for a
-KV, so CI checks it without a Cloudflare account or a network.
+The three words are one number, not one word per H3 level. A word can't hold
+four of H3's base-7 digits (7⁴ = 2,401 > 1,296), so a word-per-level layout
+would stop at resolution 7.
 
 ```
-POST /new   {"lat":51.50072,"lng":-0.12456}  ->  {"code":"apron.trophy.export"}
-GET  /c/<code>                               ->  {"lat":...,"lng":...}
+ordinal = base cell × 7⁸ + its eight digits read in base 7
+value   = ordinal × 3 + check          check = sha256(cell) mod 3
+number  = scramble(value)              a keyed permutation of all 1,296³
+words   = number in base 1,296
 ```
 
-Connect it from the Cloudflare dashboard with **Import a repository**, root
-directory `workers/codes`, deploy command `npx wrangler deploy` — the KV binding
-carries no id so the first deploy provisions or connects one rather than failing
-on a placeholder.
+**The check is weak, so the scramble makes mistakes obvious.** The spare factor
+of three is all there is for checking. A misheard word is refused about
+**68 %** of the time: it lands past the last value that names a cell, on a
+pentagon's missing child, or fails the check. The rest decode to a real place,
+so the scramble sends them somewhere unrelated. In the tests the median miss is
+**9,900 km** away, and none of 6,000 landed within 100 km. Without the scramble,
+a wrong last word would land a plausible few kilometres away, the hardest
+mistake to spot.
 
-Two things in it are worth knowing even if you never deploy it. **A short TTL is
-the safety property**: a misheard code collides with a live one at exactly
-`live ÷ 2,176,782,336`, so codes held for a job and released give 1 in 1.7
-million, while a code assigned per handset would give 1 in 36. And **repair
-costs three reads, not 3,885** — each code is also written under three partial
-keys, one per word left out, so a code with one wrong word still matches on the
-two that were heard correctly.
+The scramble is a six-round Feistel network over two halves of 46,656, and
+1,296³ is exactly 46,656². So it is a bijection on every three-word combination
+with nothing left over.
+
+**What it costs:**
+- Neighbouring places share no words.
+- There is no shorter form: two words do not name a bigger area, and there is
+  no dropping words against a nearby reference.
+- H3 is not equal-area, so resolution-8 cells vary in size by about 2:1 across
+  the globe.
+
+### What came before
+
+This used to be six words to a 3 m hexagon, and before that a square grid on a
+cylindrical equal-area projection, whose cells were square only at 55.65°. There
+was also an online mode that issued random three-word codes from a database,
+backed by a Cloudflare Worker. All of that is gone: three words, decoded
+offline, is the scheme. The git history has the rest.
+
+Open the demo file directly in a browser: no build step. It loads Leaflet,
+h3-js and map tiles from a CDN, and once loaded the address is computed in the
+page. SHA-256 is plain JavaScript rather than `crypto.subtle`, which is missing
+outside a secure context.
 
 ## Publishing
 
@@ -133,11 +87,9 @@ re-run the workflow and it will publish.
 
 ## Docs
 
-- [`docs/grid-scheme.md`](docs/grid-scheme.md) — the scheme: both directions of
-  shortening, why the checksum makes shortening safe, how many words a search
-  why the prefix property is free in base-36 and was not in binary, why every
-  word can carry check and the checks multiply, and why a checksum cannot be
-  verified until the whole position is known.
+- [`docs/grid-scheme.md`](docs/grid-scheme.md) — the scheme in full: why
+  resolution 8, how the cell is numbered, the check, the scramble, and what is
+  verified.
 - [`docs/coverage.md`](docs/coverage.md) — the square-root law relating area to
   resolution, and the word-list vs address-length trade. Written for an earlier,
   UK-only version of the scheme; the arithmetic still holds.
@@ -147,8 +99,7 @@ re-run the workflow and it will publish.
 ## Word list
 
 **1,296 words, every one graded CEFR A1–B2** — the band a person can retrieve
-under pressure, not merely recognise. 36 × 36, so each word is one base-36 digit
-of x and one of y. Generated by [`tools/wordlist`](tools/wordlist)
+under pressure, not merely recognise. Generated by [`tools/wordlist`](tools/wordlist)
 from the 9,025 graded headwords of the Oxford 5000 and the English Vocabulary
 Profile, minus names, places, offensive and vulgar words, inflections of other
 words, words spelled two ways — and then everything confusable or sound-alike.
@@ -161,29 +112,29 @@ checksummed*, not spoken: it contains `pair`/`pear`, `peace`/`piece`,
 twin, and its only guarantee is unique four-letter prefixes — which says nothing
 about a phone line.
 
-**The list does not have to be a power of two**, and dropping that assumption is
-what pays for the resolution. Binary forced 1,024 words and a 10.8 m cell;
-36 × 36 is 1,296 words and 2.99 m at six words, checked to one part in 82,944.
-1,311 is the ceiling on A1–B2 graded vocabulary, so 1,296 is
-close to everything the easy band has to give — BIP-39's 2,048 would carry more
-per word, but the largest phonetically clean list inside the top 10,000 words of
-English is 976, and 2,048 needs roughly the top 30,000. Four and a half metres
-is a parking space; a sixth word would reach 12 cm if a doorstep were ever
-needed.
+**The list size sets the resolution.** 1,311 is the ceiling on A1–B2 graded
+vocabulary, so 1,296 is close to everything the easy band has to give. Three
+words of 1,296 just fit H3 resolution 8; resolution 9 would need a list of
+about 1,700. BIP-39's 2,048 would reach it, but the largest phonetically clean
+list inside the top 10,000 words of English is 976, and 2,048 needs roughly the
+top 30,000.
 
 ## Tools
 
 ```
-npm install --prefix tools/gridcode
-python3 tools/gridcode/test_bip39grid.py      # the scheme: round trip, checksums, uniqueness
+pip install -r tools/gridcode/requirements.txt   # h3, the Python bindings
+npm ci --prefix tools/gridcode                   # h3-js, for the cross-check
+python3 tools/gridcode/test_bip39grid.py      # the scheme: round trip, scramble, wrong words
 node    tools/gridcode/check-demo.mjs         # the demo's JS against the Python reference
 python3 tools/gridcode/build_fixture.py       # regenerate the cross-check fixture
 ```
 
 The last two exist because the codec is implemented twice — once in Python as
-the reference, once in JavaScript inside the demo. The cross-check runs on every
-push so they cannot drift apart.
+the reference, once in JavaScript inside the demo. Both sit on the same H3 core,
+4.5.0, and the cross-check runs on every push so they cannot drift apart.
 
 ## Licence
 
 MIT — see [LICENSE](LICENSE).
+
+[H3]: https://h3geo.org/

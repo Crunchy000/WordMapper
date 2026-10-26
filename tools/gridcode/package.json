@@ -1,0 +1,9 @@
+{
+  "name": "wordmapper-gridcode",
+  "private": true,
+  "description": "Cross-checks the demo's JavaScript codec against the Python reference.",
+  "type": "module",
+  "dependencies": {
+    "h3-js": "4.5.0"
+  }
+}
