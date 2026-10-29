@@ -1,0 +1,67 @@
+# Part-of-speech corrections for phrases.py, from reading the lists it builds.
+# `word pos`: a adjective, n noun, v verb, - leave the word out of every list.
+# WordNet's tagged senses decide everything not listed here; these are the
+# words where the most common SENSE is not the most common USE in speech.
+
+# Read as nouns, whatever WordNet counts
+broadband n
+mum n          # a mother, here; WordNet's first sense is "silent"
+lyric n
+resident n
+roundabout n   # the traffic kind
+finger n
+skylark n      # a bird before it is a verb
+map n
+wax n
+gorge n
+institute n
+issue n
+thread n
+tunnel n
+
+# Read as adjectives
+weary a
+cautious a
+immune a
+obsessive a
+private a
+public a
+sociable a
+romantic a
+transient a
+drinkable a
+elective a
+moral a
+dark a
+
+# Read as verbs
+pave v
+cry v
+
+# Not really any of the three, or read as another word
+farther -      # an adverb
+unlike -       # a preposition
+except -       # a preposition
+despite -      # a preposition
+minus -        # a preposition
+behalf -       # only ever "on behalf of"
+regard -       # reads as the verb
+saw -          # reads as the past of "see"
+polity -       # obscure
+balky -        # obscure
+mutable -      # obscure
+skyward -      # an adverb
+
+# Tone, as the single list's exclude files judge it
+prick -
+reverence -
+racist -
+slave -
+underpants -
+bra -
+gravestone -
+flesh -
+
+# American
+mommy -
+railroad -

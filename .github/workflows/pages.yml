@@ -51,6 +51,12 @@ jobs:
       - name: Check the UK scheme
         run: python3 tools/gridcode/test_ukgrid.py
 
+      - name: Check the UK phrase demo codec against the reference
+        run: node tools/gridcode/check-ukphrase-demo.mjs
+
+      - name: Check the UK phrases
+        run: python3 tools/gridcode/test_ukphrase.py
+
       - name: Assemble site
         run: |
           mkdir -p _site/demos

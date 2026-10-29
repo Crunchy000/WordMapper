@@ -103,6 +103,40 @@ the address is in the wrong town, not as a safety net.
 
 **Nowhere else has an address.** Outside the mask, the page says so.
 
+## UK only: four-word phrases, a 7.5 m square
+
+[`demos/uk-phrase.html`](demos/uk-phrase.html) reads an address as a phrase,
+**adjective noun verb noun**, and names a **7.5 m square** anywhere in the same
+UK area. Half of all points are within **3.1 m**, and a misheard word is refused
+at least **95 %** of the time.
+
+```
+impressive diamond qualify wagon      <- Big Ben
+festive ancestor correspond chapter   <- Edinburgh Castle
+```
+
+**One word list per slot.** Each slot takes one part of speech: 367
+adjectives, 800 nouns and 419 verbs, built by
+[`tools/wordlist/phrases.py`](tools/wordlist/phrases.py). A word only has to be
+distinct from the other words of its own part of speech, because a noun is never
+heard where a verb belongs. So 426 words the single 1,296 list had turned away,
+for sounding like a word of another kind, are back. The part of speech comes
+from WordNet's tagged sense counts, corrected by hand in
+[`pos-override.txt`](tools/wordlist/pos-override.txt) after reading the lists.
+
+**Where the safety comes from.** 367 × 800 × 419 × 800 ≈ 98 billion phrases,
+enough for 7.5 m squares with a 1-in-20 check.
+- A misheard word that comes out as another part of speech breaks the pattern
+  and is always refused.
+- One of the right kind fails the check 19 times in 20.
+- The rest land somewhere unrelated in the UK, a median of about 330 km away.
+
+The scramble works on unequal halves (adjective and noun, verb and noun), since
+the slots have different list sizes.
+
+Allowing four natural patterns instead of one would reach 4.4 m at the same
+95 %, at the cost of listeners learning four shapes rather than one.
+
 ### What came before
 
 It got here by way of four words to a 307 m² hexagon, three words to a
@@ -177,6 +211,9 @@ python3 tools/gridcode/test_ukgrid.py         # the UK scheme
 node    tools/gridcode/check-uk-demo.mjs      # the UK demo's JS against its reference
 python3 tools/gridcode/build_uk_fixture.py    # regenerate the UK fixture
 python3 tools/gridcode/build_uk_mask.py ne_10m_admin_0_countries.geojson   # rebuild the mask
+python3 tools/gridcode/test_ukphrase.py       # the UK phrases
+node    tools/gridcode/check-ukphrase-demo.mjs   # the phrase demo's JS against its reference
+python3 tools/gridcode/build_ukphrase_fixture.py # regenerate the phrase fixture
 ```
 
 The last two exist because the codec is implemented twice — once in Python as

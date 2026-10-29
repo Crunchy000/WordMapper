@@ -306,3 +306,36 @@ So **2,048 words cannot all be common** — around the top 30,000 is the floor.
 `spoken-2048.txt` sits at a median rank near 10,000 with its rarest word around
 45,000. Wanting a list of only everyday words means wanting a list of about
 1,300 — which, in base 36, still costs only five words to an address.
+
+## Phrase lists: one per part of speech
+
+```
+WORDLIST_DATA=<data-dir> python3 phrases.py
+```
+
+`phrases.py` builds `phrase-adjective.txt`, `phrase-noun.txt` and
+`phrase-verb.txt` for addresses read as a phrase, adjective noun verb noun
+(`demos/uk-phrase.html`). It starts from the same A1–B2 pool, with the same
+content rules, homophone bar and ordering as the single list. Then it applies
+every selection rule **within each part of speech** rather than across the
+whole list: nothing within 2.0 by sound, nothing one keystroke apart, one word
+per piece and per root, no word inside another.
+
+That is the point of it. In a phrase a noun is never heard where a verb belongs,
+so a noun and a verb that sound alike cannot be mistaken for each other. Mishear
+one as the other and the phrase stops being grammatical, which is caught on the
+spot. Words the single list turned away for clashing with a word of another kind
+come back: 426 of the 1,586 phrase words are not in `spoken-1296-plain.txt`.
+
+The part of speech is the one a word is **most used as**, by WordNet's tagged
+sense counts, at 50 % or more. `pos-override.txt` corrects it where the most
+common sense is not the most common use in speech: `mum` is a mother here, not
+"silent"; `roundabout` is the traffic kind; `private` and `public` are adjectives.
+It also drops a handful of words for tone or for not really being any of the
+three (`despite`, `saw`).
+
+| list | candidates | taken | not in the single list |
+|---|---|---|---|
+| adjectives | 476 | 367 | 129 |
+| nouns | 1,541 | 800 | 157 |
+| verbs | 652 | 419 | 140 |

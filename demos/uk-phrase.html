@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="A four-word phrase -- adjective noun verb noun -- names any place in the UK to a 7.5 m square, and refuses a misheard word 95% of the time.">
+<title>UK phrases — four words, a 7.5-metre square</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+  html, body { margin: 0; height: 100%; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  #map { position: absolute; inset: 0; background: #dfe3e6; }
+  /* No card: the address sits directly on the map, with a halo rather than a
+     panel so it reads over pale streets and dark satellite tiles alike. */
+  #hud { position: absolute; z-index: 1000; top: 16px; left: 16px;
+         pointer-events: none; max-width: calc(100vw - 32px); }
+  #addr { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+          font-size: 24px; font-weight: 700; color: #16171a; letter-spacing: -0.01em;
+          line-height: 1.3;
+          text-shadow: 0 1px 3px #fff, 0 0 8px #fff, 0 0 16px #fff,
+                       1px 0 3px #fff, -1px 0 3px #fff, 0 -1px 3px #fff; }
+  /* Each word is unbreakable, and a line may only break after a dot, so a long
+     address wraps between words rather than through one. */
+  #addr .w { white-space: nowrap; display: inline-block; text-align: left; }
+  /* The slot under each word, so the pattern teaches itself. */
+  #addr .w small { display: block; font: 600 9px/1.2 -apple-system, BlinkMacSystemFont,
+                   "Segoe UI", Roboto, sans-serif; letter-spacing: .04em;
+                   text-transform: uppercase; color: #8a8a82; }
+  #note { font-size: 12px; color: #4a4a44; margin-top: 5px; font-weight: 600;
+          max-width: 44ch; line-height: 1.45;
+          text-shadow: 0 1px 3px #fff, 0 0 8px #fff, 1px 0 3px #fff, -1px 0 3px #fff; }
+  #note .dim { color: #8a8a82; font-weight: 400; }
+  #note .err { color: #a8322a; }
+  /* #hud is pointer-events:none so clicks fall through to the map; the form
+     has to opt back in. */
+  #find { margin-top: 10px; pointer-events: auto; display: flex; gap: 6px; }
+  #q { font: inherit; font-size: 14px; padding: 5px 9px; width: 220px; max-width: 60vw;
+       border: 1px solid #c9c9c0; border-radius: 999px; background: #ffffffdd;
+       color: #16171a; backdrop-filter: blur(2px); }
+  #q:focus-visible, #go:focus-visible { outline: 2px solid #4f9481; outline-offset: 2px; }
+  #go { font: inherit; font-size: 13px; padding: 5px 11px; border: 1px solid #1a5c4a;
+        border-radius: 999px; background: #1a5c4a; color: #fff; cursor: pointer; }
+  @media (max-width: 480px) {
+    #hud { top: 12px; left: 12px; }
+    #addr { font-size: 19px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="map"></div>
+<div id="hud">
+  <div id="addr"></div>
+  <div id="note">Click anywhere</div>
+  <form id="find" autocomplete="off">
+    <input id="q" type="text" placeholder="adjective noun verb noun" aria-label="Look up a phrase"
+           spellcheck="false" autocapitalize="none">
+    <button id="go" type="submit">Go</button>
+  </form>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// One list per slot, built by tools/wordlist/phrases.py from the same graded,
+// cleaned vocabulary as the single list. A word only has to be distinct from
+// the other words of its own part of speech: a noun is never heard where a
+// verb belongs.
+const ADJECTIVES = ["abnormal", "absolute", "abundant", "accurate", "active", "alien", "alive", "allergic", "alone", "alright", "ambitious", "ample", "angry", "annual", "antique", "apparent", "arrogant", "artistic", "asleep", "athletic", "atomic", "attentive", "aware", "bad", "beautiful", "bilingual", "bookish", "bound", "brave", "brilliant", "broad", "broken", "busy", "careful", "cautious", "central", "chaotic", "cheap", "cheeky", "cheerful", "childish", "circular", "civil", "classical", "cloudy", "clumsy", "coastal", "coherent", "comic", "commercial", "common", "competent", "confident", "consistent", "constant", "convenient", "courageous", "creative", "critical", "crucial", "cultural", "curious", "cute", "damp", "dark", "deceptive", "decisive", "decorative", "definite", "delicate", "delightful", "dense", "dependent", "difficult", "diligent", "dim", "disastrous", "distant", "distinct", "dominant", "doubtful", "downward", "dreamy", "drunk", "dynamic", "eager", "ecstatic", "efficient", "elective", "electric", "entire", "ethical", "ethnic", "everyday", "evident", "exact", "excellent", "excessive", "exclusive", "exotic", "expensive", "expressive", "exquisite", "external", "extinct", "extra", "extreme", "fabulous", "faint", "fallen", "false", "familiar", "famous", "fantastic", "faraway", "festive", "fictional", "final", "firm", "flat", "flexible", "fluent", "foggy", "foolish", "formal", "fresh", "frozen", "full", "functional", "funky", "future", "gaudy", "generous", "global", "glorious", "gorgeous", "gradual", "grateful", "greedy", "guilty", "gymnastic", "handsome", "happy", "harmful", "hasty", "healthy", "hearty", "helpful", "historic", "hopeful", "humane", "humorous", "hungry", "ignorant", "illegal", "immune", "impartial", "important", "impressive", "indirect", "indoor", "indulgent", "innermost", "intensive", "internal", "juicy", "large", "late", "lazy", "lengthy", "liberal", "lifelong", "local", "logical", "lost", "lucky", "lush", "magical", "massive", "meaningful", "mental", "messy", "mighty", "modern", "moral", "multiple", "musical", "mutual", "naked", "native", "nearby", "neat", "negative", "nervous", "neutral", "newsworthy", "noisy", "northern", "nuclear", "numerous", "nutritious", "obsessive", "obvious", "official", "oily", "old", "open", "orchestral", "organic", "outrageous", "overweight", "parental", "passionate", "peaceful", "pedantic", "permanent", "persistent", "personal", "persuasive", "physical", "playful", "polite", "poor", "popular", "positive", "possessive", "possible", "potential", "powerful", "pregnant", "pretty", "previous", "primary", "prime", "private", "probable", "prominent", "prosperous", "protective", "proven", "public", "punctual", "purposeful", "quick", "quotable", "random", "rare", "redundant", "reflective", "regional", "relevant", "resonant", "rhythmic", "ripe", "risky", "romantic", "rude", "ruinous", "rural", "safe", "salty", "scenic", "seasonal", "sensible", "serene", "serious", "severe", "shadowy", "shaken", "shallow", "shameful", "shiny", "silent", "similar", "simple", "sincere", "singular", "sleepless", "slim", "smart", "smooth", "snowy", "sociable", "social", "solar", "special", "spicy", "spoken", "standard", "sticky", "stormy", "strange", "strategic", "strict", "stubborn", "stuck", "stylish", "subsequent", "successful", "sudden", "sufficient", "suitable", "superb", "supportive", "suspicious", "symbolic", "talkative", "tall", "technical", "teenage", "terrific", "thankful", "thick", "thirsty", "thoughtful", "tolerant", "tough", "transient", "tricky", "trivial", "tropical", "true", "truthful", "turbulent", "ugly", "ultimate", "unafraid", "uncertain", "unchanged", "unclear", "undersea", "uneasy", "uneven", "unforeseen", "unfriendly", "unheard", "uniform", "unique", "unknown", "unpleasant", "unsure", "untidy", "upright", "upward", "urgent", "useful", "vacant", "vague", "valid", "various", "vast", "verbal", "vertical", "vigorous", "virtual", "visual", "warm", "wasteful", "waterproof", "witty", "wonderful", "wondrous", "wooden", "worldwide", "worthwhile", "written", "yummy"];
+const NOUNS = ["absence", "absentee", "accident", "actress", "adjective", "advantage", "advert", "afternoon", "age", "agency", "agent", "airport", "alarm", "album", "allowance", "alphabet", "altitude", "ambition", "ambulance", "ammonia", "amount", "analyst", "ancestor", "anchor", "animal", "annoyance", "appeal", "appearance", "appetite", "applause", "applicant", "apron", "architect", "area", "argument", "arm", "arrival", "aspect", "aspirin", "assembly", "asset", "assistant", "assumption", "assurance", "astronaut", "athlete", "atmosphere", "attempt", "attention", "audio", "author", "avenue", "award", "axis", "badminton", "bakery", "balcony", "balloon", "banana", "bank", "barley", "bartender", "basketball", "bathroom", "battery", "beauty", "bed", "beef", "bench", "benefit", "bias", "bicycle", "bikini", "birdcage", "birthday", "biscuit", "blackboard", "blog", "body", "bone", "bonus", "book", "border", "bottle", "box", "boyfriend", "bracelet", "brainstorm", "bravery", "breakfast", "breakup", "breath", "brewery", "bridge", "broadband", "brochure", "budget", "bulb", "bulletin", "bureau", "butterfly", "cake", "calendar", "camp", "canal", "candle", "captain", "cardigan", "carnival", "cartoon", "castle", "cello", "century", "certainty", "chain", "channel", "chapter", "character", "checkpoint", "cheese", "chemist", "chicken", "child", "chimney", "chimpanzee", "cinema", "circle", "city", "claim", "classmate", "clerk", "client", "cloth", "cloud", "clue", "coat", "coconut", "coherence", "collection", "college", "column", "comedy", "comfort", "command", "commerce", "committee", "companion", "company", "competence", "complement", "completion", "component", "compromise", "concept", "concern", "conclusion", "condition", "conductor", "confidence", "confusion", "consensus", "consonant", "control", "copy", "corn", "corona", "country", "couple", "courtesy", "creature", "critic", "crocodile", "cube", "cucumber", "cuff", "culture", "currency", "cursor", "custom", "daddy", "dance", "daughter", "debit", "decade", "decision", "deficit", "degree", "departure", "depth", "design", "desire", "dessert", "destiny", "detective", "devotion", "diagram", "diamond", "dictator", "diet", "dignity", "dilemma", "dimension", "dinosaur", "dioxide", "diploma", "dish", "dislike", "disposal", "distance", "district", "dolphin", "donation", "door", "dozen", "drama", "drapery", "duration", "dustbin", "dwarf", "effort", "elbow", "electron", "elegance", "elephant", "embassy", "emission", "emperor", "end", "endurance", "energy", "entrance", "envelope", "equation", "equity", "escape", "essay", "estate", "ethic", "evidence", "exam", "excellence", "exchange", "exclusion", "excursion", "exercise", "expense", "expert", "explosion", "extension", "extent", "eyebrow", "fabric", "fact", "faculty", "failure", "fan", "farewell", "farmland", "fashion", "feather", "feedback", "ferryboat", "fiction", "figure", "film", "finger", "fireplace", "flax", "flight", "flock", "fluency", "footnote", "forestry", "fork", "format", "formula", "forum", "fossil", "foundation", "fraction", "fragment", "fragrance", "freedom", "frequency", "front", "function", "furniture", "gallery", "gangster", "garage", "garden", "garlic", "gas", "gender", "genius", "genre", "gesture", "gift", "giggle", "giraffe", "giveaway", "glare", "glimpse", "globe", "glory", "goalkeeper", "gold", "gossip", "governor", "grade", "grammar", "grandma", "gratitude", "greenhouse", "grip", "ground", "guitar", "habit", "haircut", "handbag", "handicraft", "happiness", "hardware", "harmony", "haste", "hat", "headache", "healthcare", "heap", "highway", "hike", "hint", "hockey", "hometown", "honesty", "honeymoon", "horizon", "hospital", "hotel", "humbug", "hurry", "husband", "hygiene", "hyphen", "icon", "idea", "ignorance", "immigrant", "impact", "impulse", "incense", "inch", "income", "increase", "indent", "index", "industry", "infant", "inference", "inflation", "influence", "input", "insect", "inspector", "instant", "instinct", "institute", "instructor", "insurance", "interval", "inventor", "island", "issue", "item", "journey", "judo", "junk", "juror", "kangaroo", "kilo", "kingdom", "kitchen", "lady", "latecomer", "laugh", "laundry", "lava", "lawmaker", "laziness", "leadership", "league", "lemonade", "leopard", "lettuce", "liar", "liberty", "library", "lifestyle", "lightning", "limit", "line", "list", "location", "logic", "logo", "lottery", "loyalty", "lunch", "luxury", "lyric", "machine", "maestro", "magazine", "magic", "manual", "map", "marble", "marriage", "maximum", "measure", "medicine", "medium", "melon", "member", "memory", "menu", "merchant", "metaphor", "method", "metric", "microphone", "microwave", "midnight", "migration", "milk", "mirror", "mischief", "misfortune", "mistake", "mixture", "modem", "mogul", "moisture", "molecule", "moment", "monkey", "mosquito", "motorist", "motto", "mountain", "movie", "mum", "museum", "music", "mustard", "mutton", "mystery", "myth", "napkin", "narrator", "nature", "necklace", "nectar", "needle", "network", "newspaper", "nickname", "nomad", "nominee", "nonsense", "novel", "nucleus", "nurse", "nutrient", "nutrition", "nutshell", "oak", "objective", "obstacle", "occasion", "ocean", "office", "oil", "opera", "opinion", "opponent", "optimist", "orator", "orbit", "orchestra", "organ", "origin", "ounce", "outlook", "oval", "oven", "ozone", "paintbrush", "palace", "papaya", "parachute", "parade", "paradox", "parcel", "parent", "partisan", "partner", "passenger", "password", "pasta", "patch", "patience", "patron", "pattern", "pawnshop", "pencil", "penguin", "people", "perception", "period", "permanence", "permit", "person", "persuasion", "pessimist", "petrol", "pharmacist", "photo", "phrase", "physics", "picnic", "picture", "pineapple", "pizza", "planet", "plastic", "platform", "playwright", "plot", "plural", "poem", "poetry", "policeman", "pollutant", "porch", "portrait", "potato", "powder", "prawn", "predictor", "prefix", "pressure", "prestige", "pride", "print", "privacy", "problem", "product", "professor", "prominence", "proof", "property", "proponent", "proposal", "prospect", "protein", "pudding", "pupil", "purpose", "pursuit", "quality", "quantity", "query", "quiz", "quotation", "radar", "radium", "rainfall", "range", "raspberry", "razor", "recipe", "referee", "refuge", "reggae", "relay", "relic", "remedy", "rental", "repertoire", "replica", "rescue", "research", "resource", "retina", "retreat", "retrospect", "review", "revision", "ribbon", "river", "rocket", "romance", "roundabout", "routine", "rugby", "rule", "safari", "safeguard", "sailor", "salon", "salsa", "sample", "satellite", "saucepan", "scarf", "scenery", "scholar", "school", "science", "scientist", "scope", "script", "scuba", "sculpture", "seafood", "seesaw", "self", "seminar", "sentence", "sequence", "servant", "shadow", "shampoo", "shelter", "shock", "shrimp", "side", "signpost", "silver", "sketch", "ski", "skirt", "skylark", "slang", "sleep", "slice", "slogan", "smell", "smoke", "sneeze", "sofa", "soldier", "solution", "song", "soup", "souvenir", "soybean", "space", "spaghetti", "sparrow", "species", "spectacle", "spectator", "speech", "spider", "spinach", "spoon", "sport", "spray", "spur", "squad", "stadium", "stage", "standby", "standstill", "stanza", "statistic", "statue", "stepfather", "stick", "stimulant", "stockpile", "stopover", "story", "stove", "strand", "strategy", "straw", "stress", "string", "stripe", "structure", "student", "studio", "substance", "suburb", "success", "suffix", "sugar", "suitcase", "sunshine", "superstar", "surrender", "survey", "survival", "swarm", "sweat", "sweetheart", "syllable", "sympathy", "symphony", "synonym", "system", "table", "tabloid", "tackle", "talent", "task", "tattoo", "taxi", "team", "technique", "telegram", "telephone", "temptation", "tendency", "terrace", "text", "theorist", "thesis", "thirst", "thrill", "thunder", "tightrope", "title", "tooth", "topic", "tourism", "tournament", "tradition", "traffic", "trail", "trainee", "transistor", "trap", "tree", "triangle", "triumph", "trolley", "trophy", "truck", "trumpet", "trust", "tuition", "tulip", "tunnel", "turbulence", "type", "umbrella", "uncle", "unease", "universe", "vacancy", "valley", "value", "verb", "version", "vibration", "video", "vinegar", "violin", "virtue", "visitor", "vitamin", "voice", "volcano", "volume", "vowel", "wagon", "waitress", "wallet", "wardrobe", "warmth", "wartime", "wax", "website", "welfare", "width", "wife", "window", "wing", "wisdom", "woman", "world", "wristwatch", "yard", "year", "yogurt", "zebra"];
+const VERBS = ["abandon", "abolish", "absorb", "accomplish", "accustom", "achieve", "acquire", "activate", "adjust", "admire", "admit", "adopt", "adore", "advance", "advertise", "affect", "afford", "agree", "allow", "amaze", "amuse", "announce", "annoy", "answer", "appear", "appoint", "argue", "arrange", "arrest", "arrive", "ask", "assemble", "assert", "assign", "assure", "astonish", "attach", "attend", "attract", "audition", "avoid", "awake", "bake", "balance", "become", "behave", "believe", "belong", "blame", "blend", "blossom", "blur", "boost", "bounce", "breathe", "broaden", "brush", "calculate", "cancel", "capture", "cascade", "catch", "celebrate", "certify", "challenge", "change", "chat", "cherish", "chirp", "classify", "coincide", "collect", "commit", "commute", "compare", "compensate", "complain", "complete", "complicate", "compliment", "compose", "comprise", "conceal", "conclude", "confess", "confuse", "conquer", "consider", "consist", "constitute", "consult", "consume", "contain", "continue", "contradict", "convey", "convince", "cope", "correspond", "count", "crack", "create", "cry", "cultivate", "cut", "dazzle", "debate", "decide", "declare", "decline", "dedicate", "deduce", "define", "delay", "delete", "deliver", "deny", "depart", "depend", "describe", "deserve", "detect", "develop", "devote", "dig", "discover", "dispute", "dominate", "download", "doze", "draw", "dress", "drill", "drink", "droop", "elect", "embarrass", "enclose", "endanger", "endorse", "engage", "engulf", "enhance", "equip", "establish", "exalt", "examine", "exceed", "excel", "exclude", "exhibit", "exist", "expect", "explain", "exploit", "explore", "expose", "express", "extend", "falter", "fascinate", "fasten", "feel", "fight", "fix", "flap", "float", "flutter", "follow", "force", "forecast", "free", "frighten", "fume", "furnish", "fuss", "generate", "give", "glance", "gleam", "glide", "glint", "glorify", "govern", "grasp", "guarantee", "guess", "gulp", "handle", "happen", "harrow", "haunt", "help", "hesitate", "highlight", "horrify", "hug", "ignore", "illustrate", "imagine", "imitate", "immerse", "immigrate", "implement", "impose", "impress", "imprison", "improve", "include", "incur", "indicate", "indulge", "inflate", "infringe", "inhabit", "inhale", "inject", "inquire", "inscribe", "insert", "inspire", "instruct", "interpret", "interrupt", "interview", "invade", "invent", "invoke", "involve", "irritate", "isolate", "jaw", "join", "judge", "jump", "justify", "launch", "learn", "lecture", "legislate", "liberate", "lift", "limp", "listen", "locate", "look", "maintain", "massage", "meditate", "melt", "mention", "mislead", "mistreat", "modify", "monitor", "mortify", "motivate", "move", "multiply", "mumble", "mystify", "name", "narrate", "navigate", "nod", "nourish", "obey", "observe", "obtain", "occupy", "occur", "oppose", "oppress", "outdo", "outweigh", "paddle", "paint", "penetrate", "perceive", "perform", "permeate", "persist", "persuade", "photograph", "plan", "plug", "pollute", "pop", "precede", "prepare", "pretend", "probe", "proclaim", "prohibit", "promise", "prompt", "pronounce", "prosecute", "protect", "provide", "publish", "purify", "pursue", "push", "puzzle", "qualify", "quantify", "quit", "rally", "react", "rebuild", "recite", "reckon", "recommend", "recycle", "reflect", "refresh", "refute", "regain", "register", "regulate", "release", "remind", "renew", "repay", "represent", "reproduce", "restore", "restrict", "retell", "revolve", "rewrite", "roar", "roast", "rub", "sag", "save", "scare", "scramble", "scribble", "search", "secure", "settle", "signify", "simplify", "sit", "skip", "smash", "sniff", "snore", "solve", "sparkle", "speak", "specify", "speculate", "splash", "split", "sponsor", "spy", "squash", "squeeze", "stamp", "start", "stay", "steer", "stimulate", "stop", "straighten", "strengthen", "stretch", "strive", "stumble", "submit", "substitute", "subtract", "succeed", "sunbathe", "supervise", "surround", "suspend", "sustain", "swim", "talk", "tap", "teach", "tempt", "testify", "toil", "tolerate", "train", "transfer", "travel", "tremble", "twist", "undergo", "underline", "unfold", "unify", "unite", "unlock", "unpack", "update", "upgrade", "upload", "vibrate", "visit", "volunteer", "vow", "weaken", "welcome", "widen", "wink", "wipe", "wish", "work", "worry", "worsen", "yield", "zoom"];
+
+// --- the scheme ------------------------------------------------------------
+// Must match tools/gridcode/ukphrase.py exactly; CI cross-checks them.
+//
+// A PHRASE -- adjective noun verb noun -- NAMES ONE SQUARE OF ABOUT 7.5 METRES
+// anywhere in the UK, the Isle of Man and the Channel Islands, with a strip of
+// coastal sea. Same projection and same 2 km mask as the three-word UK grid.
+//
+//   rank   = the 2 km square's position among the squares in the mask
+//   cell   = (rank * K + row) * K + column
+//   value  = cell * CHECK + check        check = sha256(cell) mod CHECK
+//   number = scramble(value)             a permutation of every phrase
+//   phrase = number in mixed radix: adjective, noun, verb, noun
+//
+// K is the most cells per side that leaves a check of 20. A misheard word of
+// another part of speech breaks the pattern and is refused outright; one of the
+// right kind fails the check 19 times in 20, and the rest land somewhere
+// unrelated in the UK.
+const PATTERN = ['adjective', 'noun', 'verb', 'noun'];
+const LISTS = { adjective: ADJECTIVES, noun: NOUNS, verb: VERBS };
+const INDEXES = Object.fromEntries(Object.entries(LISTS)
+  .map(([k, l]) => [k, new Map(l.map((w, i) => [w, i]))]));
+const SIZES = PATTERN.map((k) => LISTS[k].length);
+const SPACE = SIZES.reduce((a, b) => a * b, 1);
+const LEFT = SIZES[0] * SIZES[1], RIGHT = SIZES[2] * SIZES[3];
+const ROUNDS = 6;
+const MIN_CHECK = 20;
+const R = 6371008.8;
+const LAT0 = 54.9, LNG0 = -3.4;                  // projection centre
+const SQUARE = 2000;                             // metres, the mask's resolution
+const X0 = -616000, Y0 = -642000;                // south-west corner of the grid
+const GRID_W = 486, GRID_H = 656;
+
+// Which 2 km squares are in: run lengths row by row from the south, alternating
+// out and in, starting with out. Built by tools/gridcode/build_uk_mask.py from
+// Natural Earth: land of the UK, Isle of Man, Jersey and Guernsey, plus every
+// square next to land.
+const MASK = '1321,11,475,11,475,11,475,11,475,11,475,11,475,10,476,8,2896,3,4,3,472,8,3,3,472,8,3,3,472,14,472,14,473,10,478,8,479,5,4381,4,482,5,481,5,481,5,482,4,4222,4,482,4,481,5,36,4,441,5,35,5,441,5,34,7,440,4,35,9,477,10,460,8,7,11,460,9,6,11,460,9,4,13,460,9,1,16,460,26,460,29,457,29,457,30,457,31,36,8,411,35,31,10,413,32,30,11,415,31,29,11,420,26,28,12,422,24,22,18,424,26,13,3,1,21,423,32,5,28,422,33,1,30,423,64,423,63,424,62,424,62,424,62,426,60,428,58,428,58,429,57,429,57,34,3,392,57,34,4,391,58,32,5,391,59,31,5,393,60,26,7,8,8,19,8,352,60,23,7,3,14,18,10,355,57,21,26,15,12,356,56,19,28,14,13,356,62,12,29,10,19,355,64,7,31,10,21,353,66,2,35,9,21,354,108,2,22,356,130,6,3,348,128,5,6,347,128,4,7,348,142,24,9,312,143,19,12,313,150,8,16,312,175,311,176,310,179,307,183,303,186,300,187,299,188,298,189,4,3,291,196,290,196,290,196,290,7,1,188,299,187,300,186,301,186,299,188,298,189,282,3,12,193,278,3,12,194,277,3,13,195,275,3,13,197,273,3,13,31,3,164,290,27,12,157,298,12,20,157,303,3,23,157,329,157,329,157,329,157,329,157,315,8,7,156,310,16,4,156,309,18,3,155,309,19,4,155,307,20,6,153,304,24,6,153,303,25,6,152,302,27,5,134,4,14,302,29,4,133,10,8,285,6,11,35,1,128,304,14,4,161,306,15,2,160,287,3,19,15,2,162,283,7,17,181,280,8,18,181,279,14,12,182,276,17,10,184,274,18,9,186,271,20,8,187,270,22,7,187,269,217,269,216,270,216,271,215,272,214,275,211,274,212,273,220,261,226,260,228,258,228,258,229,257,229,258,228,260,226,263,223,265,223,263,223,263,224,263,3,4,217,269,218,271,215,271,216,271,216,272,216,276,211,277,209,278,208,279,207,281,205,283,204,283,203,284,202,285,201,286,200,286,200,287,199,287,200,287,199,287,199,287,200,286,200,286,200,287,199,287,199,287,200,285,201,284,202,284,202,284,202,284,202,284,202,284,202,285,200,286,200,287,199,286,200,285,201,264,4,4,3,10,201,264,12,8,202,264,12,8,201,265,12,8,201,265,13,7,200,267,13,7,199,267,17,3,199,268,168,3,46,270,166,5,44,272,165,5,42,275,163,6,41,277,160,9,38,282,157,9,37,284,156,9,35,287,156,9,33,289,156,8,30,293,156,9,25,297,156,11,10,1,5,303,157,327,160,326,161,323,163,322,164,322,165,320,166,320,166,317,169,317,169,315,171,315,170,316,24,2,144,316,24,3,7,4,132,316,22,5,6,7,129,321,14,9,3,12,7,1,119,321,14,32,118,322,13,33,118,322,13,33,117,324,11,35,116,327,5,40,114,373,112,373,113,373,112,374,111,374,112,374,110,376,108,378,110,377,109,377,104,1,4,378,103,1,5,378,108,378,108,379,106,379,107,378,107,379,106,380,106,380,105,381,104,382,103,383,103,383,102,384,101,385,100,386,100,386,99,388,97,391,95,393,92,393,93,393,93,289,6,37,9,45,3,4,92,273,4,13,7,36,9,44,4,4,92,272,13,3,10,35,11,40,6,5,91,272,13,3,12,33,12,39,7,5,91,271,28,34,12,38,8,5,91,270,29,33,13,37,106,246,4,18,29,34,13,35,107,241,10,17,29,34,14,32,109,237,15,16,29,34,14,32,108,238,15,14,31,34,15,30,108,238,16,12,33,4,3,28,14,29,106,240,18,11,41,27,15,28,105,236,26,7,43,27,15,26,105,237,26,7,44,27,14,26,105,236,27,6,46,27,13,26,104,237,27,6,46,28,12,26,102,239,27,6,47,27,12,25,102,240,26,7,48,27,9,27,102,238,29,6,48,27,9,26,102,238,31,4,50,27,9,24,103,238,32,2,51,27,9,23,104,236,34,1,52,29,7,23,103,236,88,31,5,22,104,236,89,56,104,236,90,55,104,236,91,55,104,236,91,55,103,236,92,55,102,237,91,56,101,238,91,57,98,241,90,57,96,246,87,58,94,248,85,17,4,38,91,251,84,16,6,38,88,255,3,3,77,15,7,12,3,23,85,265,76,15,6,11,6,22,82,266,78,15,6,9,8,23,80,266,78,16,6,8,9,23,79,266,74,20,7,7,10,24,78,266,75,19,6,8,10,7,5,12,78,266,75,18,7,6,12,3,11,12,74,268,75,18,7,5,13,2,13,11,73,269,75,17,7,4,15,2,15,9,72,272,73,16,9,1,34,9,72,273,3,3,66,15,48,7,71,282,63,15,52,3,70,284,62,14,54,2,70,284,61,15,54,3,69,285,59,16,54,3,68,287,56,18,54,4,67,288,54,19,54,5,66,288,53,20,125,288,53,20,125,288,53,20,125,288,52,21,124,290,50,22,123,292,49,22,123,292,49,26,118,293,49,26,118,293,48,27,117,295,46,29,116,298,6,2,35,29,115,307,35,29,115,308,34,30,114,308,34,31,113,309,33,32,112,309,32,34,111,309,6,1,25,34,110,310,4,6,21,36,109,324,10,1,4,38,108,326,14,9,9,21,107,333,7,9,10,20,107,333,7,9,11,19,107,333,7,9,11,19,107,349,12,19,105,350,12,20,104,350,12,20,104,350,11,7,7,8,103,350,11,5,10,7,103,351,10,4,11,8,102,352,10,2,12,10,100,352,10,2,12,11,99,352,10,2,12,10,100,352,11,1,12,9,100,353,11,1,11,10,100,354,22,10,100,335,5,14,22,10,99,336,6,13,22,8,101,336,6,13,21,7,103,336,10,9,21,6,102,338,11,9,20,5,101,340,12,8,20,4,101,335,5,2,11,8,20,4,99,337,6,1,11,8,19,1,102,338,18,9,17,2,102,338,18,10,15,2,5,1,96,339,18,10,13,3,6,1,95,340,18,9,14,3,6,1,94,342,19,7,14,2,7,1,94,342,20,6,23,1,93,343,20,6,23,1,92,345,19,6,116,345,20,5,115,346,21,3,116,347,21,2,115,350,19,2,114,355,16,1,113,357,15,1,108,364,97,2,21,371,86,10,18,372,88,8,16,366,5,3,91,6,12,368,6,3,91,6,12,368,6,4,90,7,10,369,7,4,90,386,7,4,90,386,6,6,89,385,6,7,89,385,5,8,89,2,5,391,96,390,99,387,99,388,99,388,99,368,4,16,98,367,11,10,98,366,14,2,3,3,98,366,21,1,97,367,118,368,114,372,113,374,112,378,108,378,108,379,109,354,5,17,20,3,88,352,6,16,21,3,89,351,7,15,22,2,90,349,9,14,23,1,91,348,11,10,26,1,91,347,11,9,120,347,12,7,121,349,12,4,121,352,10,4,121,353,9,3,121,353,10,2,121,355,9,3,119,356,8,4,119,356,7,4,119,357,6,4,119,358,5,4,120,366,121,365,122,365,122,369,117,371,116,374,113,373,114,371,115,370,116,370,116,370,116,357,5,9,115,356,7,9,115,320,6,28,8,9,115,320,7,26,9,9,116,319,8,25,9,4,4,2,115,319,8,25,9,4,122,318,8,21,13,4,122,319,7,21,13,4,123,318,6,22,12,5,123,320,4,22,6,11,123,320,10,31,125,322,8,31,125,322,8,25,4,2,125,322,8,25,131,322,7,24,133,322,7,24,134,320,8,24,134,320,8,23,135,320,9,21,137,319,9,20,138,319,10,19,139,318,11,18,20,3,117,318,10,15,144,317,10,12,25,1,122,316,9,12,25,2,122,316,9,12,25,2,122,316,9,12,24,3,123,315,9,11,25,3,124,314,10,10,26,1,126,313,10,9,27,1,126,314,9,9,27,1,126,314,9,9,153,315,9,10,152,315,11,8,22,1,128,317,10,9,21,1,128,318,9,11,18,2,128,314,14,10,7,1,10,2,4,1,123,313,15,11,5,2,10,3,3,1,57,3,63,312,17,10,5,2,10,8,56,4,61,313,17,10,4,3,10,8,57,5,59,313,17,17,9,9,57,6,57,315,16,17,8,10,58,10,51,316,16,18,7,10,59,9,13,4,13,6,14,318,14,20,5,11,60,9,10,30,7,320,3,1,9,21,4,12,61,380,8,2,4,31,61,383,5,1,7,29,62,383,13,28,63,386,9,28,63,385,12,26,63,384,15,24,63,384,15,24,57,2,4,340,5,39,17,22,57,346,5,39,17,23,56,346,5,41,19,23,52,346,5,41,20,22,6,1,46,391,21,22,3,4,47,192,3,195,20,31,46,191,3,194,21,30,48,190,3,193,24,26,50,386,25,25,52,384,26,24,53,384,25,23,55,383,25,23,57,381,24,24,58,379,25,25,58,378,25,29,55,377,25,28,57,376,26,27,58,375,30,22,59,375,32,20,60,375,31,19,62,374,31,19,64,373,30,19,66,371,30,19,67,371,4,1,24,26,61,375,22,28,62,376,21,27,62,376,22,26,63,376,21,26,63,377,20,26,64,380,15,27,64,382,14,27,63,382,14,27,64,383,12,28,63,384,11,28,63,386,8,29,62,388,7,29,62,389,6,29,62,390,4,31,62,425,20,4,37,425,19,9,33,426,11,17,3,5,25,425,10,28,23,425,6,34,5,1,15,471,14,472,5,1,3,491,3,482,5,480,6,471,7,2,6,471,8,1,6,471,15,470,16,469,17,468,10,1,7,468,9,4,8,465,9,5,7,465,23,463,23,463,23,465,21,465,21,464,22,464,20,466,16,471,13,473,13,6,7,460,13,6,8,459,13,6,8,459,14,2,11,459,14,2,10,461,13,1,11,463,11,1,10,467,8,1,9,469,20,472,14,469,18,467,21,465,10,1,10,464,9,4,9,464,8,5,9,464,7,8,7,464,6,482,4,3922,4,482,4,482,5,481,5,481,5,7294,4,482,4,480,6,480,6,480,6,480,7,479,7,479,8,479,7,479,7,478,8,478,9,477,9,477,9,457,4,16,11,454,5,16,11,454,5,13,15,453,5,12,5,1,10,453,5,11,17,469,17,466,19,466,18,468,19,467,19,467,19,467,19,467,20,467,22,469,17,471,16,470,16,469,17,468,14,1,3,467,15,468,18,468,18,468,19,467,19,467,19,468,18,468,24,463,24,464,22,465,21,465,21,467,17,470,16,475,11,475,11,475,11,475,11,475,11,479,8,478,8,478,8,478,8,479,7,480,6,1077';
+
+const SQUARES = [];
+(() => {
+  let at = 0, inside = false;
+  for (const n of MASK.split(',').map(Number)) {
+    if (inside) for (let s = at; s < at + n; s++) SQUARES.push(s);
+    at += n; inside = !inside;
+  }
+  if (at !== GRID_W * GRID_H) throw new Error('the mask does not fit the grid');
+})();
+const RANK = new Map(SQUARES.map((s, r) => [s, r]));
+// The most cells per side that still leaves MIN_CHECK, and the check that leaves.
+const K = Math.floor(Math.sqrt(Math.floor(SPACE / (SQUARES.length * MIN_CHECK))));
+const CELL = SQUARE / K;
+const CELLS = SQUARES.length * K * K;
+const CHECK = Math.floor(SPACE / CELLS);
+const USED = CELLS * CHECK;                      // values that name a cell
+
+// --- the projection ----------------------------------------------------------
+// Lambert azimuthal equal-area on the sphere, centred on the UK.
+const RAD = Math.PI / 180;
+const P0 = LAT0 * RAD, L0 = LNG0 * RAD, SIN0 = Math.sin(P0), COS0 = Math.cos(P0);
+
+function project(lat, lng) {
+  const p = lat * RAD, dl = lng * RAD - L0;
+  const sp = Math.sin(p), cp = Math.cos(p), cl = Math.cos(dl);
+  const k = Math.sqrt(2 / (1 + SIN0 * sp + COS0 * cp * cl));
+  return [R * k * cp * Math.sin(dl), R * k * (COS0 * sp - SIN0 * cp * cl)];
+}
+
+function unproject(x, y) {
+  const rho = Math.hypot(x, y);
+  if (rho === 0) return [LAT0, LNG0];
+  const c = 2 * Math.asin(rho / (2 * R)), sc = Math.sin(c), cc = Math.cos(c);
+  return [Math.asin(cc * SIN0 + y * sc * COS0 / rho) / RAD,
+          (L0 + Math.atan2(x * sc, rho * COS0 * cc - y * SIN0 * sc)) / RAD];
+}
+
+// SHA-256 in plain JS. crypto.subtle would be neater but only exists in a
+// secure context, so it is undefined when this file is opened from disk --
+// which would silently break the checksum for anyone who downloads the demo.
+const SHA_K = [
+  0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+  0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+  0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+  0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+  0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+  0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+  0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+  0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+
+function sha256(bytes) {
+  const H = [0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+  const len = bytes.length;
+  const padded = new Uint8Array((((len + 9) >> 6) + 1) << 6);
+  padded.set(bytes);
+  padded[len] = 0x80;
+  new DataView(padded.buffer).setUint32(padded.length - 4, len * 8);
+  const w = new Uint32Array(64);
+  const rr = (x, n) => (x >>> n) | (x << (32 - n));
+  for (let off = 0; off < padded.length; off += 64) {
+    const dv = new DataView(padded.buffer, off, 64);
+    for (let i = 0; i < 16; i++) w[i] = dv.getUint32(i * 4);
+    for (let i = 16; i < 64; i++) {
+      const s0 = rr(w[i-15],7) ^ rr(w[i-15],18) ^ (w[i-15] >>> 3);
+      const s1 = rr(w[i-2],17) ^ rr(w[i-2],19) ^ (w[i-2] >>> 10);
+      w[i] = (w[i-16] + s0 + w[i-7] + s1) >>> 0;
+    }
+    let [a,b,c,d,e,f,g,h] = H;
+    for (let i = 0; i < 64; i++) {
+      const S1 = rr(e,6) ^ rr(e,11) ^ rr(e,25);
+      const ch = (e & f) ^ (~e & g);
+      const t1 = (h + S1 + ch + SHA_K[i] + w[i]) >>> 0;
+      const S0 = rr(a,2) ^ rr(a,13) ^ rr(a,22);
+      const mj = (a & b) ^ (a & c) ^ (b & c);
+      const t2 = (S0 + mj) >>> 0;
+      h = g; g = f; f = e; e = (d + t1) >>> 0;
+      d = c; c = b; b = a; a = (t1 + t2) >>> 0;
+    }
+    [a,b,c,d,e,f,g,h].forEach((v, i) => { H[i] = (H[i] + v) >>> 0; });
+  }
+  return H;
+}
+
+const shaInt = (bytes, n) => {        // the first n (<= 8) bytes of sha256
+  const h = sha256(bytes);
+  const v = (BigInt(h[0] >>> 0) << 32n) | BigInt(h[1] >>> 0);
+  return v >> BigInt(64 - 8 * n);
+};
+const te = new TextEncoder();
+
+function cellCheck(cell) {
+  const p = new Uint8Array(17);
+  p.set(te.encode('ukp-check'));
+  new DataView(p.buffer).setBigUint64(9, BigInt(cell));
+  return Number(shaInt(p, 8) % BigInt(CHECK));
+}
+
+// --- the scramble ------------------------------------------------------------
+// A Feistel network on unequal halves: left is the adjective and first noun
+// (LEFT values), right the verb and second noun (RIGHT). Each round takes
+// (L, R) in Z_a x Z_b to (R, (L + F(R)) mod a) in Z_b x Z_a, a bijection
+// whatever a and b are; six rounds land back on Z_LEFT x Z_RIGHT.
+function roundFn(i, half, modulus) {
+  const p = new Uint8Array(12);
+  p.set(te.encode('ukp')); p[3] = i;
+  new DataView(p.buffer).setBigUint64(4, BigInt(half));
+  return Number(shaInt(p, 8) % BigInt(modulus));
+}
+
+function scramble(v) {
+  let a = LEFT, b = RIGHT;
+  let left = Math.floor(v / b), right = v % b;
+  for (let i = 0; i < ROUNDS; i++) {
+    [left, right] = [right, (left + roundFn(i, right, a)) % a];
+    [a, b] = [b, a];
+  }
+  return left * b + right;
+}
+
+function unscramble(n) {
+  let a = LEFT, b = RIGHT;
+  let left = Math.floor(n / b), right = n % b;
+  for (let i = ROUNDS - 1; i >= 0; i--) {
+    [a, b] = [b, a];
+    [left, right] = [(((right - roundFn(i, left, a)) % a) + a) % a, left];
+  }
+  return left * RIGHT + right;
+}
+
+// --- phrases -------------------------------------------------------------------
+// The cell of a point, before the check and the scramble, or null outside.
+function cellAt(lat, lng) {
+  const [x, y] = project(lat, lng);
+  const fx = (x - X0) / SQUARE, fy = (y - Y0) / SQUARE;
+  const i = Math.floor(fx), j = Math.floor(fy);
+  if (i < 0 || i >= GRID_W || j < 0 || j >= GRID_H) return null;
+  const rank = RANK.get(j * GRID_W + i);
+  if (rank === undefined) return null;
+  const col = Math.min(Math.floor((fx - i) * K), K - 1);
+  const row = Math.min(Math.floor((fy - j) * K), K - 1);
+  return (rank * K + row) * K + col;
+}
+
+// The cell's south-west corner, in the plane.
+function cellXY(cell) {
+  const rank = Math.floor(cell / (K * K)), rest = cell % (K * K);
+  const row = Math.floor(rest / K), col = rest % K;
+  const s = SQUARES[rank], j = Math.floor(s / GRID_W), i = s % GRID_W;
+  return [X0 + i * SQUARE + col * CELL, Y0 + j * SQUARE + row * CELL];
+}
+
+function centreOf(cell) {
+  const [x, y] = cellXY(cell);
+  return unproject(x + CELL / 2, y + CELL / 2);
+}
+
+function numberToPhrase(n) {
+  const out = [];
+  for (let k = PATTERN.length - 1; k >= 0; k--) {
+    out.push(LISTS[PATTERN[k]][n % SIZES[k]]);
+    n = Math.floor(n / SIZES[k]);
+  }
+  return out.reverse();
+}
+
+const phraseFor = (cell) => numberToPhrase(scramble(cell * CHECK + cellCheck(cell)));
+
+function encode(lat, lng) {
+  const cell = cellAt(lat, lng);
+  if (cell === null) throw new Error('outside the UK grid');
+  return phraseFor(cell);
+}
+
+function decodeCell(spoken) {
+  if (spoken.length !== PATTERN.length)
+    throw new Error(`a phrase is ${PATTERN.length} words: ${PATTERN.join(' ')}`);
+  let n = 0;
+  spoken.forEach((w, k) => {
+    const i = INDEXES[PATTERN[k]].get(w);
+    if (i === undefined) {
+      const other = Object.keys(INDEXES).find((x) => INDEXES[x].has(w));
+      throw new Error(`"${w}" is not a word for the ${PATTERN[k]} slot`
+        + (other ? ` (it is a ${other})` : ''));
+    }
+    n = n * SIZES[k] + i;
+  });
+  const v = unscramble(n);
+  if (v >= USED) throw new Error('no such phrase - a word is wrong');
+  const cell = Math.floor(v / CHECK);
+  if (cellCheck(cell) !== v % CHECK) throw new Error('check failed - a word is wrong');
+  return cell;
+}
+
+const decode = (spoken) => centreOf(decodeCell(spoken));
+
+function parsePhrase(text) {
+  const parts = text.trim().replace(/[,\s]+/g, '.').split('.').filter(Boolean)
+    .map((p) => p.toLowerCase());
+  if (!parts.length) throw new Error('empty phrase');
+  return parts;
+}
+
+// --- map --------------------------------------------------------------------
+const map = L.map('map', { zoomControl: false }).setView([51.50072, -0.12456], 18);
+L.control.zoom({ position: 'topright' }).addTo(map);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  maxZoom: 19,
+}).addTo(map);
+
+const addrEl = document.getElementById('addr');
+const noteEl = document.getElementById('note');
+const qEl = document.getElementById('q');
+let marker = null, square = null;
+
+// The separator stays on the word it follows, so a line that continues ends in
+// a dot and the address is still correct if it is copied.
+// Spaces, not dots: a phrase is read as a sentence. The slot sits under each
+// word so the pattern teaches itself.
+function showWords(spoken) {
+  addrEl.textContent = '';
+  spoken.forEach((w, i) => {
+    const el = document.createElement('span');
+    el.className = 'w';
+    el.textContent = w;
+    const lbl = document.createElement('small');
+    lbl.textContent = PATTERN[i];
+    el.appendChild(lbl);
+    addrEl.append(el);
+    if (i < spoken.length - 1) addrEl.append(' ');
+  });
+}
+
+const NOTE = `${(CELL).toFixed(1)} m square &middot; <strong>says where you are</strong>`
+  + '<span class="dim"> &mdash; decodes in this page with nothing else involved. UK only. '
+  + 'A misheard word is refused at least 95% of the time, and always when it breaks '
+  + 'the pattern.</span>';
+
+function draw(cell, lat, lng) {
+  if (marker) map.removeLayer(marker);
+  if (square) map.removeLayer(square);
+  if (lat !== null)
+    marker = L.circleMarker([lat, lng],
+      { radius: 5, color: '#a8322a', weight: 2, fillOpacity: .9 }).addTo(map);
+  const [x, y] = cellXY(cell);
+  square = L.polygon([unproject(x, y), unproject(x + CELL, y),
+                      unproject(x + CELL, y + CELL), unproject(x, y + CELL)],
+    { color: '#1a5c4a', weight: 2, fillOpacity: .08 }).addTo(map);
+}
+
+function show(lat, lng) {
+  const cell = cellAt(lat, lng);
+  if (cell === null) {
+    if (marker) map.removeLayer(marker);
+    if (square) map.removeLayer(square);
+    marker = null; square = null;
+    addrEl.textContent = '';
+    noteEl.innerHTML = '<span class="err">Outside the UK grid</span>'
+      + '<span class="dim"> &mdash; the UK, the Isle of Man, the Channel Islands and a strip '
+      + 'of coastal sea.</span>';
+    return;
+  }
+  showWords(phraseFor(cell));
+  noteEl.innerHTML = NOTE;
+  draw(cell, lat, lng);
+}
+
+document.getElementById('find').addEventListener('submit', (e) => {
+  e.preventDefault();
+  let cell;
+  try { cell = decodeCell(parsePhrase(qEl.value)); }
+  catch (err) {
+    noteEl.innerHTML = `<span class="err">${err.message.replace(/</g, '&lt;')}</span>`;
+    return;
+  }
+  showWords(phraseFor(cell));
+  noteEl.innerHTML = NOTE;
+  draw(cell, null, null);
+  map.setView(centreOf(cell), 19);
+});
+
+map.on('click', (e) => show(e.latlng.lat, e.latlng.lng));
+show(51.50072, -0.12456);
+</script>
+</body>
+</html>
