@@ -26,13 +26,25 @@ square in the mask is cut into K x K CELLS. Then:
     number   = scramble(value)          a keyed permutation of all 1,296**3
     words    = number in base 1,296
 
-THE SCRAMBLE IS THE SAFETY. There is no check digit -- every address the space
+THE SCRAMBLE IS THE SAFETY. There is no check word -- every address the space
 can spare goes on precision -- so a misheard word is refused only when it
 lands on a value no cell uses. The rest decode, and the scramble sends them
 somewhere unrelated in the UK rather than next door. It is the same six-round
 Feistel network as the global grid: 1,296**3 is exactly 46,656**2.
+
+AND AN OPTIONAL TWO-DIGIT NUMBER, for when it matters:
+
+    interval level adjective 42
+
+The three words are unchanged and still name the 11 m cell on their own. The
+number, 00 to 99, is 4 x 25: which QUARTER of the cell (2 x 2, so a 5.7 m
+square) and a CHECK of 1 in 25 over the cell and the quarter together. Said
+with the number, a misheard word is caught 96 % of the time, because it names
+another cell and the check no longer fits. A misheard number either fails the
+check or lands in another quarter of the same cell -- a few metres, never
+somewhere else. Said without it, nothing changes.
 """
-import hashlib, math, os
+import hashlib, math, os, re
 
 LIST_SIZE = 1296
 N_WORDS = 3
@@ -212,13 +224,108 @@ def decode(spoken, words):
     return centre_of(decode_value(spoken, words))
 
 
-def format_address(spoken):
-    return SEP.join(spoken)
+# --- the optional number -------------------------------------------------------
+
+QUARTERS = 2                # the number splits a cell QUARTERS x QUARTERS
+DIGIT_CHECK = 100 // (QUARTERS * QUARTERS)       # 25: what is left is check
+assert QUARTERS * QUARTERS * DIGIT_CHECK == 100
+
+
+def _digit_check(v, q):
+    return _sha_int(b'ukd' + v.to_bytes(8, 'big') + bytes([q]), 8) % DIGIT_CHECK
+
+
+def quarter_at(lat, lng):
+    """Which quarter of its cell a point is in: row * QUARTERS + column."""
+    x, y = project(lat, lng)
+    fx, fy = (x - X0) / SQUARE * K, (y - Y0) / SQUARE * K
+    col = min(int((fx - math.floor(fx)) * QUARTERS), QUARTERS - 1)
+    row = min(int((fy - math.floor(fy)) * QUARTERS), QUARTERS - 1)
+    return row * QUARTERS + col
+
+
+def digits_at(lat, lng):
+    """The optional number for a point, 0 to 99: the quarter, then the check."""
+    v, q = value_at(lat, lng), quarter_at(lat, lng)
+    return q * DIGIT_CHECK + _digit_check(v, q)
+
+
+def centre_of_quarter(v, q):
+    rank, rest = divmod(v, K * K)
+    row, col = divmod(rest, K)
+    qrow, qcol = divmod(q, QUARTERS)
+    j, i = divmod(SQUARES[rank], GRID_W)
+    sub = CELL / QUARTERS
+    return unproject(X0 + i * SQUARE + col * CELL + (qcol + 0.5) * sub,
+                     Y0 + j * SQUARE + row * CELL + (qrow + 0.5) * sub)
+
+
+def decode_with(spoken, words, digits=None):
+    """The centre of what three words, and optionally the number, name: the
+    11 m cell without it, its 5.7 m quarter with it."""
+    v = decode_value(spoken, words)
+    if digits is None:
+        return centre_of(v)
+    if not 0 <= digits <= 99:
+        raise ValueError('the number is 00 to 99')
+    q, chk = divmod(digits, DIGIT_CHECK)
+    if _digit_check(v, q) != chk:
+        raise ValueError('the number does not fit the words - a word or the number is wrong')
+    return centre_of_quarter(v, q)
+
+
+def format_address(spoken, digits=None):
+    return SEP.join(spoken) + ('' if digits is None else f' {digits:02d}')
+
+
+UNITS = {'zero': 0, 'oh': 0, 'nought': 0, 'one': 1, 'two': 2, 'three': 3,
+         'four': 4, 'five': 5, 'six': 6, 'seven': 7, 'eight': 8, 'nine': 9}
+TEENS = {'ten': 10, 'eleven': 11, 'twelve': 12, 'thirteen': 13, 'fourteen': 14,
+         'fifteen': 15, 'sixteen': 16, 'seventeen': 17, 'eighteen': 18,
+         'nineteen': 19}
+TENS = {'twenty': 20, 'thirty': 30, 'forty': 40, 'fifty': 50, 'sixty': 60,
+        'seventy': 70, 'eighty': 80, 'ninety': 90}
+NUMBER_WORDS = set(UNITS) | set(TEENS) | set(TENS)
+
+
+def _number(tokens):
+    """Digits or English for 0 to 99: '42', '4 2', 'forty two', 'four two',
+    'oh seven'. None of these words is on the word list, so they cannot be
+    mistaken for the address."""
+    if all(t.isdigit() for t in tokens):
+        s = ''.join(tokens)
+        if not 1 <= len(s) <= 2:
+            raise ValueError('the number is two digits')
+        return int(s)
+    if len(tokens) == 1:
+        t = tokens[0]
+        for table in (UNITS, TEENS, TENS):
+            if t in table:
+                return table[t]
+    if len(tokens) == 2:
+        a, b = tokens
+        if a in TENS and b in UNITS and UNITS[b]:
+            return TENS[a] + UNITS[b]
+        if a in UNITS and b in UNITS:
+            return UNITS[a] * 10 + UNITS[b]
+    raise ValueError(f'not a number from 00 to 99: {" ".join(tokens)}')
 
 
 def parse_address(text):
-    text = text.strip().replace(',', SEP).replace(' ', SEP)
-    parts = [p.lower() for p in text.split(SEP) if p]
-    if not parts:
+    """Words only: 'a.b.c', 'a b c' or 'a, b, c'."""
+    words, _ = parse_full(text)
+    return words
+
+
+def parse_full(text):
+    """(words, number or None). The number, if there is one, comes last."""
+    tokens = [t for t in re.split(r'[\s.,;:/-]+', text.strip().lower()) if t]
+    if not tokens:
         raise ValueError('empty address')
-    return parts
+    at = len(tokens)
+    while at > 0 and (tokens[at - 1].isdigit() or tokens[at - 1] in NUMBER_WORDS):
+        at -= 1
+    words, num = tokens[:at], tokens[at:]
+    if not words:
+        raise ValueError('no words before the number')
+    return words, (_number(num) if num else None)

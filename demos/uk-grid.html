@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Three everyday words name any place in the UK to an 11 m square. Nothing else is needed to decode them.">
-<title>UK grid — three easy words, an 11-metre square</title>
+<meta name="description" content="Three everyday words name any place in the UK to an 11 m square; add an optional two-digit number for a 5.7 m square and a check.">
+<title>UK grid — three easy words, and an optional number</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
   html, body { margin: 0; height: 100%; }
@@ -12,8 +12,9 @@
   #map { position: absolute; inset: 0; background: #dfe3e6; }
   /* No card: the address sits directly on the map, with a halo rather than a
      panel so it reads over pale streets and dark satellite tiles alike. */
+  /* Clear of the zoom buttons on the right, which are about 50 px wide. */
   #hud { position: absolute; z-index: 1000; top: 16px; left: 16px;
-         pointer-events: none; max-width: calc(100vw - 32px); }
+         pointer-events: none; max-width: calc(100vw - 76px); }
   #addr { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
           font-size: 24px; font-weight: 700; color: #16171a; letter-spacing: -0.01em;
           line-height: 1.3;
@@ -27,6 +28,11 @@
           text-shadow: 0 1px 3px #fff, 0 0 8px #fff, 1px 0 3px #fff, -1px 0 3px #fff; }
   #note .dim { color: #8a8a82; font-weight: 400; }
   #note .err { color: #a8322a; }
+  /* The optional number: set apart and lighter, because it can be left off. */
+  #addr .num { color: #1a5c4a; margin-left: .45em; white-space: nowrap; }
+  #addr .num small { font: 600 9px/1 -apple-system, BlinkMacSystemFont, "Segoe UI",
+                     Roboto, sans-serif; letter-spacing: .04em; text-transform: uppercase;
+                     color: #8a8a82; margin-left: .3em; vertical-align: middle; }
   /* #hud is pointer-events:none so clicks fall through to the map; the form
      has to opt back in. */
   #find { margin-top: 10px; pointer-events: auto; display: flex; gap: 6px; }
@@ -49,7 +55,7 @@
   <div id="addr"></div>
   <div id="note">Click anywhere</div>
   <form id="find" autocomplete="off">
-    <input id="q" type="text" placeholder="three words" aria-label="Look up three words"
+    <input id="q" type="text" placeholder="three words, and a number if you have it" aria-label="Look up three words and an optional number"
            spellcheck="false" autocapitalize="none">
     <button id="go" type="submit">Go</button>
   </form>
@@ -258,14 +264,99 @@ function decodeValue(spoken) {
 
 const decode = (spoken) => centreOf(decodeValue(spoken));
 
-const formatAddress = (spoken) => spoken.join(SEP);
+// --- the optional number -------------------------------------------------------
+// 00 to 99, said after the words when it matters: 4 x 25, which QUARTER of the
+// cell (a 5.7 m square) and a CHECK of 1 in 25 over the cell and the quarter.
+// With it a misheard word is caught 96 % of the time; a misheard number fails
+// the check or lands in another quarter of the same cell. Without it, nothing
+// changes.
+const QUARTERS = 2;
+const DIGIT_CHECK = 100 / (QUARTERS * QUARTERS);  // 25
 
-function parseAddress(text) {
-  const parts = text.trim().replace(/[,\s]+/g, SEP).split(SEP).filter(Boolean)
-    .map((p) => p.toLowerCase());
-  if (!parts.length) throw new Error('empty address');
-  return parts;
+function digitCheck(v, q) {
+  const p = new Uint8Array(12);
+  p[0] = 0x75; p[1] = 0x6b; p[2] = 0x64;         // 'ukd'
+  new DataView(p.buffer).setBigUint64(3, BigInt(v));
+  p[11] = q;
+  const h = sha256(p);
+  return Number(((BigInt(h[0] >>> 0) << 32n) | BigInt(h[1] >>> 0)) % BigInt(DIGIT_CHECK));
 }
+
+function quarterAt(lat, lng) {
+  const [x, y] = project(lat, lng);
+  const fx = (x - X0) / SQUARE * K, fy = (y - Y0) / SQUARE * K;
+  const col = Math.min(Math.floor((fx - Math.floor(fx)) * QUARTERS), QUARTERS - 1);
+  const row = Math.min(Math.floor((fy - Math.floor(fy)) * QUARTERS), QUARTERS - 1);
+  return row * QUARTERS + col;
+}
+
+function digitsAt(lat, lng) {
+  const v = valueAt(lat, lng), q = quarterAt(lat, lng);
+  return q * DIGIT_CHECK + digitCheck(v, q);
+}
+
+// The quarter a number names, checked against the cell. Throws if it does not fit.
+function quarterOf(v, digits) {
+  if (!(digits >= 0 && digits <= 99)) throw new Error('the number is 00 to 99');
+  const q = Math.floor(digits / DIGIT_CHECK);
+  if (digitCheck(v, q) !== digits % DIGIT_CHECK)
+    throw new Error('the number does not fit the words - a word or the number is wrong');
+  return q;
+}
+
+function quarterXY(v, q) {
+  const [x, y] = cellXY(v), sub = CELL / QUARTERS;
+  return [x + (q % QUARTERS) * sub, y + Math.floor(q / QUARTERS) * sub];
+}
+
+function centreOfQuarter(v, q) {
+  const [x, y] = quarterXY(v, q), sub = CELL / QUARTERS;
+  return unproject(x + sub / 2, y + sub / 2);
+}
+
+const pad2 = (n) => String(n).padStart(2, '0');
+const formatAddress = (spoken, digits) =>
+  spoken.join(SEP) + (digits === undefined || digits === null ? '' : ` ${pad2(digits)}`);
+
+// Digits or English for 0 to 99: '42', '4 2', 'forty two', 'four two', 'oh seven'.
+// None of these words is on the word list, so they cannot be taken for the address.
+const UNITS = { zero: 0, oh: 0, nought: 0, one: 1, two: 2, three: 3, four: 4, five: 5,
+                six: 6, seven: 7, eight: 8, nine: 9 };
+const TEENS = { ten: 10, eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15,
+                sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19 };
+const TENS = { twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60, seventy: 70,
+               eighty: 80, ninety: 90 };
+const isNumberToken = (t) => /^\d+$/.test(t) || t in UNITS || t in TEENS || t in TENS;
+
+function parseNumber(tokens) {
+  if (tokens.every((t) => /^\d+$/.test(t))) {
+    const s = tokens.join('');
+    if (s.length < 1 || s.length > 2) throw new Error('the number is two digits');
+    return Number(s);
+  }
+  if (tokens.length === 1) {
+    for (const table of [UNITS, TEENS, TENS]) if (tokens[0] in table) return table[tokens[0]];
+  }
+  if (tokens.length === 2) {
+    const [a, b] = tokens;
+    if (a in TENS && b in UNITS && UNITS[b]) return TENS[a] + UNITS[b];
+    if (a in UNITS && b in UNITS) return UNITS[a] * 10 + UNITS[b];
+  }
+  throw new Error(`not a number from 00 to 99: ${tokens.join(' ')}`);
+}
+
+// [words, number or null]. The number, if there is one, comes last.
+function parseFull(text) {
+  const tokens = text.trim().toLowerCase().split(/[\s.,;:\/-]+/).filter(Boolean);
+  if (!tokens.length) throw new Error('empty address');
+  let at = tokens.length;
+  while (at > 0 && isNumberToken(tokens[at - 1])) at--;
+  if (!at) throw new Error('no words before the number');
+  const num = tokens.slice(at);
+  return [tokens.slice(0, at), num.length ? parseNumber(num) : null];
+}
+
+const parseAddress = (text) => parseFull(text)[0];
 
 // --- map --------------------------------------------------------------------
 const map = L.map('map', { zoomControl: false }).setView([51.50072, -0.12456], 18);
@@ -282,7 +373,8 @@ let marker = null, square = null;
 
 // The separator stays on the word it follows, so a line that continues ends in
 // a dot and the address is still correct if it is copied.
-function showWords(spoken) {
+// The number goes after the words, set apart, with a note that it is optional.
+function showWords(spoken, digits) {
   addrEl.textContent = '';
   spoken.forEach((w, i) => {
     const el = document.createElement('span');
@@ -290,53 +382,76 @@ function showWords(spoken) {
     el.textContent = w + (i < spoken.length - 1 ? SEP : '');
     addrEl.append(el, document.createElement('wbr'));
   });
+  if (digits !== null) {
+    const el = document.createElement('span');
+    el.className = 'num';
+    el.textContent = pad2(digits);
+    const lbl = document.createElement('small');
+    lbl.textContent = 'optional';
+    el.appendChild(lbl);
+    addrEl.append(el);
+  }
 }
 
-const NOTE = `${(CELL).toFixed(1)} m square &middot; <strong>says where you are</strong>`
+const NOTE = `<strong>${CELL.toFixed(1)} m</strong> with the words, `
+  + `<strong>${(CELL / QUARTERS).toFixed(1)} m</strong> with the number`
   + '<span class="dim"> &mdash; decodes in this page with nothing else involved. UK only. '
-  + 'There is no check word: a misheard word lands somewhere unrelated in the UK.</span>';
+  + 'With the number a misheard word is refused 96% of the time; without it, a misheard '
+  + 'word lands somewhere unrelated in the UK.</span>';
 
-function draw(v, lat, lng) {
-  if (marker) map.removeLayer(marker);
-  if (square) map.removeLayer(square);
+function ring(x, y, side) {
+  return [unproject(x, y), unproject(x + side, y),
+          unproject(x + side, y + side), unproject(x, y + side)];
+}
+
+// The 11 m cell, and inside it the quarter the number names when there is one.
+let quarter = null;
+function draw(v, q, lat, lng) {
+  for (const layer of [marker, square, quarter]) if (layer) map.removeLayer(layer);
+  marker = square = quarter = null;
   if (lat !== null)
     marker = L.circleMarker([lat, lng],
       { radius: 5, color: '#a8322a', weight: 2, fillOpacity: .9 }).addTo(map);
-  const [x, y] = cellXY(v);
-  square = L.polygon([unproject(x, y), unproject(x + CELL, y),
-                      unproject(x + CELL, y + CELL), unproject(x, y + CELL)],
-    { color: '#1a5c4a', weight: 2, fillOpacity: .08 }).addTo(map);
+  square = L.polygon(ring(...cellXY(v), CELL),
+    { color: '#1a5c4a', weight: 2, fillOpacity: q === null ? .08 : 0,
+      dashArray: q === null ? null : '4 4' }).addTo(map);
+  if (q !== null)
+    quarter = L.polygon(ring(...quarterXY(v, q), CELL / QUARTERS),
+      { color: '#1a5c4a', weight: 2, fillOpacity: .15 }).addTo(map);
 }
 
 function show(lat, lng) {
   const v = valueAt(lat, lng);
   if (v === null) {
-    if (marker) map.removeLayer(marker);
-    if (square) map.removeLayer(square);
-    marker = null; square = null;
+    for (const layer of [marker, square, quarter]) if (layer) map.removeLayer(layer);
+    marker = square = quarter = null;
     addrEl.textContent = '';
     noteEl.innerHTML = '<span class="err">Outside the UK grid</span>'
       + '<span class="dim"> &mdash; the UK, the Isle of Man, the Channel Islands and a strip '
       + 'of coastal sea.</span>';
     return;
   }
-  showWords(wordsFor(v));
+  showWords(wordsFor(v), digitsAt(lat, lng));
   noteEl.innerHTML = NOTE;
-  draw(v, lat, lng);
+  draw(v, quarterAt(lat, lng), lat, lng);
 }
 
 document.getElementById('find').addEventListener('submit', (e) => {
   e.preventDefault();
-  let v;
-  try { v = decodeValue(parseAddress(qEl.value)); }
-  catch (err) {
+  let v, q = null, digits;
+  try {
+    const [spoken, num] = parseFull(qEl.value);
+    digits = num;
+    v = decodeValue(spoken);
+    if (num !== null) q = quarterOf(v, num);
+  } catch (err) {
     noteEl.innerHTML = `<span class="err">${err.message.replace(/</g, '&lt;')}</span>`;
     return;
   }
-  showWords(wordsFor(v));
+  showWords(wordsFor(v), digits);
   noteEl.innerHTML = NOTE;
-  draw(v, null, null);
-  map.setView(centreOf(v), 19);
+  draw(v, q, null, null);
+  map.setView(q === null ? centreOf(v) : centreOfQuarter(v, q), 19);
 });
 
 map.on('click', (e) => show(e.latlng.lat, e.latlng.lng));

@@ -13,6 +13,14 @@ INSIDE = [
 ]
 OUTSIDE = [(48.8566, 2.3522), (53.3498, -6.2603), (40.7128, -74.0060), (56.0, 3.0)]
 
+def _fits(u, words, la, lo, d):
+    try:
+        u.decode_with(u.encode(la, lo, words), words, d)
+        return True
+    except ValueError:
+        return False
+
+
 if __name__ == '__main__':
     words = u.load_wordlist()
     rng = random.Random(1)
@@ -44,7 +52,19 @@ if __name__ == '__main__':
         'scramble': [[v, u.scramble(v)] for v in values],
         'points': [{'lat': la, 'lng': lo, 'value': u.value_at(la, lo),
                     'words': u.encode(la, lo, words),
-                    'centre': list(u.centre_of(u.value_at(la, lo)))} for la, lo in pts],
+                    'centre': list(u.centre_of(u.value_at(la, lo))),
+                    'digits': u.digits_at(la, lo), 'quarter': u.quarter_at(la, lo),
+                    'quarter_centre': list(u.decode_with(u.encode(la, lo, words), words,
+                                                         u.digits_at(la, lo)))}
+                   for la, lo in pts],
+        # Every number against a few cells: the ports must agree on which fit.
+        'numbers': [{'value': u.value_at(la, lo),
+                     'fits': [d for d in range(100) if _fits(u, words, la, lo, d)]}
+                    for la, lo in INSIDE[:4]],
+        'parse': [[t, list(u.parse_full(t))] for t in (
+            'interval level adjective', 'interval.level.adjective 07',
+            'interval level adjective forty two', 'Interval, level, adjective, four two',
+            'interval level adjective oh seven', 'interval level adjective 4 2')],
         'outside': [list(p) for p in OUTSIDE],
         'wrong': wrong,
     }

@@ -103,6 +103,26 @@ the address is in the wrong town, not as a safety net.
 
 **Nowhere else has an address.** Outside the mask, the page says so.
 
+**And an optional two-digit number, for when it matters.**
+
+```
+interval.level.adjective 25      <- Big Ben, to 5.7 m, checked
+```
+
+The three words are unchanged and still name the 11 m square on their own. The
+number, 00 to 99, is 4 × 25: which **quarter** of the square (2 × 2, so a
+**5.7 m** square) and a **1-in-25 check** over the square and quarter together.
+- **With the number:** a misheard word is refused **96 %** of the time, because
+  it names another square and the check no longer fits. Half of all points are
+  within 2.3 m.
+- **A misheard number** (fifteen and fifty are the classic pair) either fails
+  the check or lands in another quarter of the same square. It is never more
+  than a few metres off.
+- **Without the number,** every address means exactly what it did.
+
+The page takes the number as digits or words: `25`, `2 5`, `twenty five`,
+`two five`, `oh seven`. None of those words is on the word list.
+
 ## UK only: four-word phrases, a 7.5 m square
 
 [`demos/uk-phrase.html`](demos/uk-phrase.html) reads an address as a phrase,

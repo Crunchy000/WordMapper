@@ -129,6 +129,64 @@ check('a wrong word lands far away (median over 100 km)',
       landed[len(landed) // 2] > 100e3, True)
 check('rarely within 10 km (under 1 %)', sum(d < 10e3 for d in landed) < 0.01 * len(landed), True)
 
+print('\nthe optional number')
+check('quarters and check fill 00 to 99 exactly',
+      u.QUARTERS ** 2 * u.DIGIT_CHECK, 100)
+check('with the number, every point decodes to its own quarter',
+      all(u.value_at(*u.decode_with(u.encode(la, lo, WORDS), WORDS, u.digits_at(la, lo)))
+          == u.value_at(la, lo)
+          and u.quarter_at(*u.decode_with(u.encode(la, lo, WORDS), WORDS, u.digits_at(la, lo)))
+          == u.quarter_at(la, lo) for la, lo in PTS[:2000]), True)
+qerrs = sorted(hav(p, u.decode_with(u.encode(*p, WORDS), WORDS, u.digits_at(*p)))
+               for p in PTS[:2000])
+print(f'  ----  with the number: half within {qerrs[len(qerrs)//2]:.2f} m, '
+      f'all within {qerrs[-1]:.2f} m ({u.CELL / u.QUARTERS:.2f} m squares)')
+check('with the number, every point within half a quarter diagonal (plus 1 %)',
+      qerrs[-1] < u.CELL / u.QUARTERS / math.sqrt(2) * 1.01, True)
+check('without it, the words mean exactly what they did',
+      all(u.decode_with(u.encode(la, lo, WORDS), WORDS) == u.decode(u.encode(la, lo, WORDS), WORDS)
+          for la, lo in PTS[:500]), True)
+caught = landed_far = 0
+for i in range(10000):
+    q = PTS[i % len(PTS)]
+    a, d = u.encode(*q, WORDS), u.digits_at(*q)
+    bad = list(a)
+    k = random.randrange(3)
+    while bad[k] == a[k]:
+        bad[k] = random.choice(WORDS)
+    try:
+        u.decode_with(bad, WORDS, d)
+    except ValueError:
+        caught += 1
+theory = (1 - (1 - (1 - u.CELLS / u.SPACE)) / u.DIGIT_CHECK) * 100
+print(f'  ----  with the number, a wrong word is refused {caught/100:.2f}% (theory {theory:.2f}%)')
+check('with the number, a wrong word is refused at least 95 %', caught >= 9500, True)
+worst = 0.0
+for q in PTS[:1000]:
+    a, d = u.encode(*q, WORDS), u.digits_at(*q)
+    for wrong in range(100):
+        if wrong == d:
+            continue
+        try:
+            worst = max(worst, hav(q, u.decode_with(a, WORDS, wrong)))
+        except ValueError:
+            pass
+check('a misheard number never lands outside the 11 m cell',
+      worst < u.CELL * math.sqrt(2), True)
+for text, want in (('interval level adjective', None), ('interval.level.adjective 07', 7),
+                   ('interval level adjective forty two', 42),
+                   ('Interval, level, adjective, four two', 42),
+                   ('interval level adjective oh seven', 7),
+                   ('interval level adjective 4 2', 42)):
+    check(f'parse {text!r}', u.parse_full(text), (['interval', 'level', 'adjective'], want))
+for text in ('interval level adjective 123', 'interval level adjective forty forty', '42'):
+    try:
+        u.parse_full(text)
+        check(f'{text!r} is refused', False, True)
+    except ValueError:
+        check(f'{text!r} is refused', True, True)
+check('no number word is on the word list', bool(u.NUMBER_WORDS & set(WORDS)), False)
+
 print('\naddress strings')
 bb = u.encode(*PLACES['Big Ben'], WORDS)
 check('parse round trips', u.parse_address(u.format_address(bb)), bb)
@@ -143,7 +201,7 @@ for bad in (bb[:2], bb + ['zoom'], ['notaword'] + bb[1:]):
 
 print()
 for name, ll in PLACES.items():
-    print(f'  ----  {name:24s} {u.format_address(u.encode(*ll, WORDS))}')
+    print(f'  ----  {name:24s} {u.format_address(u.encode(*ll, WORDS), u.digits_at(*ll))}')
 print(f'\n  ----  {len(u.SQUARES):,} squares of 2 km, {u.K} x {u.K} cells each, '
       f'cell {u.CELL:.2f} m')
 print()

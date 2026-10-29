@@ -25,7 +25,7 @@ if (mask !== readFileSync(join(here, 'uk-mask.txt'), 'utf8').trim())
 const src = `const WORDS = ${words};\n`
   + html.slice(html.indexOf('const INDEX = new Map'), html.indexOf('// --- map ---'))
   + '\nexport { valueAt, centreOf, encode, decodeValue, scramble, unscramble, parseAddress,'
-  + ' K, CELLS, SQUARES };';
+  + ' digitsAt, quarterAt, quarterOf, centreOfQuarter, parseFull, K, CELLS, SQUARES };';
 const tmp = join(here, `.check-uk-demo-${process.pid}.mjs`);
 writeFileSync(tmp, src);
 let mod;
@@ -54,6 +54,30 @@ for (const c of fixture.points) {
   try {
     if (mod.decodeValue(c.words) !== c.value) fail(`DECODE ${c.words.join('.')}`);
   } catch (e) { fail(`DECODE ${c.words.join('.')}: ${e.message}`); }
+}
+
+// The optional number: the digits for a point, the quarter they name, and which
+// of all 100 numbers fit a cell.
+for (const c of fixture.points) {
+  if (mod.digitsAt(c.lat, c.lng) !== c.digits)
+    fail(`DIGITS ${c.lat},${c.lng}: js ${mod.digitsAt(c.lat, c.lng)} vs py ${c.digits}`);
+  if (mod.quarterAt(c.lat, c.lng) !== c.quarter) fail(`QUARTER ${c.lat},${c.lng}`);
+  const [la, lo] = mod.centreOfQuarter(c.value, mod.quarterOf(c.value, c.digits));
+  if (Math.abs(la - c.quarter_centre[0]) > 1e-9 || Math.abs(lo - c.quarter_centre[1]) > 1e-9)
+    fail(`QUARTER CENTRE ${c.value}: js ${[la, lo]} vs py ${c.quarter_centre}`);
+}
+for (const n of fixture.numbers) {
+  const fits = [];
+  for (let d = 0; d < 100; d++) {
+    try { mod.quarterOf(n.value, d); fits.push(d); } catch { /* does not fit */ }
+  }
+  if (fits.join(',') !== n.fits.join(','))
+    fail(`NUMBERS for ${n.value}: js ${fits} vs py ${n.fits}`);
+}
+for (const [text, [words, num]] of fixture.parse) {
+  const [w, n] = mod.parseFull(text);
+  if (w.join('.') !== words.join('.') || n !== num)
+    fail(`PARSE ${JSON.stringify(text)}: js ${[w, n]} vs py ${[words, num]}`);
 }
 
 for (const [la, lo] of fixture.outside)
