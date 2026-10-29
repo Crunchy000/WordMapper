@@ -68,6 +68,41 @@ ordinary numbers.
   no dropping words against a nearby reference.
 - H3 is not equal-area, so cells vary in size by about 2:1 across the globe.
 
+## UK only: three words, an 11 m square
+
+[`demos/uk-grid.html`](demos/uk-grid.html) is a second scheme, for the UK
+only. **Three everyday words name an 11.4 m square** anywhere in the UK, the
+Isle of Man and the Channel Islands, plus a strip of coastal sea. Half of all
+points are within **4.5 m** of the centre their words decode to, and every point
+is within 8 m.
+
+```
+interval.level.adjective      <- Big Ben
+steady.belong.reflect         <- Edinburgh Castle
+```
+
+**Why it fits.** Three words are 2.18 billion addresses, and the covered area
+is about 278,000 km², so each address gets about 130 m². A 2 km-square mask
+says which squares are covered: land, plus every square next to land. Each
+covered square splits into 176 × 176 cells, which uses 98.9 % of the space. The
+mask is built from Natural Earth by
+[`build_uk_mask.py`](tools/gridcode/build_uk_mask.py) and committed, 7 KB as
+run lengths.
+
+**Why not H3.** H3's levels step 7× in area. At UK latitudes resolution 12 is
+about 270 m² and resolution 13 doesn't fit, so H3 would waste half of what three
+words can carry. Over an area the size of the UK, a flat grid is accurate. A
+Lambert azimuthal equal-area projection centred on the UK keeps every square the
+same area and square to within 0.2 %.
+
+**The catch: no check word.** All the space goes on precision, so a misheard
+word is refused only about 1 % of the time. The same kind of scramble as the
+global grid sends the rest somewhere unrelated in the UK, a median of about
+340 km away, rather than next door. It works for listeners who would notice that
+the address is in the wrong town, not as a safety net.
+
+**Nowhere else has an address.** Outside the mask, the page says so.
+
 ### What came before
 
 It got here by way of four words to a 307 m² hexagon, three words to a
@@ -138,6 +173,10 @@ npm ci --prefix tools/gridcode                   # h3-js, for the cross-check
 python3 tools/gridcode/test_bip39grid.py      # the scheme: round trip, scramble, wrong words
 node    tools/gridcode/check-demo.mjs         # the demo's JS against the Python reference
 python3 tools/gridcode/build_fixture.py       # regenerate the cross-check fixture
+python3 tools/gridcode/test_ukgrid.py         # the UK scheme
+node    tools/gridcode/check-uk-demo.mjs      # the UK demo's JS against its reference
+python3 tools/gridcode/build_uk_fixture.py    # regenerate the UK fixture
+python3 tools/gridcode/build_uk_mask.py ne_10m_admin_0_countries.geojson   # rebuild the mask
 ```
 
 The last two exist because the codec is implemented twice — once in Python as
